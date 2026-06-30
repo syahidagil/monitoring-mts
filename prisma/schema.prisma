@@ -1,0 +1,358 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(ORANGTUA)
+  name      String
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi per role
+  guru          Guru?
+  orangTua      OrangTua?
+  informasiList InformasiSekolah[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  GURU
+  ORANGTUA
+}
+
+// ─────────────────────────────────────────
+// PROFIL PUBLIK
+// ─────────────────────────────────────────
+
+model InformasiSekolah {
+  idInfo        Int          @id @default(autoincrement())
+  kategori      KategoriInfo
+  judul         String       @db.VarChar(100)
+  isi           String       @db.Text
+  gambar        String?      @db.VarChar(255)
+  tanggalUpdate DateTime     @default(now()) @updatedAt
+  idUser        String
+
+  admin User @relation(fields: [idUser], references: [id])
+
+  @@map("informasi_sekolah")
+}
+
+enum KategoriInfo {
+  sejarah
+  visi
+  misi
+  tujuan
+  fasilitas
+  kurikulum
+  prestasi
+  berita
+  ekstrakurikuler
+  psb
+  statistik
+}
+
+// ─────────────────────────────────────────
+// DATA AKADEMIK
+// ─────────────────────────────────────────
+
+model TahunAjaran {
+  id        Int       @id @default(autoincrement())
+  nama      String    @unique @db.VarChar(20) // contoh: "2024/2025"
+  semester  Semester
+  aktif     Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  kelas     Kelas[]
+
+  @@map("tahun_ajaran")
+}
+
+enum Semester {
+  GANJIL
+  GENAP
+}
+
+model Kelas {
+  id           Int    @id @default(autoincrement())
+  nama         String @db.VarChar(20) // contoh: "7A", "8B"
+  tingkat      Int    // 7, 8, atau 9
+  tahunAjaranId Int
+  waliKelasId  String?
+
+  tahunAjaran TahunAjaran @relation(fields: [tahunAjaranId], references: [id])
+  waliKelas   Guru?       @relation("WaliKelas", fields: [waliKelasId], references: [id])
+
+  siswa       Siswa[]
+  jadwal      Jadwal[]
+
+  @@map("kelas")
+}
+
+model Guru {
+  id        String  @id
+  nip       String? @unique @db.VarChar(20)
+  mapel     String  @db.VarChar(100)
+  noHp      String? @db.VarChar(20)
+  alamat    String? @db.Text
+
+  user      User    @relation(fields: [id], references: [id])
+
+  kelasWali    Kelas[]   @relation("WaliKelas")
+  jadwal       Jadwal[]
+  nilaiList    Nilai[]
+  absensiList  Absensi[]
+  guruMapel    GuruMapel[]  // ← tambahkan baris ini
+  
+  @@map("guru")
+}
+
+model OrangTua {
+  id     String  @id
+  noHp   String? @db.VarChar(20)
+  alamat String? @db.Text
+
+  user   User    @relation(fields: [id], references: [id])
+  anak   Siswa[]
+
+  @@map("orang_tua")
+}
+
+model Siswa {
+  id          Int      @id @default(autoincrement())
+  nis         String   @unique @db.VarChar(20)
+  nama        String   @db.VarChar(100)
+  jenisKelamin JenisKelamin
+  tanggalLahir DateTime @db.Date
+  kelasId     Int
+  orangTuaId  String?
+  foto        String?  @db.VarChar(255)
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  kelas    Kelas    @relation(fields: [kelasId], references: [id])
+  orangTua OrangTua? @relation(fields: [orangTuaId], references: [id])
+
+  absensi  Absensi[]
+  nilai    Nilai[]
+  sikap    Sikap[]
+  hafalan  Hafalan[]
+  tahsin   Tahsin[]
+
+  @@map("siswa")
+}
+
+enum JenisKelamin {
+  L
+  P
+}
+
+// ─────────────────────────────────────────
+// MONITORING — ABSENSI
+// ─────────────────────────────────────────
+
+model Jadwal {
+  id      Int    @id @default(autoincrement())
+  kelasId Int
+  guruId  String
+  mapel   String @db.VarChar(100)
+  hari    Hari
+  jamMulai String @db.VarChar(5)  // "07:00"
+  jamSelesai String @db.VarChar(5) // "08:30"
+
+  kelas   Kelas  @relation(fields: [kelasId], references: [id])
+  guru    Guru   @relation(fields: [guruId], references: [id])
+
+  absensi Absensi[]
+
+  @@map("jadwal")
+}
+
+enum Hari {
+  SENIN
+  SELASA
+  RABU
+  KAMIS
+  JUMAT
+  SABTU
+}
+
+model Absensi {
+  id        Int           @id @default(autoincrement())
+  siswaId   Int
+  jadwalId  Int
+  guruId    String
+  tanggal   DateTime      @db.Date
+  status    StatusAbsensi
+  keterangan String?      @db.VarChar(255)
+  createdAt DateTime      @default(now())
+
+  siswa  Siswa  @relation(fields: [siswaId], references: [id])
+  jadwal Jadwal @relation(fields: [jadwalId], references: [id])
+  guru   Guru   @relation(fields: [guruId], references: [id])
+
+  @@unique([siswaId, jadwalId, tanggal])
+  @@map("absensi")
+}
+
+enum StatusAbsensi {
+  HADIR
+  SAKIT
+  IZIN
+  ALPHA
+}
+
+// ─────────────────────────────────────────
+// MONITORING — NILAI
+// ─────────────────────────────────────────
+
+model Nilai {
+  id        Int        @id @default(autoincrement())
+  siswaId   Int
+  guruId    String
+  mapel     String     @db.VarChar(100)
+  jenis     JenisNilai
+  nilai     Decimal    @db.Decimal(5, 2)
+  semester  Semester
+  tahunAjar String     @db.VarChar(20)
+  keterangan String?   @db.VarChar(255)
+  tanggal   DateTime   @default(now())
+
+  siswa Siswa @relation(fields: [siswaId], references: [id])
+  guru  Guru  @relation(fields: [guruId], references: [id])
+
+  @@map("nilai")
+}
+
+enum JenisNilai {
+  HARIAN
+  UTS
+  UAS
+  TUGAS
+  PRAKTIK
+}
+
+// ─────────────────────────────────────────
+// MONITORING — SIKAP
+// ─────────────────────────────────────────
+
+model Sikap {
+  id        Int      @id @default(autoincrement())
+  siswaId   Int
+  aspek     String   @db.VarChar(100) // "Kedisiplinan", "Sopan Santun", dll
+  predikat  Predikat
+  deskripsi String?  @db.Text
+  semester  Semester
+  tahunAjar String   @db.VarChar(20)
+  tanggal   DateTime @default(now())
+
+  siswa Siswa @relation(fields: [siswaId], references: [id])
+
+  @@map("sikap")
+}
+
+enum Predikat {
+  SB // Sangat Baik
+  B  // Baik
+  C  // Cukup
+  K  // Kurang
+}
+
+// ─────────────────────────────────────────
+// MONITORING — HAFALAN
+// ─────────────────────────────────────────
+
+model Hafalan {
+  id          Int      @id @default(autoincrement())
+  siswaId     Int
+  surah       String   @db.VarChar(50)  // "Al-Baqarah"
+  ayatMulai   Int
+  ayatSelesai Int
+  juz         Int?
+  nilai       Decimal? @db.Decimal(4, 1) // 0-100
+  status      StatusHafalan
+  tanggal     DateTime @default(now())
+  catatan     String?  @db.Text
+
+  siswa Siswa @relation(fields: [siswaId], references: [id])
+
+  @@map("hafalan")
+}
+
+enum StatusHafalan {
+  BELUM
+  PROSES
+  LULUS
+  MENGULANG
+}
+
+// ─────────────────────────────────────────
+// MONITORING — TAHSIN
+// ─────────────────────────────────────────
+
+model Tahsin {
+  id        Int          @id @default(autoincrement())
+  siswaId   Int
+  materi    String       @db.VarChar(100) // "Makharijul Huruf", "Mad", dll
+  nilai     Decimal?     @db.Decimal(4, 1)
+  status    StatusTahsin
+  tanggal   DateTime     @default(now())
+  catatan   String?      @db.Text
+
+  siswa Siswa @relation(fields: [siswaId], references: [id])
+
+  @@map("tahsin")
+}
+
+enum StatusTahsin {
+ BELUM
+  PROSES
+  LULUS
+  MENGULANG
+}
+
+// ─────────────────────────────────────────
+// MATA PELAJARAN
+// ─────────────────────────────────────────
+
+model MataPelajaran {
+  kodeMapel String @id @db.VarChar(5)
+  namaMapel String @db.VarChar(20)
+
+  guruMapel GuruMapel[]
+
+  @@map("mata_pelajaran")
+}
+
+// ─────────────────────────────────────────
+// RELASI GURU — MATA PELAJARAN
+// ─────────────────────────────────────────
+
+model GuruMapel {
+  idGuruMapel Int    @id @default(autoincrement())
+  idGuru      String @db.VarChar(16)
+  kodeMapel   String @db.VarChar(5)
+
+  guru         Guru          @relation(fields: [idGuru], references: [id])
+  mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
+
+  @@unique([idGuru, kodeMapel]) // 1 guru tidak bisa duplikat mapel yang sama
+  @@map("guru_mapel")
+}
