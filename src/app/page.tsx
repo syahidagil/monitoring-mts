@@ -4,7 +4,7 @@ import HeroSection from "@/components/public/HeroSection";
 import StatistikSection from "@/components/public/StatistikSection";
 import SejarahSection from "@/components/public/SejarahSection";
 import VisiMisiSection from "@/components/public/VisiMisiSection";
-import FasilitasSection from "@/components/public/FasilitasSection";
+// import FasilitasSection from "@/components/public/FasilitasSection";
 import KurikulumSection from "@/components/public/KurikulumSection";
 import PrestasiSection from "@/components/public/PrestasiSection";
 import BeritaSection from "@/components/public/BeritaSection";
@@ -31,7 +31,7 @@ export default async function HomePage() {
         misi={get("misi")[0]}
         tujuan={get("tujuan")[0]}
       />
-      <FasilitasSection fasilitas={get("fasilitas")} />
+      {/* <FasilitasSection fasilitas={get("fasilitas")} /> */}
       <KurikulumSection kurikulum={get("kurikulum")} />
       <PrestasiSection prestasi={get("prestasi")} />
       <BeritaSection berita={get("berita")} />

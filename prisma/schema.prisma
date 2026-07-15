@@ -27,6 +27,7 @@ model User {
   guru          Guru?
   orangTua      OrangTua?
   informasiList InformasiSekolah[]
+  pengumumanPmbm PengumumanPmbm[]
 
   @@map("users")
 }
@@ -112,49 +113,55 @@ model Guru {
   mapel     String  @db.VarChar(100)
   noHp      String? @db.VarChar(20)
   alamat    String? @db.Text
+  pendidikan String? @db.VarChar(100)
 
-  user      User    @relation(fields: [id], references: [id])
+  user      User   @relation(fields: [id], references: [id])
 
-  kelasWali    Kelas[]   @relation("WaliKelas")
-  jadwal       Jadwal[]
-  nilaiList    Nilai[]
-  absensiList  Absensi[]
-  guruMapel    GuruMapel[]  // ← tambahkan baris ini
-  
+  kelasWali   Kelas[]   @relation("WaliKelas")
+  jadwal      Jadwal[]
+  nilaiList   Nilai[]
+  absensiList Absensi[]
+  guruMapel   GuruMapel[]
+
   @@map("guru")
 }
 
 model OrangTua {
-  id     String  @id
-  noHp   String? @db.VarChar(20)
-  alamat String? @db.Text
+  id       String  @id
+  noHp     String? @db.VarChar(20)
+  alamat   String? @db.Text
+  pekerjaan String? @db.VarChar(100)
 
-  user   User    @relation(fields: [id], references: [id])
-  anak   Siswa[]
+  user User    @relation(fields: [id], references: [id])
+  anak Siswa[]
 
   @@map("orang_tua")
 }
 
 model Siswa {
-  id          Int      @id @default(autoincrement())
-  nis         String   @unique @db.VarChar(20)
-  nama        String   @db.VarChar(100)
+  id           Int          @id @default(autoincrement())
+  nis          String       @unique @db.VarChar(20)
+  nama         String       @db.VarChar(100)
   jenisKelamin JenisKelamin
-  tanggalLahir DateTime @db.Date
-  kelasId     Int
-  orangTuaId  String?
-  foto        String?  @db.VarChar(255)
-  status      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  tanggalLahir DateTime     @db.Date
+  tempatLahir  String?      @db.VarChar(50)
+  alamat       String?      @db.Text
+  namaAyah     String?      @db.VarChar(100)
+  namaIbu      String?      @db.VarChar(100)
+  statusTahfidz Boolean     @default(false)
+  kelasId      Int
+  orangTuaId   String?
+  status       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
 
-  kelas    Kelas    @relation(fields: [kelasId], references: [id])
+  kelas    Kelas     @relation(fields: [kelasId], references: [id])
   orangTua OrangTua? @relation(fields: [orangTuaId], references: [id])
 
-  absensi  Absensi[]
-  nilai    Nilai[]
-  sikap    Sikap[]
-  hafalan  Hafalan[]
-  tahsin   Tahsin[]
+  absensi Absensi[]
+  nilai   Nilai[]
+  sikap   Sikap[]
+  hafalan Hafalan[]
+  tahsin  Tahsin[]
 
   @@map("siswa")
 }
@@ -355,4 +362,20 @@ model GuruMapel {
 
   @@unique([idGuru, kodeMapel]) // 1 guru tidak bisa duplikat mapel yang sama
   @@map("guru_mapel")
+}
+
+model PengumumanPmbm {
+  id          Int      @id @default(autoincrement())
+  judul       String   @db.VarChar(200)
+  deskripsi   String?  @db.Text
+  filePath    String   @db.VarChar(255)
+  fileName    String   @db.VarChar(255)
+  tahun       String   @db.VarChar(20)
+  idUser      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  admin User @relation(fields: [idUser], references: [id])
+
+  @@map("pengumuman_pmbm")
 }

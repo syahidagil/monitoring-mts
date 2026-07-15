@@ -3,9 +3,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, BookOpen, Building2, Target, Wrench,
-  BookMarked, Newspaper, Trophy, Users, Settings,
-  ChevronDown, ChevronRight, GraduationCap
+  LayoutDashboard, Building2, Newspaper, Users,
+  Settings, ChevronDown, ChevronRight, GraduationCap,
+  School, FileUp
 } from "lucide-react";
 
 type MenuItem = {
@@ -34,13 +34,26 @@ const MENUS: MenuItem[] = [
       { label: "Ekstrakurikuler", href: "/admin/ekstrakurikuler" },
     ],
   },
+  {
+    label: "Data Akademik", icon: School,
+    children: [
+      { label: "Data Siswa", href: "/admin/data-siswa" },
+      { label: "Data Guru", href: "/admin/data-guru" },
+      { label: "Data Orang Tua", href: "/admin/data-orangtua" },
+      { label: "Data Kelas", href: "/admin/data-kelas" },
+      { label: "Mata Pelajaran", href: "/admin/mata-pelajaran" },
+    ],
+  },
+  { label: "Pengumuman PMBM", href: "/admin/pmbm", icon: FileUp },
   { label: "Manajemen Pengguna", href: "/admin/pengguna", icon: Users },
   { label: "Pengaturan", href: "/admin/pengaturan", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [openMenus, setOpenMenus] = useState<string[]>(["Informasi Sekolah", "Konten Website"]);
+  const [openMenus, setOpenMenus] = useState<string[]>([
+    "Informasi Sekolah", "Konten Website", "Data Akademik"
+  ]);
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
@@ -65,6 +78,7 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
+
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
         {MENUS.map((menu) => {
           if (menu.href) {
@@ -83,8 +97,10 @@ export default function Sidebar() {
               </Link>
             );
           }
+
           const isOpen = openMenus.includes(menu.label);
           const parentActive = isParentActive(menu.children ?? []);
+
           return (
             <div key={menu.label}>
               <button
@@ -97,11 +113,10 @@ export default function Sidebar() {
               >
                 <menu.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1 text-left">{menu.label}</span>
-                {isOpen ? (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                )}
+                {isOpen
+                  ? <ChevronDown className="w-3.5 h-3.5" />
+                  : <ChevronRight className="w-3.5 h-3.5" />
+                }
               </button>
               {isOpen && (
                 <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
@@ -124,6 +139,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
       <div className="px-5 py-4 border-t border-white/10">
         <p className="text-green-400 text-xs text-center">v1.0.0 • 2026</p>
       </div>

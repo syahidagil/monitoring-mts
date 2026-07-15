@@ -27,7 +27,7 @@ export default function Footer() {
           </div>
           <div>
             <p className="font-semibold text-sm mb-5">Tautan Cepat</p>
-            {["Sejarah Madrasah","Fasilitas Kampus","Program Kurikulum","Galeri Kegiatan","Kontak Kami"].map((item) => (
+            {["Sejarah Madrasah","Program Kurikulum","Galeri Kegiatan","Kontak Kami"].map((item) => (
               <a key={item} href="#" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm py-1.5 transition-colors">
                 <span className="text-[#4CAF50] text-xs">&#9654;</span> {item}
               </a>

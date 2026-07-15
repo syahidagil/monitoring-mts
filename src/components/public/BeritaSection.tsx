@@ -1,4 +1,5 @@
 ﻿import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const BADGE_COLORS: Record<string, string> = {
   berita: "bg-green-100 text-green-800",
@@ -9,7 +10,9 @@ const BADGE_COLORS: Record<string, string> = {
 };
 
 function formatTanggal(date: Date | string) {
-  return new Date(date).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(date).toLocaleDateString("id-ID", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
 }
 
 export default function BeritaSection({ berita }: { berita: any[] }) {
@@ -19,6 +22,7 @@ export default function BeritaSection({ berita }: { berita: any[] }) {
     "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=250&fit=crop",
     "https://images.unsplash.com/photo-1529390079861-591de354faf5?w=400&h=250&fit=crop",
   ];
+
   return (
     <section id="berita" className="py-16 bg-[#F9FAFB]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -27,10 +31,12 @@ export default function BeritaSection({ berita }: { berita: any[] }) {
             <h2 className="text-2xl font-bold text-gray-900">Berita Terkini</h2>
             <p className="text-gray-500 text-sm mt-1">Ikuti perkembangan terbaru dan kegiatan madrasah kami.</p>
           </div>
-          <a href="#" className="hidden sm:flex items-center gap-1 text-[#2E7D32] hover:text-[#1B5E20] text-sm font-semibold transition-colors">
+          <Link href="/berita"
+            className="hidden sm:flex items-center gap-1 text-[#2E7D32] hover:text-[#1B5E20] text-sm font-semibold transition-colors">
             Lihat Semua <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
           {berita.slice(0, 4).map((item, i) => (
             <div key={item.idInfo} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
@@ -53,11 +59,21 @@ export default function BeritaSection({ berita }: { berita: any[] }) {
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">{formatTanggal(item.tanggalUpdate)}</span>
-                  <a href="#" className="text-xs font-semibold text-[#2E7D32] hover:underline">Selengkapnya</a>
+                  <Link href={`/berita/${item.idInfo}`}
+                    className="text-xs font-semibold text-[#2E7D32] hover:underline">
+                    Selengkapnya
+                  </Link>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="sm:hidden mt-6 text-center">
+          <Link href="/berita"
+            className="inline-flex items-center gap-1 text-[#2E7D32] hover:text-[#1B5E20] text-sm font-semibold">
+            Lihat Semua Berita <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>
