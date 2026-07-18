@@ -176,21 +176,32 @@ enum JenisKelamin {
 // ─────────────────────────────────────────
 
 model Jadwal {
-  id      Int    @id @default(autoincrement())
-  kelasId Int
-  guruId  String
-  mapel   String @db.VarChar(100)
-  hari    Hari
-  jamMulai String @db.VarChar(5)  // "07:00"
-  jamSelesai String @db.VarChar(5) // "08:30"
+  id            Int    @id @default(autoincrement())
+  kelasId       Int                    // FK ke Kelas (sudah ada)
+  guruId        String                 // FK ke Guru (sudah ada)
+  kodeMapel     String @db.VarChar(5)  // FK ke MataPelajaran (BARU)
+  tahunAjaranId Int                    // FK ke TahunAjaran (BARU)
+  hari          Hari                   // enum (sudah ada)
+  jamMulai      String @db.VarChar(5)  // "07:30" (sudah ada)
+  jamSelesai    String @db.VarChar(5)  // "09:00" (sudah ada)
 
-  kelas   Kelas  @relation(fields: [kelasId], references: [id])
-  guru    Guru   @relation(fields: [guruId], references: [id])
+  kelas         Kelas         @relation(...)
+  guru          Guru          @relation(...)
+  mataPelajaran MataPelajaran @relation(...)  // BARU
+  tahunAjaran   TahunAjaran   @relation(...)  // BARU
+  absensi       Absensi[]
 
-  absensi Absensi[]
-
+  // Constraint: 1 kelas tidak boleh punya jadwal sama
+  // di hari + jam yang sama dalam 1 tahun ajaran
+  @@unique([kelasId, hari, jamMulai, tahunAjaranId])
+  
+  // Constraint: 1 guru tidak boleh ngajar 2 kelas
+  // di waktu yang sama
+  @@unique([guruId, hari, jamMulai, tahunAjaranId])
+  
   @@map("jadwal")
 }
+
 
 enum Hari {
   SENIN
@@ -378,4 +389,17 @@ model PengumumanPmbm {
   admin User @relation(fields: [idUser], references: [id])
 
   @@map("pengumuman_pmbm")
+}
+
+model TahunAjaran {
+  id        Int      @id @default(autoincrement())
+  nama      String   @unique @db.VarChar(20) // "2025/2026"
+  semester  Semester // GANJIL | GENAP
+  aktif     Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  kelas   Kelas[]    // relasi ke kelas
+  jadwal  Jadwal[]   // TAMBAHKAN jika belum ada
+
+  @@map("tahun_ajaran")
 }

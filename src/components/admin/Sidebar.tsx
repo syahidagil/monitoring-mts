@@ -3,57 +3,112 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Building2, Newspaper, Users,
-  Settings, ChevronDown, ChevronRight, GraduationCap,
-  School, FileUp
+  LayoutDashboard,
+  Users,
+  UserCheck,
+  GraduationCap,
+  Grid2x2,
+  Calendar,
+  BookOpen,
+  Settings2,
+  Info,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 type MenuItem = {
+  type: "single" | "accordion";
   label: string;
   href?: string;
   icon: any;
-  children?: { label: string; href: string }[];
+  children?: { label: string; href: string; disabled?: boolean; badge?: string }[];
 };
 
 const MENUS: MenuItem[] = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { type: "single", label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   {
-    label: "Informasi Sekolah", icon: Building2,
+    type: "accordion",
+    label: "Data Siswa",
+    icon: Users,
+    children: [
+      { label: "Input Data Siswa", href: "/admin/data-siswa/input" },
+      { label: "View Data Siswa", href: "/admin/data-siswa" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Data Wali",
+    icon: UserCheck,
+    children: [
+      { label: "Input Wali", href: "/admin/data-orangtua/input" },
+      { label: "View Wali", href: "/admin/data-orangtua" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Data Guru",
+    icon: GraduationCap,
+    children: [
+      { label: "Input Data Guru", href: "/admin/data-guru/input" },
+      { label: "View Data Guru", href: "/admin/data-guru" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Data Kelas",
+    icon: Grid2x2,
+    children: [
+      { label: "Input Data Kelas", href: "/admin/data-kelas/input" },
+      { label: "View Data Kelas", href: "/admin/data-kelas" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Jadwal",
+    icon: Calendar,
+    children: [
+      { label: "Input Jadwal", href: "#", disabled: true, badge: "Soon" },
+      { label: "View Jadwal", href: "#", disabled: true, badge: "Soon" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Mata Pelajaran",
+    icon: BookOpen,
+    children: [
+      { label: "Input Mata Pelajaran", href: "/admin/mata-pelajaran/input" },
+      { label: "View Mata Pelajaran", href: "/admin/mata-pelajaran" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Kelola Semester",
+    icon: Settings2,
+    children: [
+      { label: "Kelola Semester", href: "#", disabled: true, badge: "Soon" },
+    ],
+  },
+  {
+    type: "accordion",
+    label: "Data Informasi Sekolah",
+    icon: Info,
     children: [
       { label: "Sejarah", href: "/admin/informasi/sejarah" },
-      { label: "Visi Misi & Tujuan", href: "/admin/informasi/visi-misi" },
-      { label: "Fasilitas", href: "/admin/informasi/fasilitas" },
-      { label: "Kurikulum", href: "/admin/informasi/kurikulum" },
-    ],
-  },
-  {
-    label: "Konten Website", icon: Newspaper,
-    children: [
+      { label: "Visi Misi", href: "/admin/informasi/visi-misi" },
       { label: "Berita", href: "/admin/berita" },
       { label: "Prestasi", href: "/admin/prestasi" },
+      { label: "Fasilitas", href: "/admin/informasi/fasilitas" },
       { label: "Ekstrakurikuler", href: "/admin/ekstrakurikuler" },
+      { label: "PSB", href: "/admin/pmbm" },
     ],
   },
-  {
-    label: "Data Akademik", icon: School,
-    children: [
-      { label: "Data Siswa", href: "/admin/data-siswa" },
-      { label: "Data Guru", href: "/admin/data-guru" },
-      { label: "Data Orang Tua", href: "/admin/data-orangtua" },
-      { label: "Data Kelas", href: "/admin/data-kelas" },
-      { label: "Mata Pelajaran", href: "/admin/mata-pelajaran" },
-    ],
-  },
-  { label: "Pengumuman PMBM", href: "/admin/pmbm", icon: FileUp },
-  { label: "Manajemen Pengguna", href: "/admin/pengguna", icon: Users },
-  { label: "Pengaturan", href: "/admin/pengaturan", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [openMenus, setOpenMenus] = useState<string[]>([
-    "Informasi Sekolah", "Konten Website", "Data Akademik"
-  ]);
+  const [openMenus, setOpenMenus] = useState<string[]>(
+    MENUS.filter((menu) => menu.type === "accordion").map((menu) => menu.label)
+  );
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
@@ -63,7 +118,7 @@ export default function Sidebar() {
 
   const isActive = (href: string) => pathname === href;
   const isParentActive = (children: { href: string }[]) =>
-    children.some((c) => pathname.startsWith(c.href));
+    children.some((c) => c.href !== "#" && pathname.startsWith(c.href));
 
   return (
     <aside className="w-64 bg-[#1B5E20] flex flex-col h-full flex-shrink-0">
@@ -81,7 +136,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
         {MENUS.map((menu) => {
-          if (menu.href) {
+          if (menu.type === "single" && menu.href) {
             return (
               <Link
                 key={menu.label}
@@ -121,17 +176,31 @@ export default function Sidebar() {
               {isOpen && (
                 <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
                   {menu.children?.map((child) => (
-                    <Link
-                      key={child.href}
-                      href={child.href}
-                      className={`block px-3 py-2 rounded-lg text-xs transition-all ${
-                        isActive(child.href)
-                          ? "bg-white/20 text-white font-medium"
-                          : "text-green-200 hover:bg-white/10 hover:text-white"
-                      }`}
-                    >
-                      {child.label}
-                    </Link>
+                    child.disabled ? (
+                      <div
+                        key={child.label}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-green-200/70 cursor-not-allowed"
+                      >
+                        <span>{child.label}</span>
+                        {child.badge && (
+                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-100">
+                            {child.badge}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={`block px-3 py-2 rounded-lg text-xs transition-all ${
+                          isActive(child.href)
+                            ? "bg-white/20 text-white font-medium"
+                            : "text-green-200 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {child.label}
+                      </Link>
+                    )
                   ))}
                 </div>
               )}
