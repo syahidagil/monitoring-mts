@@ -119,9 +119,12 @@ model Guru {
 
   kelasWali   Kelas[]   @relation("WaliKelas")
   jadwal      Jadwal[]
-  nilaiList   Nilai[]
-  absensiList Absensi[]
   guruMapel   GuruMapel[]
+  sikapDibuat   Sikap[]   @relation("GuruSikap")
+  hafalanDibuat Hafalan[] @relation("GuruHafalan")
+  tahsinDibuat  Tahsin[]  @relation("GuruTahsin")
+  nilaiDibuat   Nilai[]
+  absensiDibuat Absensi[]
 
   @@map("guru")
 }
@@ -242,19 +245,20 @@ enum StatusAbsensi {
 // ─────────────────────────────────────────
 
 model Nilai {
-  id        Int        @id @default(autoincrement())
-  siswaId   Int
-  guruId    String
-  mapel     String     @db.VarChar(100)
-  jenis     JenisNilai
-  nilai     Decimal    @db.Decimal(5, 2)
-  semester  Semester
-  tahunAjar String     @db.VarChar(20)
-  keterangan String?   @db.VarChar(255)
-  tanggal   DateTime   @default(now())
+  id           Int        @id @default(autoincrement())
+  siswaId      Int
+  guruId       String
+  guruMapelId  Int        // FK ke GuruMapel (TAMBAHKAN)
+  jenis        JenisNilai
+  nilai        Decimal    @db.Decimal(5, 2)  // 0-100
+  tanggal      DateTime   @db.Date
+  semester     Semester
+  tahunAjar    String     @db.VarChar(20)
+  keterangan   String?    @db.VarChar(255)
 
-  siswa Siswa @relation(fields: [siswaId], references: [id])
-  guru  Guru  @relation(fields: [guruId], references: [id])
+  siswa     Siswa     @relation(fields: [siswaId], references: [id])
+  guru      Guru      @relation(fields: [guruId], references: [id])
+  guruMapel GuruMapel @relation(fields: [guruMapelId], references: [idGuruMapel])
 
   @@map("nilai")
 }
@@ -272,25 +276,25 @@ enum JenisNilai {
 // ─────────────────────────────────────────
 
 model Sikap {
-  id        Int      @id @default(autoincrement())
-  siswaId   Int
-  aspek     String   @db.VarChar(100) // "Kedisiplinan", "Sopan Santun", dll
-  predikat  Predikat
-  deskripsi String?  @db.Text
-  semester  Semester
-  tahunAjar String   @db.VarChar(20)
-  tanggal   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  siswaId    Int
+  guruId     String   // FK ke Guru (id_user role=guru)
+  tanggal    DateTime @db.Date
+  jenisSikap JenisSikap  // POSITIF atau PELANGGARAN
+  kategori   String   @db.VarChar(50)  // "Kedisiplinan", "Atribut", dll
+  keterangan String   @db.Text
+  semester   Semester
+  tahunAjar  String   @db.VarChar(20)
+  createdAt  DateTime @default(now())
 
   siswa Siswa @relation(fields: [siswaId], references: [id])
+  guru  Guru  @relation("GuruSikap", fields: [guruId], references: [id])
 
   @@map("sikap")
 }
-
-enum Predikat {
-  SB // Sangat Baik
-  B  // Baik
-  C  // Cukup
-  K  // Kurang
+enum JenisSikap {
+  POSITIF
+  PELANGGARAN
 }
 
 // ─────────────────────────────────────────
@@ -298,27 +302,27 @@ enum Predikat {
 // ─────────────────────────────────────────
 
 model Hafalan {
-  id          Int      @id @default(autoincrement())
-  siswaId     Int
-  surah       String   @db.VarChar(50)  // "Al-Baqarah"
-  ayatMulai   Int
-  ayatSelesai Int
-  juz         Int?
-  nilai       Decimal? @db.Decimal(4, 1) // 0-100
-  status      StatusHafalan
-  tanggal     DateTime @default(now())
-  catatan     String?  @db.Text
+  id        Int          @id @default(autoincrement())
+  siswaId   Int
+  guruId    String       // guru penguji
+  hari      Hari
+  tanggal   DateTime     @db.Date
+  juz       Int          @db.TinyInt  // 1-30
+  surat     String       @db.VarChar(50)  // nama surat
+  halaman   Int          // 1-604
+  nilai     NilaiHafalan // L atau L-
+  keterangan String?     @db.Text
+  createdAt  DateTime    @default(now())
 
   siswa Siswa @relation(fields: [siswaId], references: [id])
+  guru  Guru  @relation("GuruHafalan", fields: [guruId], references: [id])
 
   @@map("hafalan")
 }
 
-enum StatusHafalan {
-  BELUM
-  PROSES
-  LULUS
-  MENGULANG
+enum NilaiHafalan {
+  L      // Lancar
+  L_MIN  @map("L-")  // Lancar dengan catatan
 }
 
 // ─────────────────────────────────────────
@@ -326,24 +330,24 @@ enum StatusHafalan {
 // ─────────────────────────────────────────
 
 model Tahsin {
-  id        Int          @id @default(autoincrement())
-  siswaId   Int
-  materi    String       @db.VarChar(100) // "Makharijul Huruf", "Mad", dll
-  nilai     Decimal?     @db.Decimal(4, 1)
-  status    StatusTahsin
-  tanggal   DateTime     @default(now())
-  catatan   String?      @db.Text
+  id         Int         @id @default(autoincrement())
+  siswaId    Int
+  guruId     String
+  hari       Hari
+  tanggal    DateTime    @db.Date
+  juz        Int         @db.TinyInt
+  surat      String      @db.VarChar(50)
+  halaman    Int
+  tajwid     NilaiHafalan
+  makhraj    NilaiHafalan
+  sifatul    NilaiHafalan
+  keterangan String?     @db.Text
+  createdAt  DateTime    @default(now())
 
   siswa Siswa @relation(fields: [siswaId], references: [id])
+  guru  Guru  @relation("GuruTahsin", fields: [guruId], references: [id])
 
   @@map("tahsin")
-}
-
-enum StatusTahsin {
- BELUM
-  PROSES
-  LULUS
-  MENGULANG
 }
 
 // ─────────────────────────────────────────
