@@ -1,9 +1,9 @@
 ﻿"use client";
-import { useState } from "react";
+import { BarChart2, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { logoutAction } from "@/actions/auth.action";
-import {
+import { BarChart2, usePathname } from "next/navigation";
+import { BarChart2, logoutAction } from "@/actions/auth.action";
+import { BarChart2,
   LayoutDashboard, Calendar, ClipboardCheck,
   BookOpen, Heart, BookMarked, Star, LogOut, Menu, X
 } from "lucide-react";
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { label: "Sikap",      href: "/guru/sikap",       icon: Heart            },
   { label: "Hafalan",    href: "/guru/hafalan",     icon: BookMarked       },
   { label: "Tahsin",     href: "/guru/tahsin",      icon: Star             },
+  { label: "Rekap",      href: "/guru/rekap",       icon: BarChart2        },
 ];
 
 export default function GuruNavbar({ user }: { user: any }) {

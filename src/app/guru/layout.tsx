@@ -1,5 +1,7 @@
 ﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import GuruNavbar from "@/components/guru/GuruNavbar";
 
 export default async function GuruLayout({ children }: { children: React.ReactNode }) {
