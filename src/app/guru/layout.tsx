@@ -1,7 +1,5 @@
 ﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import GuruNavbar from "@/components/guru/GuruNavbar";
 
 export default async function GuruLayout({ children }: { children: React.ReactNode }) {
@@ -9,11 +7,11 @@ export default async function GuruLayout({ children }: { children: React.ReactNo
   if (!session) redirect("/login");
   if (session.user.role !== "GURU") redirect("/login");
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <GuruNavbar user={session.user} />
-      <div className="pt-14">
+      <main className="flex-1 overflow-y-auto">
         {children}
-      </div>
+      </main>
     </div>
   );
 }
