@@ -82,6 +82,7 @@ model TahunAjaran {
   createdAt DateTime  @default(now())
 
   kelas     Kelas[]
+  jadwal    Jadwal[]
 
   @@map("tahun_ajaran")
 }
@@ -188,10 +189,10 @@ model Jadwal {
   jamMulai      String @db.VarChar(5)  // "07:30" (sudah ada)
   jamSelesai    String @db.VarChar(5)  // "09:00" (sudah ada)
 
-  kelas         Kelas         @relation(...)
-  guru          Guru          @relation(...)
-  mataPelajaran MataPelajaran @relation(...)  // BARU
-  tahunAjaran   TahunAjaran   @relation(...)  // BARU
+  kelas         Kelas         @relation(fields: [kelasId], references: [id])
+  guru          Guru          @relation(fields: [guruId], references: [id])
+  mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
+  tahunAjaran   TahunAjaran   @relation(fields: [tahunAjaranId], references: [id])
   absensi       Absensi[]
 
   // Constraint: 1 kelas tidak boleh punya jadwal sama
@@ -359,6 +360,7 @@ model MataPelajaran {
   namaMapel String @db.VarChar(20)
 
   guruMapel GuruMapel[]
+  jadwal    Jadwal[]
 
   @@map("mata_pelajaran")
 }
@@ -374,6 +376,7 @@ model GuruMapel {
 
   guru         Guru          @relation(fields: [idGuru], references: [id])
   mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
+  nilai        Nilai[]
 
   @@unique([idGuru, kodeMapel]) // 1 guru tidak bisa duplikat mapel yang sama
   @@map("guru_mapel")
@@ -393,17 +396,4 @@ model PengumumanPmbm {
   admin User @relation(fields: [idUser], references: [id])
 
   @@map("pengumuman_pmbm")
-}
-
-model TahunAjaran {
-  id        Int      @id @default(autoincrement())
-  nama      String   @unique @db.VarChar(20) // "2025/2026"
-  semester  Semester // GANJIL | GENAP
-  aktif     Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  kelas   Kelas[]    // relasi ke kelas
-  jadwal  Jadwal[]   // TAMBAHKAN jika belum ada
-
-  @@map("tahun_ajaran")
 }
