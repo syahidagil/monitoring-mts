@@ -126,6 +126,7 @@ model Guru {
   tahsinDibuat  Tahsin[]  @relation("GuruTahsin")
   nilaiDibuat   Nilai[]
   absensiDibuat Absensi[]
+  catatanUmumAbsensiDibuat AbsensiCatatanUmum[]
 
   @@map("guru")
 }
@@ -194,6 +195,7 @@ model Jadwal {
   mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
   tahunAjaran   TahunAjaran   @relation(fields: [tahunAjaranId], references: [id])
   absensi       Absensi[]
+  catatanUmumAbsensi AbsensiCatatanUmum[]
 
   // Constraint: 1 kelas tidak boleh punya jadwal sama
   // di hari + jam yang sama dalam 1 tahun ajaran
@@ -239,6 +241,23 @@ enum StatusAbsensi {
   SAKIT
   IZIN
   ALPHA
+}
+
+// Catatan umum untuk seluruh kelas pada 1 sesi jadwal + tanggal tertentu
+model AbsensiCatatanUmum {
+  id       Int      @id @default(autoincrement())
+  jadwalId Int
+  tanggal  DateTime @db.Date
+  catatan  String   @db.Text
+  guruId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  jadwal Jadwal @relation(fields: [jadwalId], references: [id])
+  guru   Guru   @relation(fields: [guruId], references: [id])
+
+  @@unique([jadwalId, tanggal])
+  @@map("absensi_catatan_umum")
 }
 
 // ─────────────────────────────────────────

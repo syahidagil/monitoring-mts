@@ -1,7 +1,7 @@
 ﻿import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getAbsensiByJadwalTanggal } from "@/actions/guru/absensi.action";
+import { getAbsensiByJadwalTanggal, getCatatanUmum } from "@/actions/guru/absensi.action";
 import AbsensiForm from "@/components/guru/absensi/AbsensiForm";
 
 export default async function AbsensiJadwalPage({ params }: { params: Promise<{ jadwalId: string }> }) {
@@ -32,9 +32,10 @@ export default async function AbsensiJadwalPage({ params }: { params: Promise<{ 
 
   const tanggal    = new Date().toISOString().split("T")[0];
   const existing   = await getAbsensiByJadwalTanggal(jadwal.id, tanggal);
+  const catatanUmum = await getCatatanUmum(jadwal.id, tanggal);
 
   const jadwalInfo = {
-    mapel:     jadwal.mataPelajaran?.namaMapel ?? jadwal.mapel,
+    mapel:     jadwal.mataPelajaran?.namaMapel ?? jadwal.kodeMapel,
     kelas:     jadwal.kelas.nama,
     tingkat:   jadwal.kelas.tingkat,
     hari:      jadwal.hari,
@@ -45,7 +46,7 @@ export default async function AbsensiJadwalPage({ params }: { params: Promise<{ 
   const guruInfo = {
     nama:  jadwal.guru.user.name,
     nip:   jadwal.guru.nip,
-    mapel: jadwal.mataPelajaran?.namaMapel ?? jadwal.mapel,
+    mapel: jadwal.mataPelajaran?.namaMapel ?? jadwal.kodeMapel,
   };
 
   return (
@@ -55,6 +56,7 @@ export default async function AbsensiJadwalPage({ params }: { params: Promise<{ 
         tanggal={tanggal}
         siswaList={jadwal.kelas.siswa.map((s) => ({ id: s.id, nis: s.nis, nama: s.nama }))}
         existingAbsensi={existing.map((e) => ({ siswaId: e.siswaId, status: e.status, keterangan: e.keterangan }))}
+        catatanUmum={catatanUmum}
         jadwalInfo={jadwalInfo}
         guruInfo={guruInfo}
       />

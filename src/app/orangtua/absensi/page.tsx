@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR:"bg-green-100 text-green-700", SAKIT:"bg-blue-100 text-blue-700",
@@ -35,15 +36,13 @@ export default async function OrangtuaAbsensiPage({ searchParams }: Props) {
     <div className="p-6 space-y-5 max-w-4xl mx-auto">
       <h1 className="text-xl font-bold text-gray-900">Monitoring Absensi</h1>
 
-      <form className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <select name="anakId" defaultValue={params.anakId ?? ""}
-          onChange={(e) => e.currentTarget.form?.requestSubmit()}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
           <option value="">Semua Anak</option>
           {ortu?.anak.map((a) => <option key={a.id} value={a.id}>{a.nama}</option>)}
         </select>
         <select name="bulan" defaultValue={String(bulan)}
-          onChange={(e) => e.currentTarget.form?.requestSubmit()}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
           {BULAN.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
         </select>
@@ -52,7 +51,7 @@ export default async function OrangtuaAbsensiPage({ searchParams }: Props) {
         <button type="submit" className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32] transition-colors">
           Tampilkan
         </button>
-      </form>
+      </AutoSubmitForm>
 
       {ringkasan && (
         <div className="grid grid-cols-4 gap-3">

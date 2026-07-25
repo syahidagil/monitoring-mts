@@ -32,16 +32,18 @@ export async function getAbsensiAnak(params?: {
     include: {
       jadwal: {
         select: {
-          mapel: true,
           hari: true,
           jamMulai: true,
           jamSelesai: true,
+          mataPelajaran: { select: { namaMapel: true } },
         },
       },
       siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
     },
     orderBy: { tanggal: "desc" },
-  });
+  }).then((rows) =>
+    rows.map((r) => ({ ...r, jadwal: { ...r.jadwal, mapel: r.jadwal.mataPelajaran.namaMapel } }))
+  );
 }
 
 export async function getRingkasanAbsensiAnak(anakId: number) {

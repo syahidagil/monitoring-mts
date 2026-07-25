@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
 
 const S_COLOR: Record<string, string> = {
   BELUM:"bg-gray-100 text-gray-600", PROSES:"bg-blue-100 text-blue-700",
@@ -38,9 +39,8 @@ export default async function OrangtuaHafalanPage({ searchParams }: Props) {
         </div>
       )}
 
-      <form className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <select name="anakId" defaultValue={params.anakId ?? ""}
-          onChange={(e) => e.currentTarget.form?.requestSubmit()}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
           <option value="">Semua Anak</option>
           {ortu?.anak.map((a) => <option key={a.id} value={a.id}>{a.nama}</option>)}
@@ -48,7 +48,7 @@ export default async function OrangtuaHafalanPage({ searchParams }: Props) {
         <button type="submit" className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32] transition-colors">
           Tampilkan
         </button>
-      </form>
+      </AutoSubmitForm>
 
       {progress && (
         <div className="grid grid-cols-4 gap-3">

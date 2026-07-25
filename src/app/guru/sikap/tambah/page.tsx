@@ -351,7 +351,7 @@ export default function TambahSikapPage() {
                     </button>
                   </div>
                 ) : (
-                  /* Input search */}
+                  /* Input search */
                   <div className={`flex items-center border rounded-xl px-4 py-2.5 gap-2
                     ${errors.siswaId ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}
                     focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500`}>

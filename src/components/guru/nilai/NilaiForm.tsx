@@ -8,13 +8,13 @@ const JENIS_OPTIONS = ["HARIAN","UTS","UAS","TUGAS","PRAKTIK"];
 type Siswa = { id: number; nis: string; nama: string };
 type Props = {
   siswaList: Siswa[];
-  mapel: string;
+  kodeMapel: string;
   semester: string;
   tahunAjar: string;
   guruId: string;
 };
 
-export default function NilaiForm({ siswaList, mapel, semester, tahunAjar, guruId }: Props) {
+export default function NilaiForm({ siswaList, kodeMapel, semester, tahunAjar, guruId }: Props) {
   const [isPending, startTransition] = useTransition();
   const [jenis, setJenis]   = useState("HARIAN");
   const [success, setSuccess] = useState("");
@@ -25,7 +25,7 @@ export default function NilaiForm({ siswaList, mapel, semester, tahunAjar, guruI
     e.preventDefault();
     setError(""); setSuccess("");
     const fd = new FormData();
-    fd.set("mapel", mapel); fd.set("jenis", jenis);
+    fd.set("kodeMapel", kodeMapel); fd.set("jenis", jenis);
     fd.set("semester", semester); fd.set("tahunAjar", tahunAjar);
     fd.set("guruId", guruId);
     Object.entries(nilaiMap).forEach(([id, val]) => { if (val) fd.set(`nilai_${id}`, val); });

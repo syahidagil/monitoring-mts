@@ -87,11 +87,6 @@ export async function createJadwal(formData: FormData) {
       guruId,
       kelasId,
       tahunAjaranId,
-      // field mapel (string) diambil dari namaMapel
-      mapel: (await prisma.mataPelajaran.findUnique({
-        where: { kodeMapel },
-        select: { namaMapel: true },
-      }))?.namaMapel ?? kodeMapel,
     },
   });
 
@@ -269,17 +264,11 @@ export async function updateJadwal(id: number, formData: FormData) {
     ? "Perhatian: Guru ini belum terdaftar sebagai pengampu mata pelajaran ini."
     : undefined;
 
-  const namaMapel = (await prisma.mataPelajaran.findUnique({
-    where: { kodeMapel },
-    select: { namaMapel: true },
-  }))?.namaMapel ?? kodeMapel;
-
   await prisma.jadwal.update({
     where: { id },
     data: {
       hari: hari as any,
       kodeMapel,
-      mapel: namaMapel,
       jamMulai,
       jamSelesai,
       guruId,

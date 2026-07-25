@@ -1,5 +1,6 @@
 ﻿import { getRekapNilaiGuru, getKelasGuru, getMapelGuru } from "@/actions/guru/rekap.action";
 import RekapNilaiTable from "@/components/guru/rekap/RekapNilaiTable";
+import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -25,21 +26,18 @@ export default async function RekapNilaiPage({ searchParams }: Props) {
           </Link>
           <h1 className="text-xl font-bold text-gray-900">Rekap Nilai</h1>
         </div>
-        <form className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <select name="kelasId" defaultValue={params.kelasId ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Kelas</option>
             {kelasList.map((k) => <option key={k.id} value={k.id}>Kelas {k.nama}</option>)}
           </select>
           <select name="mapel" defaultValue={params.mapel ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Mapel</option>
-            {mapelList.map((m) => <option key={m} value={m}>{m}</option>)}
+            {mapelList.map((m) => <option key={m.kodeMapel} value={m.kodeMapel}>{m.namaMapel}</option>)}
           </select>
           <select name="semester" defaultValue={params.semester ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Semester</option>
             <option value="GANJIL">Ganjil</option>
@@ -48,7 +46,7 @@ export default async function RekapNilaiPage({ searchParams }: Props) {
           <button type="submit" className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32] transition-colors">
             Tampilkan
           </button>
-        </form>
+        </AutoSubmitForm>
         <RekapNilaiTable data={data} />
       </div>
     </main>

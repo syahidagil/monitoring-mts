@@ -14,13 +14,19 @@ export async function saveNilaiKelas(formData: FormData) {
   const guruId = await getGuruId();
   if (!guruId) return { success: false, message: "Tidak diizinkan" };
 
-  const mapel     = formData.get("mapel") as string;
+  const kodeMapel = formData.get("kodeMapel") as string;
   const jenis     = formData.get("jenis") as string;
   const semester  = formData.get("semester") as string;
   const tahunAjar = formData.get("tahunAjar") as string;
 
-  if (!mapel || !jenis || !semester || !tahunAjar)
+  if (!kodeMapel || !jenis || !semester || !tahunAjar)
     return { success: false, message: "Data tidak lengkap" };
+
+  const guruMapel = await prisma.guruMapel.upsert({
+    where: { idGuru_kodeMapel: { idGuru: guruId, kodeMapel } },
+    update: {},
+    create: { idGuru: guruId, kodeMapel },
+  });
 
   const entries: { siswaId: number; nilai: number; keterangan?: string }[] = [];
   for (const [key, val] of formData.entries()) {
@@ -39,9 +45,10 @@ export async function saveNilaiKelas(formData: FormData) {
     data: entries.map((e) => ({
       siswaId: e.siswaId,
       guruId,
-      mapel,
+      guruMapelId: guruMapel.idGuruMapel,
       jenis: jenis as any,
       nilai: e.nilai,
+      tanggal: new Date(),
       semester: semester as any,
       tahunAjar,
       keterangan: e.keterangan,
@@ -54,9 +61,9 @@ export async function saveNilaiKelas(formData: FormData) {
 }
 
 // Ambil nilai siswa per kelas & mapel
-export async function getNilaiByKelasMapel(kelasId: number, mapel: string, semester: string, tahunAjar: string) {
+export async function getNilaiByKelasMapel(kelasId: number, kodeMapel: string, semester: string, tahunAjar: string) {
   return prisma.nilai.findMany({
-    where: { siswa: { kelasId }, mapel, semester: semester as any, tahunAjar },
+    where: { siswa: { kelasId }, guruMapel: { kodeMapel }, semester: semester as any, tahunAjar },
     include: { siswa: { select: { id: true, nis: true, nama: true } } },
     orderBy: { siswa: { nama: "asc" } },
   });

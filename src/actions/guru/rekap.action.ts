@@ -19,7 +19,7 @@ export async function getRekapAbsensiGuru(params?: {
 
   const jadwal = await prisma.jadwal.findMany({
     where: { guruId, ...(params?.kelasId && { kelasId: params.kelasId }) },
-    select: { id: true, mapel: true, kelas: { select: { nama: true } } },
+    select: { id: true, kelas: { select: { nama: true } } },
   });
   const jadwalIds = jadwal.map((j) => j.id);
 
@@ -31,7 +31,7 @@ export async function getRekapAbsensiGuru(params?: {
     where,
     include: {
       siswa: { select: { id: true, nis: true, nama: true } },
-      jadwal: { select: { mapel: true, kelas: { select: { nama: true } } } },
+      jadwal: { select: { kelas: { select: { nama: true } } } },
     },
     orderBy: [{ tanggal: "desc" }, { siswa: { nama: "asc" } }],
   });
@@ -65,7 +65,7 @@ export async function getRekapNilaiGuru(params?: {
   if (!guruId) return [];
 
   const where: any = { guruId };
-  if (params?.mapel)     where.mapel    = params.mapel;
+  if (params?.mapel)     where.guruMapel = { kodeMapel: params.mapel };
   if (params?.semester)  where.semester  = params.semester;
   if (params?.tahunAjar) where.tahunAjar = params.tahunAjar;
   if (params?.kelasId)   where.siswa     = { kelasId: params.kelasId };
@@ -208,8 +208,8 @@ export async function getMapelGuru() {
   if (!guruId) return [];
   const jadwal = await prisma.jadwal.findMany({
     where: { guruId },
-    select: { mapel: true },
-    distinct: ["mapel"],
+    select: { kodeMapel: true, mataPelajaran: { select: { namaMapel: true } } },
+    distinct: ["kodeMapel"],
   });
-  return jadwal.map((j) => j.mapel);
+  return jadwal.map((j) => ({ kodeMapel: j.kodeMapel, namaMapel: j.mataPelajaran.namaMapel }));
 }

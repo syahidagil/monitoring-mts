@@ -4,6 +4,7 @@ import { getAllGuru } from "@/actions/guru.action";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import JadwalTable from "@/components/admin/jadwal/JadwalTable";
+import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
 
 type Props = { searchParams: Promise<{ kelasId?: string; guruId?: string; hari?: string }> };
 
@@ -33,26 +34,23 @@ export default async function JadwalPage({ searchParams }: Props) {
       </div>
 
       <div className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <form className="flex flex-wrap gap-3 w-full">
+        <AutoSubmitForm className="flex flex-wrap gap-3 w-full">
           <select name="kelasId" defaultValue={params.kelasId ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Kelas</option>
             {kelasList.map((k) => <option key={k.id} value={k.id}>Kelas {k.nama}</option>)}
           </select>
           <select name="guruId" defaultValue={params.guruId ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Guru</option>
             {guruList.map((g) => <option key={g.id} value={g.id}>{g.user.name}</option>)}
           </select>
           <select name="hari" defaultValue={params.hari ?? ""}
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
             <option value="">Semua Hari</option>
             {["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU"].map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
-        </form>
+        </AutoSubmitForm>
       </div>
 
       <JadwalTable data={jadwal} />

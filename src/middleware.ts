@@ -12,12 +12,6 @@ export default auth((req: NextRequest & { auth?: any }) => {
   const { pathname } = req.nextUrl;
   const role = (req as any).auth?.user?.role as string | undefined;
 
-  if (pathname === "/login" && role) {
-    return NextResponse.redirect(
-      new URL(ROLE_HOME[role] ?? "/", req.url)
-    );
-  }
-
   const protectedPrefixes: Record<string, string> = {
     "/admin": "ADMIN",
     "/guru": "GURU",

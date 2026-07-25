@@ -21,28 +21,35 @@ export async function getNilaiAnak(params?: {
   const where: any = {
     siswaId: params?.anakId ? params.anakId : { in: anakIds },
   };
-  if (params?.mapel)     where.mapel    = params.mapel;
+  if (params?.mapel)     where.guruMapel = { kodeMapel: params.mapel };
   if (params?.semester)  where.semester  = params.semester as any;
   if (params?.tahunAjar) where.tahunAjar = params.tahunAjar;
 
-  return prisma.nilai.findMany({
+  const nilai = await prisma.nilai.findMany({
     where,
     include: {
       siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
+      guruMapel: { select: { mataPelajaran: { select: { namaMapel: true } } } },
     },
-    orderBy: [{ mapel: "asc" }, { jenis: "asc" }, { tanggal: "desc" }],
+    orderBy: [{ guruMapel: { kodeMapel: "asc" } }, { jenis: "asc" }, { tanggal: "desc" }],
   });
+
+  return nilai.map((n) => ({ ...n, mapel: n.guruMapel.mataPelajaran.namaMapel }));
 }
 
 export async function getRataRataNilaiAnak(anakId: number, tahunAjar?: string) {
   const where: any = { siswaId: anakId };
   if (tahunAjar) where.tahunAjar = tahunAjar;
 
-  const nilai = await prisma.nilai.findMany({ where });
+  const nilai = await prisma.nilai.findMany({
+    where,
+    include: { guruMapel: { select: { mataPelajaran: { select: { namaMapel: true } } } } },
+  });
   const mapMap = new Map<string, number[]>();
   nilai.forEach((n) => {
-    if (!mapMap.has(n.mapel)) mapMap.set(n.mapel, []);
-    mapMap.get(n.mapel)!.push(Number(n.nilai));
+    const mapel = n.guruMapel.mataPelajaran.namaMapel;
+    if (!mapMap.has(mapel)) mapMap.set(mapel, []);
+    mapMap.get(mapel)!.push(Number(n.nilai));
   });
 
   return Array.from(mapMap.entries()).map(([mapel, vals]) => ({

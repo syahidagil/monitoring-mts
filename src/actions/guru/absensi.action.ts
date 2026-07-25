@@ -31,6 +31,8 @@ export async function saveAbsensiKelas(formData: FormData) {
 
   if (entries.length === 0) return { success: false, message: "Tidak ada data siswa" };
 
+  const catatanUmum = (formData.get("catatanUmum") as string || "").trim();
+
   // Upsert semua absensi
   await Promise.all(
     entries.map((e) =>
@@ -55,8 +57,29 @@ export async function saveAbsensiKelas(formData: FormData) {
     )
   );
 
+  // Simpan/hapus catatan umum untuk sesi jadwal + tanggal ini
+  if (catatanUmum) {
+    await prisma.absensiCatatanUmum.upsert({
+      where: { jadwalId_tanggal: { jadwalId, tanggal: new Date(tanggal) } },
+      update: { catatan: catatanUmum },
+      create: { jadwalId, tanggal: new Date(tanggal), catatan: catatanUmum, guruId },
+    });
+  } else {
+    await prisma.absensiCatatanUmum.deleteMany({
+      where: { jadwalId, tanggal: new Date(tanggal) },
+    });
+  }
+
   revalidatePath("/guru/absensi");
   return { success: true, message: `Absensi ${entries.length} siswa berhasil disimpan` };
+}
+
+// Ambil catatan umum sesi jadwal + tanggal tertentu
+export async function getCatatanUmum(jadwalId: number, tanggal: string) {
+  const data = await prisma.absensiCatatanUmum.findUnique({
+    where: { jadwalId_tanggal: { jadwalId, tanggal: new Date(tanggal) } },
+  });
+  return data?.catatan ?? "";
 }
 
 // Rekap absensi siswa per jadwal

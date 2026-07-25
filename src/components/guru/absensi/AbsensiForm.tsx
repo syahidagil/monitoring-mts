@@ -18,6 +18,7 @@ type Props = {
   tanggal:           string;
   siswaList:         Siswa[];
   existingAbsensi?:  { siswaId: number; status: string; keterangan?: string | null }[];
+  catatanUmum?:      string;
   jadwalInfo:        {
     mapel:      string;
     kelas:      string;
@@ -34,13 +35,13 @@ type Props = {
 };
 
 export default function AbsensiForm({
-  jadwalId, tanggal, siswaList, existingAbsensi = [], jadwalInfo, guruInfo,
+  jadwalId, tanggal, siswaList, existingAbsensi = [], catatanUmum = "", jadwalInfo, guruInfo,
 }: Props) {
   const [isPending,  startTransition] = useTransition();
   const [success,    setSuccess]      = useState("");
   const [error,      setError]        = useState("");
   const [tglInput,   setTglInput]     = useState(tanggal);
-  const [ketUmum,    setKetUmum]      = useState("");
+  const [ketUmum,    setKetUmum]      = useState(catatanUmum);
   const [rekapMulai, setRekapMulai]   = useState("");
   const [rekapAkhir, setRekapAkhir]   = useState("");
 
@@ -59,12 +60,29 @@ export default function AbsensiForm({
     return init;
   });
 
+  const [invalidKetIds, setInvalidKetIds] = useState<Set<number>>(new Set());
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setSuccess("");
+
+    const belumTerisi = siswaList.filter(
+      (s) => statuses[s.id] !== "HADIR" && !(ketMap[s.id] ?? "").trim()
+    );
+    if (belumTerisi.length > 0) {
+      setInvalidKetIds(new Set(belumTerisi.map((s) => s.id)));
+      setError(
+        `Keterangan belum diisi untuk: ${belumTerisi.map((s) => s.nama).join(", ")}. ` +
+          `Siswa dengan status selain HADIR wajib diisi keterangannya.`
+      );
+      return;
+    }
+    setInvalidKetIds(new Set());
+
     const fd = new FormData();
     fd.set("jadwalId", String(jadwalId));
     fd.set("tanggal",  tglInput);
+    fd.set("catatanUmum", ketUmum);
     siswaList.forEach((s) => {
       fd.set(`status_${s.id}`, statuses[s.id] ?? "HADIR");
       if (ketMap[s.id]) fd.set(`ket_${s.id}`, ketMap[s.id]);
@@ -249,7 +267,17 @@ export default function AbsensiForm({
                           name={`status_${siswa.id}`}
                           value={opt.value}
                           checked={statuses[siswa.id] === opt.value}
-                          onChange={() => setStatuses((prev) => ({ ...prev, [siswa.id]: opt.value }))}
+                          onChange={() => {
+                            setStatuses((prev) => ({ ...prev, [siswa.id]: opt.value }));
+                            if (opt.value === "HADIR") {
+                              setInvalidKetIds((prev) => {
+                                if (!prev.has(siswa.id)) return prev;
+                                const next = new Set(prev);
+                                next.delete(siswa.id);
+                                return next;
+                              });
+                            }
+                          }}
                           className="sr-only"
                         />
                         <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -268,10 +296,28 @@ export default function AbsensiForm({
                     <input
                       type="text"
                       value={ketMap[siswa.id] ?? ""}
-                      onChange={(e) => setKetMap((prev) => ({ ...prev, [siswa.id]: e.target.value }))}
-                      placeholder="Tulis deskripsi"
-                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-green-400 bg-gray-50 hover:bg-white transition-colors"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setKetMap((prev) => ({ ...prev, [siswa.id]: value }));
+                        if (value.trim()) {
+                          setInvalidKetIds((prev) => {
+                            if (!prev.has(siswa.id)) return prev;
+                            const next = new Set(prev);
+                            next.delete(siswa.id);
+                            return next;
+                          });
+                        }
+                      }}
+                      placeholder={statuses[siswa.id] !== "HADIR" ? "Wajib diisi" : "Tulis deskripsi"}
+                      className={`w-full border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 bg-gray-50 hover:bg-white transition-colors ${
+                        invalidKetIds.has(siswa.id)
+                          ? "border-red-400 focus:ring-red-400 bg-red-50"
+                          : "border-gray-200 focus:ring-green-400"
+                      }`}
                     />
+                    {invalidKetIds.has(siswa.id) && (
+                      <p className="text-[10px] text-red-500 mt-1">Keterangan belum diisi</p>
+                    )}
                   </td>
                 </tr>
               ))}

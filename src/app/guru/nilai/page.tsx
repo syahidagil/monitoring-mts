@@ -9,7 +9,7 @@ export default async function GuruNilaiPage() {
   if (!session || session.user.role !== "GURU") redirect("/login");
   const jadwal = await getJadwalByGuru(session.user.id);
   const unique = jadwal.filter((j, i, arr) =>
-    i === arr.findIndex((x) => x.kelasId === j.kelasId && x.mapel === j.mapel)
+    i === arr.findIndex((x) => x.kelasId === j.kelasId && x.kodeMapel === j.kodeMapel)
   );
   return (
     <main className="min-h-screen bg-gray-50 p-6">
@@ -26,7 +26,7 @@ export default async function GuruNilaiPage() {
                 <BookOpen className="w-4 h-4 text-green-700" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-800">{j.mataPelajaran?.namaMapel ?? j.mapel}</p>
+                <p className="text-sm font-semibold text-gray-800">{j.mataPelajaran?.namaMapel ?? j.kodeMapel}</p>
                 <p className="text-xs text-gray-500">Kelas {j.kelas.nama}</p>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-600 transition-colors" />

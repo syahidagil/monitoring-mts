@@ -42,15 +42,15 @@ export default async function GuruJadwalPage() {
                 {jadwal.map((j) => (
                   <tr key={j.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-4">
-                      <span className={text-xs font-semibold px-2.5 py-1 rounded-full ${HARI_COLOR[j.hari] ?? "bg-gray-100 text-gray-600"}}>{j.hari}</span>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${HARI_COLOR[j.hari] ?? "bg-gray-100 text-gray-600"}`}>{j.hari}</span>
                     </td>
-                    <td className="px-5 py-4 text-sm font-medium text-gray-800">{j.mataPelajaran?.namaMapel ?? j.mapel}</td>
+                    <td className="px-5 py-4 text-sm font-medium text-gray-800">{j.mataPelajaran?.namaMapel ?? j.kodeMapel}</td>
                     <td className="px-5 py-4 text-sm text-gray-600">Kelas {j.kelas.nama}</td>
                     <td className="px-5 py-4">
                       <span className="text-xs font-mono bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">{j.jamMulai}–{j.jamSelesai}</span>
                     </td>
                     <td className="px-5 py-4 text-center">
-                      <Link href={/guru/absensi/${j.id}}
+                      <Link href={`/guru/absensi/${j.id}`}
                         className="text-xs bg-[#1B5E20] text-white px-3 py-1.5 rounded-lg hover:bg-[#2E7D32] transition-colors">
                         Input Absensi
                       </Link>

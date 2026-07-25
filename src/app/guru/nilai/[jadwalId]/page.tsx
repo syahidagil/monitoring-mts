@@ -29,12 +29,12 @@ export default async function NilaiJadwalPage({ params }: { params: Promise<{ ja
           </Link>
           <h1 className="text-xl font-bold text-gray-900">Input Nilai</h1>
           <p className="text-sm text-gray-500">
-            {jadwal.mataPelajaran?.namaMapel ?? jadwal.mapel} • Kelas {jadwal.kelas.nama} • {jadwal.tahunAjaran?.nama}
+            {jadwal.mataPelajaran?.namaMapel ?? jadwal.kodeMapel} • Kelas {jadwal.kelas.nama} • {jadwal.tahunAjaran?.nama}
           </p>
         </div>
         <NilaiForm
           siswaList={jadwal.kelas.siswa.map((s) => ({ id: s.id, nis: s.nis, nama: s.nama }))}
-          mapel={jadwal.mataPelajaran?.namaMapel ?? jadwal.mapel}
+          kodeMapel={jadwal.kodeMapel}
           semester={jadwal.tahunAjaran?.semester ?? "GANJIL"}
           tahunAjar={jadwal.tahunAjaran?.nama ?? ""}
           guruId={session.user.id}
