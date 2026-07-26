@@ -1,10 +1,10 @@
-﻿import { getAllTahunAjaran } from "@/actions/tahunAjaran.action";
+import { getAllTahunPelajaran } from "@/actions/tahunAjaran.action";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import TahunPelajaranTable from "@/components/admin/tahun-pelajaran/TahunPelajaranTable";
 
 export default async function TahunPelajaranPage() {
-  const data = await getAllTahunAjaran();
+  const data = await getAllTahunPelajaran();
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">

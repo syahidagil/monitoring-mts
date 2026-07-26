@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Edit, Trash2 } from "lucide-react";
-import { deleteTahunAjaran } from "@/actions/tahunAjaran.action";
+import { deleteTahunPelajaran } from "@/actions/tahunAjaran.action";
 import AktifToggle from "./AktifToggle";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
 
@@ -14,7 +14,7 @@ export default function TahunPelajaranTable({ data }: { data: any[] }) {
   async function handleDelete() {
     if (!deleteTarget) return;
     startTransition(async () => {
-      const result = await deleteTahunAjaran(deleteTarget.id);
+      const result = await deleteTahunPelajaran(deleteTarget.id);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
       setDeleteTarget(null);
       setTimeout(() => setMessage(null), 4000);

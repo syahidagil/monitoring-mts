@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 import { useTransition } from "react";
-import { setTahunAjaranAktif } from "@/actions/tahunAjaran.action";
+import { setTahunPelajaranAktif } from "@/actions/tahunAjaran.action";
 
 export default function AktifToggle({ id, isAktif }: { id: number; isAktif: boolean }) {
   const [isPending, startTransition] = useTransition();
@@ -8,7 +8,7 @@ export default function AktifToggle({ id, isAktif }: { id: number; isAktif: bool
   function handleToggle() {
     if (isAktif) return;
     if (!confirm("Set tahun ajaran ini sebagai aktif? Tahun ajaran lain akan dinonaktifkan.")) return;
-    startTransition(async () => { await setTahunAjaranAktif(id); });
+    startTransition(async () => { await setTahunPelajaranAktif(id); });
   }
 
   return (

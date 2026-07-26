@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -53,7 +53,7 @@ export async function getAllGuru() {
       user: { select: { username: true, status: true, name: true, createdAt: true } },
       guruMapel: { include: { mataPelajaran: true } },
       kelasWali: { select: { id: true, nama: true } },
-      _count: { select: { jadwal: true, nilaiList: true, absensiList: true } },
+      _count: { select: { jadwal: true, nilaiDibuat: true, absensiDibuat: true } },
     },
     orderBy: { user: { name: "asc" } },
   });
@@ -66,7 +66,7 @@ export async function getGuruById(id: string) {
       user: { select: { username: true, status: true, name: true, createdAt: true } },
       guruMapel: { include: { mataPelajaran: true } },
       kelasWali: { select: { id: true, nama: true } },
-      _count: { select: { jadwal: true, nilaiList: true, absensiList: true } },
+      _count: { select: { jadwal: true, nilaiDibuat: true, absensiDibuat: true } },
     },
   });
 }
@@ -124,15 +124,15 @@ export async function deleteGuru(id: string) {
   const guru = await prisma.guru.findUnique({
     where: { id },
     include: {
-      _count: { select: { jadwal: true, nilaiList: true, absensiList: true, kelasWali: true } },
+      _count: { select: { jadwal: true, nilaiDibuat: true, absensiDibuat: true, kelasWali: true } },
     },
   });
   if (!guru) return { success: false, message: "Guru tidak ditemukan" };
   if (guru._count.jadwal > 0)
     return { success: false, message: "Guru masih memiliki jadwal mengajar. Hapus jadwal terlebih dahulu." };
-  if (guru._count.nilaiList > 0)
+  if (guru._count.nilaiDibuat > 0)
     return { success: false, message: "Guru masih memiliki data nilai siswa." };
-  if (guru._count.absensiList > 0)
+  if (guru._count.absensiDibuat > 0)
     return { success: false, message: "Guru masih memiliki data absensi siswa." };
   if (guru._count.kelasWali > 0)
     return { success: false, message: "Guru masih menjadi wali kelas. Ganti wali kelas terlebih dahulu." };
