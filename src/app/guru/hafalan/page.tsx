@@ -59,7 +59,14 @@ export default async function GuruHafalanPage() {
         </div>
 
         {/* Filter + tabel (client) */}
-        <TahfidzSantriList santri={santri} kelasList={kelasList} />
+        <TahfidzSantriList
+          santri={santri}
+          kelasList={kelasList}
+          guruNama={guru.nama}
+          tahunAjaran={tahunAjaran
+            ? `${tahunAjaran.semester === "GANJIL" ? "Ganjil" : "Genap"} ${tahunAjaran.nama}`
+            : undefined}
+        />
       </div>
     </main>
   );

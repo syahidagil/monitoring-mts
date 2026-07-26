@@ -93,7 +93,7 @@ export default function JadwalAbsensiTable({ rows }: { rows: Row[] }) {
                           href={`/guru/absensi/${r.id}`}
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#1B5E20] text-white hover:bg-[#2E7D32] transition-colors"
                         >
-                          {r.sudahAbsen ? "Lihat/Edit" : "Absen"}
+                          Absen
                         </Link>
                       )}
                     </td>

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import DownloadTahfidzPDF from "@/components/guru/hafalan/DownloadTahfidzPDF";
 import type { SantriTahfidz, KelasRingkas } from "@/actions/guru/hafalan.action";
 
 const PER_HALAMAN = 8;
@@ -17,9 +18,13 @@ function inisial(nama: string): string {
 export default function TahfidzSantriList({
   santri,
   kelasList,
+  guruNama,
+  tahunAjaran,
 }: {
   santri: SantriTahfidz[];
   kelasList: KelasRingkas[];
+  guruNama: string;
+  tahunAjaran?: string;
 }) {
   const [kelasId, setKelasId] = useState<number | "semua">(
     kelasList[0]?.id ?? "semua"
@@ -114,13 +119,12 @@ export default function TahfidzSantriList({
           <h3 className="text-sm font-bold text-gray-800">
             Daftar Santri {namaKelasAktif}
           </h3>
-          <button
-            type="button"
-            disabled={terfilter.length === 0}
-            className="flex items-center gap-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-40"
-          >
-            <Download size={14} /> Ekspor
-          </button>
+          <DownloadTahfidzPDF
+            data={terfilter}
+            guruNama={guruNama}
+            namaKelas={namaKelasAktif}
+            tahunAjaran={tahunAjaran}
+          />
         </div>
 
         <div className="overflow-x-auto">

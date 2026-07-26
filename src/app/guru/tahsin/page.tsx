@@ -57,7 +57,14 @@ export default async function GuruTahsinPage() {
         </div>
 
         {/* Filter + tabel */}
-        <TahsinSiswaList siswa={siswa} kelasList={kelasList} />
+        <TahsinSiswaList
+          siswa={siswa}
+          kelasList={kelasList}
+          guruNama={guru.nama}
+          tahunAjaran={tahunAjaran
+            ? `${tahunAjaran.semester === "GANJIL" ? "Ganjil" : "Genap"} ${tahunAjaran.nama}`
+            : undefined}
+        />
       </div>
     </main>
   );

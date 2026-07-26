@@ -1,4 +1,4 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import GuruNavbar from "@/components/guru/GuruNavbar";
 
@@ -9,7 +9,7 @@ export default async function GuruLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <GuruNavbar user={session.user} />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-gray-50">
         {children}
       </main>
     </div>

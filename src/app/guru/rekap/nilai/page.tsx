@@ -1,5 +1,9 @@
-﻿import { getRekapNilaiGuru, getKelasGuru, getMapelGuru } from "@/actions/guru/rekap.action";
+import { getRekapNilaiGuru, getKelasGuru, getMapelGuru } from "@/actions/guru/rekap.action";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import RekapNilaiTable from "@/components/guru/rekap/RekapNilaiTable";
+import DownloadRekapNilaiPDF from "@/components/guru/rekap/DownloadRekapNilaiPDF";
 import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -7,25 +11,45 @@ import { ArrowLeft } from "lucide-react";
 type Props = { searchParams: Promise<{ kelasId?: string; mapel?: string; semester?: string; tahunAjar?: string }> };
 
 export default async function RekapNilaiPage({ searchParams }: Props) {
+  const session = await auth();
+  if (!session || session.user.role !== "GURU") redirect("/login");
+
   const params = await searchParams;
-  const [data, kelasList, mapelList] = await Promise.all([
+  const [data, kelasList, mapelList, guru] = await Promise.all([
     getRekapNilaiGuru({
       kelasId: params.kelasId ? Number(params.kelasId) : undefined,
       mapel: params.mapel, semester: params.semester, tahunAjar: params.tahunAjar,
     }),
     getKelasGuru(),
     getMapelGuru(),
+    prisma.guru.findUnique({
+      where: { id: session.user.id },
+      include: { user: { select: { name: true } } },
+    }),
   ]);
+
+  const kelasFilter = kelasList.find((k) => k.id === (params.kelasId ? Number(params.kelasId) : undefined))?.nama;
+  const mapelFilter = mapelList.find((m) => m.kodeMapel === params.mapel)?.namaMapel;
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto space-y-5">
-        <div>
-          <Link href="/guru/rekap" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-2">
-            <ArrowLeft className="w-4 h-4" /> Kembali
-          </Link>
-          <h1 className="text-xl font-bold text-gray-900">Rekap Nilai</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <Link href="/guru/rekap" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-2">
+              <ArrowLeft className="w-4 h-4" /> Kembali
+            </Link>
+            <h1 className="text-xl font-bold text-gray-900">Rekap Nilai</h1>
+          </div>
+          <DownloadRekapNilaiPDF
+            data={data}
+            guruNama={guru?.user?.name ?? ""}
+            kelasFilter={kelasFilter ? `Kelas ${kelasFilter}` : undefined}
+            mapelFilter={mapelFilter}
+            semesterFilter={params.semester ? (params.semester === "GANJIL" ? "Ganjil" : "Genap") : undefined}
+          />
         </div>
+
         <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <select name="kelasId" defaultValue={params.kelasId ?? ""}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">

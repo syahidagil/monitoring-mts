@@ -1,4 +1,4 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAbsensiByJadwalTanggal, getCatatanUmum } from "@/actions/guru/absensi.action";
@@ -50,7 +50,8 @@ export default async function AbsensiJadwalPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-5xl mx-auto pb-10">
       <AbsensiForm
         jadwalId={jadwal.id}
         tanggal={tanggal}
@@ -60,6 +61,7 @@ export default async function AbsensiJadwalPage({ params }: { params: Promise<{ 
         jadwalInfo={jadwalInfo}
         guruInfo={guruInfo}
       />
+      </div>
     </div>
   );
 }

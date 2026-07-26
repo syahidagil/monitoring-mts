@@ -156,3 +156,32 @@ export async function resetPasswordGuru(id: string) {
   await prisma.user.update({ where: { id }, data: { password: hashed } });
   return { success: true, message: "Password direset ke: password123" };
 }
+
+export async function assignGuruMapel(guruId: string, kodeMapel: string) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN")
+    return { success: false, message: "Tidak diizinkan" };
+
+  const exists = await prisma.guruMapel.findUnique({
+    where: { idGuru_kodeMapel: { idGuru: guruId, kodeMapel } },
+  });
+  if (exists) return { success: false, message: "Mata pelajaran sudah di-assign ke guru ini" };
+
+  await prisma.guruMapel.create({ data: { idGuru: guruId, kodeMapel } });
+  revalidatePath("/admin/data-guru");
+  return { success: true, message: "Mata pelajaran berhasil ditambahkan" };
+}
+
+export async function removeGuruMapel(idGuruMapel: number) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN")
+    return { success: false, message: "Tidak diizinkan" };
+
+  const hasNilai = await prisma.nilai.count({ where: { guruMapelId: idGuruMapel } });
+  if (hasNilai > 0)
+    return { success: false, message: "Tidak bisa dihapus, sudah ada data nilai terkait mata pelajaran ini" };
+
+  await prisma.guruMapel.delete({ where: { idGuruMapel } });
+  revalidatePath("/admin/data-guru");
+  return { success: true, message: "Mata pelajaran berhasil dihapus dari daftar ampu" };
+}

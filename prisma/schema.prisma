@@ -392,7 +392,7 @@ model MataPelajaran {
 
 model GuruMapel {
   idGuruMapel Int    @id @default(autoincrement())
-  idGuru      String @db.VarChar(16)
+  idGuru      String @db.VarChar(30)
   kodeMapel   String @db.VarChar(5)
 
   guru         Guru          @relation(fields: [idGuru], references: [id])

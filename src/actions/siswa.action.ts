@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -182,3 +182,14 @@ export async function searchSiswaForSelect(query: string) {
     kelasNama: s.kelas.nama,
   }));
 }
+
+export async function checkNisExists(nis: string, excludeId?: number) {
+  const siswa = await prisma.siswa.findFirst({
+    where: {
+      nis,
+      ...(excludeId ? { NOT: { id: excludeId } } : {}),
+    },
+    select: { id: true },
+  });
+  return { exists: !!siswa };
+}
