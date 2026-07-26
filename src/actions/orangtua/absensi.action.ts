@@ -1,65 +1,41 @@
-﻿"use server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { resolveAnak } from "./dashboard.action";
 
-export async function getAbsensiAnak(params?: {
-  anakId?: number;
-  bulan?: number;
-  tahun?: number;
-}) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return [];
+/** Monitoring absensi anak. Filter bulan+tahun (Absensi terikat Jadwal). */
+export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; tahun?: number }) {
+  const anak = await resolveAnak(opts.siswaId);
+  if (!anak) return null;
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true } } },
-  });
-  const anakIds = ortu?.anak.map((a) => a.id) ?? [];
-  if (anakIds.length === 0) return [];
+  const now = new Date();
+  const bulan = opts.bulan ?? now.getMonth() + 1;
+  const tahun = opts.tahun ?? now.getFullYear();
+  const awal = new Date(tahun, bulan - 1, 1);
+  const akhir = new Date(tahun, bulan, 0, 23, 59, 59);
 
-  const where: any = {
-    siswaId: params?.anakId ? params.anakId : { in: anakIds },
-  };
-
-  if (params?.bulan && params?.tahun) {
-    const start = new Date(params.tahun, params.bulan - 1, 1);
-    const end   = new Date(params.tahun, params.bulan, 0, 23, 59, 59);
-    where.tanggal = { gte: start, lte: end };
-  }
-
-  return prisma.absensi.findMany({
-    where,
-    include: {
-      jadwal: {
-        select: {
-          hari: true,
-          jamMulai: true,
-          jamSelesai: true,
-          mataPelajaran: { select: { namaMapel: true } },
-        },
-      },
-      siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
-    },
+  const rows = await prisma.absensi.findMany({
+    where: { siswaId: anak.id, tanggal: { gte: awal, lte: akhir } },
     orderBy: { tanggal: "desc" },
-  }).then((rows) =>
-    rows.map((r) => ({ ...r, jadwal: { ...r.jadwal, mapel: r.jadwal.mataPelajaran.namaMapel } }))
-  );
-}
-
-export async function getRingkasanAbsensiAnak(anakId: number) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return null;
-
-  const grouped = await prisma.absensi.groupBy({
-    by: ["status"],
-    where: { siswaId: anakId },
-    _count: { status: true },
+    include: {
+      jadwal: { include: { mataPelajaran: { select: { namaMapel: true } } } },
+    },
   });
 
-  const result = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0, total: 0 };
-  grouped.forEach((g) => {
-    result[g.status as keyof typeof result] = g._count.status;
-    result.total += g._count.status;
-  });
-  return result;
+  const rekap = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0 };
+  for (const r of rows) rekap[r.status]++;
+  const total = rows.length;
+
+  return {
+    anak, bulan, tahun,
+    rekap,
+    persentase: total > 0 ? Math.round((rekap.HADIR / total) * 100) : 0,
+    rows: rows.map((r) => ({
+      id: r.id,
+      tanggal: r.tanggal,
+      status: r.status,
+      mapel: r.jadwal.mataPelajaran.namaMapel,
+      keterangan: r.keterangan ?? "",
+    })),
+  };
 }

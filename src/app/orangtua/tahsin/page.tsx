@@ -1,97 +1,104 @@
-﻿import { getTahsinAnak, getProgressTahsinAnak } from "@/actions/orangtua/tahsin.action";
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
+import { getAnakList } from "@/actions/orangtua/dashboard.action";
+import { getTahsinAnak } from "@/actions/orangtua/tahsin.action";
+import MonitorHeader from "@/components/orangtua/MonitorHeader";
 
-const S_COLOR: Record<string, string> = {
-  BELUM:"bg-gray-100 text-gray-600", PROSES:"bg-blue-100 text-blue-700",
-  LULUS:"bg-green-100 text-green-700", MENGULANG:"bg-red-100 text-red-700",
+const NILAI: Record<string, { teks: string; kelas: string }> = {
+  L: { teks: "L", kelas: "bg-green-100 text-green-700" },
+  L_MIN: { teks: "L-", kelas: "bg-amber-100 text-amber-700" },
 };
 
-type Props = { searchParams: Promise<{ anakId?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string }> };
 
-export default async function OrangtuaTahsinPage({ searchParams }: Props) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") redirect("/login");
+export default async function TahsinPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const anakList = await getAnakList();
+  if (anakList.length === 0) redirect("/login");
 
-  const params = await searchParams;
-  const anakId = params.anakId ? Number(params.anakId) : undefined;
-
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true, nama: true } } },
-  });
-
-  const firstAnakId = anakId ?? ortu?.anak[0]?.id;
-  const [tahsin, progress] = await Promise.all([
-    getTahsinAnak({ anakId }),
-    firstAnakId ? getProgressTahsinAnak(firstAnakId) : null,
-  ]);
+  const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
+  const data = await getTahsinAnak({ siswaId });
+  if (!data) redirect("/orangtua/dashboard");
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900">Monitoring Tahsin</h1>
+    <div className="p-6 max-w-5xl mx-auto">
+      <MonitorHeader
+        judul="Monitoring Tahsin Al-Qur'an"
+        subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
+        aktifId={siswaId}
+      />
 
-      <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <select name="anakId" defaultValue={params.anakId ?? ""}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
-          <option value="">Semua Anak</option>
-          {ortu?.anak.map((a) => <option key={a.id} value={a.id}>{a.nama}</option>)}
-        </select>
-        <button type="submit" className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32] transition-colors">
-          Tampilkan
-        </button>
-      </AutoSubmitForm>
-
-      {progress && (
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label:"Lulus",     value:progress.lulus,     color:"bg-green-50 text-green-700 border-green-100" },
-            { label:"Proses",    value:progress.proses,    color:"bg-blue-50 text-blue-700 border-blue-100"   },
-            { label:"Mengulang", value:progress.mengulang, color:"bg-red-50 text-red-700 border-red-100"     },
-          ].map((s) => (
-            <div key={s.label} className={`rounded-xl border p-4 text-center ${s.color}`}>
-              <p className="text-2xl font-bold">{s.value}</p>
-              <p className="text-xs mt-0.5">{s.label}</p>
-            </div>
-          ))}
+      {/* Kartu ringkas + persentase per aspek */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Total Setoran</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{data.ringkasan.totalSetoran}</p>
+          <p className="text-xs text-gray-400 mt-2">{data.ringkasan.juzTersentuh} juz tersentuh</p>
         </div>
-      )}
+        {data.aspek.map((a) => (
+          <div key={a.nama} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{a.nama}</p>
+              <p className={"text-xl font-bold " + (a.persen >= 70 ? "text-emerald-700" : "text-amber-600")}>{a.persen}%</p>
+            </div>
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mt-3">
+              <div className={"h-full rounded-full " + (a.persen >= 70 ? "bg-emerald-500" : "bg-amber-400")}
+                style={{ width: `${a.persen}%` }} />
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1.5">Kelancaran aspek ini</p>
+          </div>
+        ))}
+      </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Siswa</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Materi</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Nilai</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {tahsin.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400 text-sm">Belum ada data tahsin</td></tr>
-            )}
-            {tahsin.map((t) => (
-              <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm font-medium text-gray-800">{t.siswa.nama}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{t.materi}</td>
-                <td className="px-4 py-3 text-center">
-                  {t.nilai ? <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${Number(t.nilai) >= 80 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{String(t.nilai)}</span>
-                  : <span className="text-gray-300 text-xs">—</span>}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${S_COLOR[t.status]}`}>{t.status}</span>
-                </td>
-                <td className="px-4 py-3 text-xs text-gray-500">
-                  {new Date(t.tanggal).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })}
-                </td>
+      {/* Riwayat */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-bold text-gray-800">Riwayat Setoran Tahsin</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50/70 text-[11px] text-gray-500 uppercase tracking-wide">
+                <th className="text-left font-semibold px-5 py-3 w-10">No</th>
+                <th className="text-left font-semibold px-3 py-3">Hari/Tanggal</th>
+                <th className="text-center font-semibold px-3 py-3">Juz</th>
+                <th className="text-left font-semibold px-3 py-3">Surat</th>
+                <th className="text-center font-semibold px-3 py-3">Tajwid</th>
+                <th className="text-center font-semibold px-3 py-3">Makhraj</th>
+                <th className="text-center font-semibold px-3 py-3">Sifatul</th>
+                <th className="text-left font-semibold px-5 py-3">Guru</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.rows.map((t, i) => {
+                const badge = (v: string) => {
+                  const n = NILAI[v] ?? NILAI.L;
+                  return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${n.kelas}`}>{n.teks}</span>;
+                };
+                return (
+                  <tr key={t.id} className="hover:bg-gray-50/60">
+                    <td className="px-5 py-3 text-gray-400">{i + 1}</td>
+                    <td className="px-3 py-3">
+                      <p className="font-semibold text-gray-800">{t.hari}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(t.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3 text-center text-gray-600">{t.juz}</td>
+                    <td className="px-3 py-3 text-gray-700">{t.surat} (hal. {t.halaman})</td>
+                    <td className="px-3 py-3 text-center">{badge(t.tajwid)}</td>
+                    <td className="px-3 py-3 text-center">{badge(t.makhraj)}</td>
+                    <td className="px-3 py-3 text-center">{badge(t.sifatul)}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{t.guruNama}</td>
+                  </tr>
+                );
+              })}
+              {data.rows.length === 0 && (
+                <tr><td colSpan={8} className="text-center py-12 text-gray-400">Belum ada riwayat setoran tahsin</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

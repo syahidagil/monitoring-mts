@@ -1,60 +1,65 @@
-﻿"use server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { resolveAnak } from "./dashboard.action";
+import type { Semester } from "@prisma/client";
 
-export async function getNilaiAnak(params?: {
-  anakId?: number;
-  mapel?: string;
-  semester?: string;
-  tahunAjar?: string;
-}) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return [];
+const URUTAN = ["TUGAS", "PR", "HARIAN", "UTS", "UAS"] as const;
+const LABEL: Record<string, string> = {
+  TUGAS: "Tugas", PR: "PR", HARIAN: "UH", UTS: "UTS", UAS: "UAS",
+};
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true } } },
+/** Monitoring nilai anak — dikelompokkan per mapel, kolom per jenis (sesuai desain). */
+export async function getNilaiAnak(opts: { siswaId?: number; semester?: Semester }) {
+  const anak = await resolveAnak(opts.siswaId);
+  if (!anak) return null;
+
+  const semester = opts.semester ?? anak.kelas.tahunAjaran.semester;
+  const tahunAjar = anak.kelas.tahunAjaran.nama;
+
+  const rows = await prisma.nilai.findMany({
+    where: { siswaId: anak.id, semester, tahunAjar },
+    include: { guruMapel: { include: { mataPelajaran: true } } },
+    orderBy: { tanggal: "asc" },
   });
-  const anakIds = ortu?.anak.map((a) => a.id) ?? [];
-  if (anakIds.length === 0) return [];
 
-  const where: any = {
-    siswaId: params?.anakId ? params.anakId : { in: anakIds },
-  };
-  if (params?.mapel)     where.guruMapel = { kodeMapel: params.mapel };
-  if (params?.semester)  where.semester  = params.semester as any;
-  if (params?.tahunAjar) where.tahunAjar = params.tahunAjar;
+  const map = new Map<string, {
+    kodeMapel: string; namaMapel: string;
+    perJenis: Record<string, number | null>; nilaiList: number[];
+  }>();
+  for (const r of rows) {
+    const kode = r.guruMapel.mataPelajaran.kodeMapel;
+    if (!map.has(kode)) {
+      map.set(kode, {
+        kodeMapel: kode,
+        namaMapel: r.guruMapel.mataPelajaran.namaMapel,
+        perJenis: Object.fromEntries(URUTAN.map((j) => [j, null])),
+        nilaiList: [],
+      });
+    }
+    const m = map.get(kode)!;
+    const angka = Number(r.nilai);
+    m.perJenis[r.jenis] = angka;
+    m.nilaiList.push(angka);
+  }
 
-  const nilai = await prisma.nilai.findMany({
-    where,
-    include: {
-      siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
-      guruMapel: { select: { mataPelajaran: { select: { namaMapel: true } } } },
+  const perMapel = Array.from(map.values()).map((m) => ({
+    kodeMapel: m.kodeMapel,
+    namaMapel: m.namaMapel,
+    perJenis: m.perJenis,
+    rataRata: m.nilaiList.length > 0
+      ? Number((m.nilaiList.reduce((a, b) => a + b, 0) / m.nilaiList.length).toFixed(1))
+      : 0,
+  }));
+
+  const semua = rows.map((r) => Number(r.nilai));
+  return {
+    anak, semester, tahunAjar,
+    urutanJenis: URUTAN.map((j) => ({ key: j, label: LABEL[j] })),
+    perMapel,
+    ringkasan: {
+      rataKeseluruhan: semua.length > 0 ? Number((semua.reduce((a, b) => a + b, 0) / semua.length).toFixed(1)) : 0,
+      jumlahMapel: perMapel.length,
     },
-    orderBy: [{ guruMapel: { kodeMapel: "asc" } }, { jenis: "asc" }, { tanggal: "desc" }],
-  });
-
-  return nilai.map((n) => ({ ...n, mapel: n.guruMapel.mataPelajaran.namaMapel }));
-}
-
-export async function getRataRataNilaiAnak(anakId: number, tahunAjar?: string) {
-  const where: any = { siswaId: anakId };
-  if (tahunAjar) where.tahunAjar = tahunAjar;
-
-  const nilai = await prisma.nilai.findMany({
-    where,
-    include: { guruMapel: { select: { mataPelajaran: { select: { namaMapel: true } } } } },
-  });
-  const mapMap = new Map<string, number[]>();
-  nilai.forEach((n) => {
-    const mapel = n.guruMapel.mataPelajaran.namaMapel;
-    if (!mapMap.has(mapel)) mapMap.set(mapel, []);
-    mapMap.get(mapel)!.push(Number(n.nilai));
-  });
-
-  return Array.from(mapMap.entries()).map(([mapel, vals]) => ({
-    mapel,
-    rata: vals.length ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) : 0,
-    count: vals.length,
-  })).sort((a, b) => b.rata - a.rata);
+  };
 }

@@ -1,44 +1,41 @@
-﻿"use server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { resolveAnak } from "./dashboard.action";
+import type { Semester } from "@prisma/client";
 
-export async function getSikapAnak(params?: {
-  anakId?: number;
-  semester?: string;
-  tahunAjar?: string;
-}) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return [];
+/** Monitoring sikap anak. Filter semester + bulan (opsional). */
+export async function getSikapAnak(opts: { siswaId?: number; semester?: Semester; bulan?: number }) {
+  const anak = await resolveAnak(opts.siswaId);
+  if (!anak) return null;
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true } } },
-  });
-  const anakIds = ortu?.anak.map((a) => a.id) ?? [];
-  if (anakIds.length === 0) return [];
+  const semester = opts.semester ?? anak.kelas.tahunAjaran.semester;
+  const tahunAjar = anak.kelas.tahunAjaran.nama;
 
-  const where: any = {
-    siswaId: params?.anakId ? params.anakId : { in: anakIds },
-  };
-  if (params?.semester)  where.semester  = params.semester as any;
-  if (params?.tahunAjar) where.tahunAjar = params.tahunAjar;
-
-  return prisma.sikap.findMany({
-    where,
-    include: {
-      siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
-    },
+  const rows = await prisma.sikap.findMany({
+    where: { siswaId: anak.id, semester, tahunAjar },
     orderBy: { tanggal: "desc" },
+    include: { guru: { include: { user: { select: { name: true } } } } },
   });
-}
 
-export async function getStatistikSikapAnak(anakId: number) {
-  const grouped = await prisma.sikap.groupBy({
-    by: ["predikat"],
-    where: { siswaId: anakId },
-    _count: { predikat: true },
-  });
-  const result = { SB: 0, B: 0, C: 0, K: 0 };
-  grouped.forEach((g) => { result[g.predikat as keyof typeof result] = g._count.predikat; });
-  return result;
+  // Filter bulan di aplikasi (agar statistik "bulan ini" tetap dari data semester)
+  const now = new Date();
+  const bulan = opts.bulan ?? now.getMonth() + 1;
+  const bulanRows = rows.filter((r) => new Date(r.tanggal).getMonth() + 1 === bulan);
+
+  const positif = bulanRows.filter((r) => r.jenisSikap === "POSITIF").length;
+  const pelanggaran = bulanRows.filter((r) => r.jenisSikap === "PELANGGARAN").length;
+
+  return {
+    anak, semester, tahunAjar, bulan,
+    statistik: { total: bulanRows.length, positif, pelanggaran },
+    rows: bulanRows.map((r) => ({
+      id: r.id,
+      tanggal: r.tanggal,
+      jenisSikap: r.jenisSikap,
+      kategori: r.kategori,
+      keterangan: r.keterangan,
+      guruNama: r.guru.user.name,
+    })),
+  };
 }

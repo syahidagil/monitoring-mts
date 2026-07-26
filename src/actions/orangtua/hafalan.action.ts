@@ -1,34 +1,53 @@
-﻿"use server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { resolveAnak } from "./dashboard.action";
 
-export async function getHafalanAnak(params?: { anakId?: number }) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return [];
+/** Monitoring hafalan (tahfidz) anak. Hafalan tak punya semester -> pakai seluruh data. */
+export async function getHafalanAnak(opts: { siswaId?: number }) {
+  const anak = await resolveAnak(opts.siswaId);
+  if (!anak) return null;
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true } } },
-  });
-  const anakIds = ortu?.anak.map((a) => a.id) ?? [];
-  if (anakIds.length === 0) return [];
-
-  return prisma.hafalan.findMany({
-    where: { siswaId: params?.anakId ? params.anakId : { in: anakIds } },
-    include: {
-      siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
-    },
+  const rows = await prisma.hafalan.findMany({
+    where: { siswaId: anak.id },
     orderBy: { tanggal: "desc" },
+    include: { guru: { include: { user: { select: { name: true } } } } },
   });
-}
 
-export async function getProgressHafalanAnak(anakId: number) {
-  const hafalan = await prisma.hafalan.findMany({ where: { siswaId: anakId } });
+  const juzSet = new Set(rows.map((r) => r.juz));
+  const juzTertinggi = rows.length > 0 ? Math.max(...rows.map((r) => r.juz)) : 0;
+  const totalHalaman = new Set(rows.map((r) => r.halaman)).size;
+  const lancar = rows.filter((r) => r.nilai === "L").length;
+
+  // Progres 4 minggu terakhir + hari ini (jumlah setoran per minggu)
+  const now = new Date();
+  const perMinggu: { label: string; jumlah: number }[] = [];
+  for (let i = 3; i >= 0; i--) {
+    const akhir = new Date(now); akhir.setDate(now.getDate() - i * 7);
+    const awal = new Date(akhir); awal.setDate(akhir.getDate() - 6);
+    const jml = rows.filter((r) => {
+      const t = new Date(r.tanggal);
+      return t >= awal && t <= akhir;
+    }).length;
+    perMinggu.push({ label: i === 0 ? "Hari Ini" : `Minggu ${4 - i}`, jumlah: jml });
+  }
+
   return {
-    total:     hafalan.length,
-    lulus:     hafalan.filter((h) => h.status === "LULUS").length,
-    proses:    hafalan.filter((h) => h.status === "PROSES").length,
-    mengulang: hafalan.filter((h) => h.status === "MENGULANG").length,
-    belum:     hafalan.filter((h) => h.status === "BELUM").length,
+    anak,
+    ringkasan: {
+      juzTertinggi,
+      jumlahJuz: juzSet.size,
+      totalHalaman,
+      totalSetoran: rows.length,
+      lancar,
+      persentaseProgres: rows.length > 0 ? Math.round((lancar / rows.length) * 100) : 0,
+      targetJuz: 30,
+    },
+    perMinggu,
+    rows: rows.map((r) => ({
+      id: r.id, tanggal: r.tanggal, hari: r.hari, juz: r.juz,
+      surat: r.surat, halaman: r.halaman, nilai: r.nilai,
+      keterangan: r.keterangan ?? "", guruNama: r.guru.user.name,
+    })),
   };
 }

@@ -1,97 +1,130 @@
-﻿import { getSikapAnak, getStatistikSikapAnak } from "@/actions/orangtua/sikap.action";
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
+import { getAnakList } from "@/actions/orangtua/dashboard.action";
+import { getSikapAnak } from "@/actions/orangtua/sikap.action";
+import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import { ClipboardList, Smile, Frown } from "lucide-react";
+import type { Semester } from "@prisma/client";
 
-const P_COLOR: Record<string, string> = {
-  SB:"bg-green-100 text-green-700", B:"bg-blue-100 text-blue-700",
-  C:"bg-yellow-100 text-yellow-700", K:"bg-red-100 text-red-700",
-};
-const P_LABEL: Record<string, string> = { SB:"Sangat Baik", B:"Baik", C:"Cukup", K:"Kurang" };
+const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
-type Props = { searchParams: Promise<{ anakId?: string; semester?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; semester?: string; bulan?: string }> };
 
-export default async function OrangtuaSikapPage({ searchParams }: Props) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") redirect("/login");
+export default async function SikapPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const anakList = await getAnakList();
+  if (anakList.length === 0) redirect("/login");
 
-  const params = await searchParams;
-  const anakId = params.anakId ? Number(params.anakId) : undefined;
+  const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
+  const bulan = sp.bulan ? Number(sp.bulan) : new Date().getMonth() + 1;
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true, nama: true } } },
-  });
-
-  const firstAnakId = anakId ?? ortu?.anak[0]?.id;
-  const [sikap, statistik] = await Promise.all([
-    getSikapAnak({ anakId, semester: params.semester }),
-    firstAnakId ? getStatistikSikapAnak(firstAnakId) : null,
-  ]);
+  const data = await getSikapAnak({ siswaId, semester: sp.semester as Semester | undefined, bulan });
+  if (!data) redirect("/orangtua/dashboard");
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900">Monitoring Sikap</h1>
+    <div className="p-6 max-w-5xl mx-auto">
+      <MonitorHeader
+        judul="Monitoring Sikap Siswa"
+        subjudul="Pantau perkembangan karakter dan perilaku harian putra-putri Anda."
+        anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
+        aktifId={siswaId}
+      />
 
-      <AutoSubmitForm className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <select name="anakId" defaultValue={params.anakId ?? ""}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
-          <option value="">Semua Anak</option>
-          {ortu?.anak.map((a) => <option key={a.id} value={a.id}>{a.nama}</option>)}
-        </select>
-        <select name="semester" defaultValue={params.semester ?? ""}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
-          <option value="">Semua Semester</option>
-          <option value="GANJIL">Ganjil</option>
-          <option value="GENAP">Genap</option>
-        </select>
-        <button type="submit" className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32] transition-colors">
-          Tampilkan
-        </button>
-      </AutoSubmitForm>
-
-      {statistik && (
-        <div className="grid grid-cols-4 gap-3">
-          {Object.entries(statistik).map(([p, n]) => (
-            <div key={p} className={`rounded-xl border p-4 text-center ${P_COLOR[p]}`}>
-              <p className="text-2xl font-bold">{n}</p>
-              <p className="text-xs mt-0.5">{P_LABEL[p]}</p>
-            </div>
-          ))}
+      {/* Filter */}
+      <form method="get" className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-5">
+        <input type="hidden" name="siswaId" value={siswaId} />
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Pilih Semester</label>
+          <select name="semester" defaultValue={data.semester}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="GANJIL">Ganjil {data.tahunAjar}</option>
+            <option value="GENAP">Genap {data.tahunAjar}</option>
+          </select>
         </div>
-      )}
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Pilih Bulan</label>
+          <select name="bulan" defaultValue={String(bulan)}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            {BULAN.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
+          </select>
+        </div>
+        <button className="ml-auto bg-[#1B5E20] text-white text-sm px-5 py-2.5 rounded-lg hover:bg-[#2E7D32]">
+          Terapkan Filter
+        </button>
+      </form>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Siswa</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Aspek</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Predikat</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {sikap.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">Belum ada catatan sikap</td></tr>
-            )}
-            {sikap.map((s) => (
-              <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-sm font-medium text-gray-800">{s.siswa.nama}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{s.aspek}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${P_COLOR[s.predikat]}`}>
-                    {P_LABEL[s.predikat]}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-xs text-gray-500">
-                  {new Date(s.tanggal).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })}
-                </td>
+      {/* 3 kartu statistik */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center">
+            <ClipboardList size={20} className="text-gray-500" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Total Laporan Bulan Ini</p>
+            <p className="text-2xl font-bold text-gray-900">{data.statistik.total}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center">
+            <Smile size={20} className="text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Sikap Positif</p>
+            <p className="text-2xl font-bold text-emerald-700">{data.statistik.positif}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-full bg-rose-100 flex items-center justify-center">
+            <Frown size={20} className="text-rose-600" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Sikap Negatif</p>
+            <p className="text-2xl font-bold text-rose-700">{data.statistik.pelanggaran}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Riwayat */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-bold text-gray-800">Riwayat Perilaku Siswa</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50/70 text-[11px] text-gray-500 uppercase tracking-wide">
+                <th className="text-left font-semibold px-5 py-3 w-10">No</th>
+                <th className="text-left font-semibold px-3 py-3">Tanggal</th>
+                <th className="text-left font-semibold px-3 py-3">Jenis Sikap</th>
+                <th className="text-left font-semibold px-3 py-3">Keterangan</th>
+                <th className="text-left font-semibold px-5 py-3">Guru Pelapor</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.rows.map((r, i) => (
+                <tr key={r.id} className="hover:bg-gray-50/60 align-top">
+                  <td className="px-5 py-4 text-gray-400">{i + 1}</td>
+                  <td className="px-3 py-4 text-gray-600 whitespace-nowrap">
+                    {new Date(r.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                  </td>
+                  <td className="px-3 py-4">
+                    <span className={
+                      "text-[10px] font-bold px-2.5 py-1 rounded-full " +
+                      (r.jenisSikap === "POSITIF" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")
+                    }>
+                      {r.jenisSikap === "POSITIF" ? "POSITIF" : "NEGATIF"}
+                    </span>
+                    <p className="text-[11px] text-gray-400 mt-1">{r.kategori}</p>
+                  </td>
+                  <td className="px-3 py-4 text-gray-600 max-w-xs">{r.keterangan}</td>
+                  <td className="px-5 py-4 font-medium text-gray-700 whitespace-nowrap">{r.guruNama}</td>
+                </tr>
+              ))}
+              {data.rows.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-12 text-gray-400">Belum ada catatan sikap pada bulan ini</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

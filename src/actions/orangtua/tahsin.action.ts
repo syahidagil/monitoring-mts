@@ -1,33 +1,35 @@
-﻿"use server";
+"use server";
+
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { resolveAnak } from "./dashboard.action";
 
-export async function getTahsinAnak(params?: { anakId?: number }) {
-  const session = await auth();
-  if (!session || session.user.role !== "ORANGTUA") return [];
+/** Monitoring tahsin anak (3 aspek: tajwid, makhraj, sifatul). */
+export async function getTahsinAnak(opts: { siswaId?: number }) {
+  const anak = await resolveAnak(opts.siswaId);
+  if (!anak) return null;
 
-  const ortu = await prisma.orangTua.findUnique({
-    where: { id: session.user.id },
-    include: { anak: { select: { id: true } } },
-  });
-  const anakIds = ortu?.anak.map((a) => a.id) ?? [];
-  if (anakIds.length === 0) return [];
-
-  return prisma.tahsin.findMany({
-    where: { siswaId: params?.anakId ? params.anakId : { in: anakIds } },
-    include: {
-      siswa: { select: { nama: true, nis: true, kelas: { select: { nama: true } } } },
-    },
+  const rows = await prisma.tahsin.findMany({
+    where: { siswaId: anak.id },
     orderBy: { tanggal: "desc" },
+    include: { guru: { include: { user: { select: { name: true } } } } },
   });
-}
 
-export async function getProgressTahsinAnak(anakId: number) {
-  const tahsin = await prisma.tahsin.findMany({ where: { siswaId: anakId } });
+  const total = rows.length;
+  const persen = (k: "tajwid" | "makhraj" | "sifatul") =>
+    total > 0 ? Math.round((rows.filter((r) => r[k] === "L").length / total) * 100) : 0;
+
   return {
-    total:     tahsin.length,
-    lulus:     tahsin.filter((t) => t.status === "LULUS").length,
-    proses:    tahsin.filter((t) => t.status === "PROSES").length,
-    mengulang: tahsin.filter((t) => t.status === "MENGULANG").length,
+    anak,
+    aspek: [
+      { nama: "Tajwid", persen: persen("tajwid") },
+      { nama: "Makhraj", persen: persen("makhraj") },
+      { nama: "Sifatul Huruf", persen: persen("sifatul") },
+    ],
+    ringkasan: { totalSetoran: total, juzTersentuh: new Set(rows.map((r) => r.juz)).size },
+    rows: rows.map((r) => ({
+      id: r.id, tanggal: r.tanggal, hari: r.hari, juz: r.juz, surat: r.surat,
+      halaman: r.halaman, tajwid: r.tajwid, makhraj: r.makhraj, sifatul: r.sifatul,
+      keterangan: r.keterangan ?? "", guruNama: r.guru.user.name,
+    })),
   };
 }
