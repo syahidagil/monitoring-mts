@@ -1,17 +1,15 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
+// Selaras dengan model Hafalan pada skema terbaru:
+//   juz, surat, halaman, nilai (enum L | L_MIN), keterangan
 export const hafalanSchema = z.object({
-  siswaId:     z.number().positive(),
-  surah:       z.string().min(1, "Nama surah wajib diisi").max(50),
-  ayatMulai:   z.coerce.number().min(1),
-  ayatSelesai: z.coerce.number().min(1),
-  juz:         z.coerce.number().min(1).max(30).optional(),
-  nilai:       z.coerce.number().min(0).max(100).optional(),
-  status:      z.enum(["BELUM","PROSES","LULUS","MENGULANG"]),
-  catatan:     z.string().max(500).optional(),
-}).refine((d) => d.ayatSelesai >= d.ayatMulai, {
-  message: "Ayat selesai harus >= ayat mulai",
-  path: ["ayatSelesai"],
+  siswaId:    z.coerce.number().int().positive(),
+  nomorSurat: z.coerce.number().int().min(1).max(114), // untuk validasi & isi nama surat
+  surat:      z.string().min(1, "Nama surat wajib diisi").max(50),
+  juz:        z.coerce.number().int().min(1, "Juz tidak valid").max(30),
+  halaman:    z.coerce.number().int().min(1, "Halaman minimal 1").max(604, "Halaman maksimal 604"),
+  nilai:      z.enum(["L", "L_MIN"], { message: "Nilai wajib dipilih (L atau L-)" }),
+  keterangan: z.string().max(500).optional().or(z.literal("")),
 });
 
 export type HafalanFormValues = z.infer<typeof hafalanSchema>;

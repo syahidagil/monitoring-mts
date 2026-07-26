@@ -1,67 +1,87 @@
-﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getAllSikapByGuru } from "@/actions/guru/sikap.action";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-
-const PREDIKAT_COLOR: Record<string, string> = {
-  SB:"bg-green-100 text-green-700", B:"bg-blue-100 text-blue-700",
-  C:"bg-yellow-100 text-yellow-700", K:"bg-red-100 text-red-700",
-};
-const PREDIKAT_LABEL: Record<string, string> = { SB:"Sangat Baik", B:"Baik", C:"Cukup", K:"Kurang" };
+import { Plus, ShieldCheck } from "lucide-react";
+import { getDataHalamanSikap } from "@/actions/guru/sikap.action";
+import SikapRiwayat from "@/components/guru/sikap/SikapRiwayat";
 
 export default async function GuruSikapPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "GURU") redirect("/login");
-  const sikap = await getAllSikapByGuru();
+  const data = await getDataHalamanSikap();
+  if (!data) redirect("/login");
+
+  const { guru, tahunAjaran, kelasList, statistik, rows } = data;
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-5">
-        <div className="flex items-center justify-between">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Judul + tombol tambah */}
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Penilaian Sikap</h1>
-            <p className="text-sm text-gray-500 mt-1">{sikap.length} catatan sikap</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Kelola Sikap &amp; Pelanggaran Siswa
+            </h1>
+            <p className="text-sm text-gray-500 mt-1 max-w-xl">
+              Pantau dan catat perkembangan karakter serta kedisiplinan siswa
+              untuk mendukung ekosistem belajar yang positif.
+            </p>
           </div>
-          <Link href="/guru/sikap/tambah"
-            className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
-            <Plus className="w-4 h-4" /> Tambah Catatan
+          <Link
+            href="/guru/sikap/tambah"
+            className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" /> Tambah Catatan Sikap
           </Link>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Siswa</th>
-                <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Aspek</th>
-                <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Predikat</th>
-                <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {sikap.length === 0 && (
-                <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">Belum ada catatan sikap</td></tr>
-              )}
-              {sikap.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3.5">
-                    <p className="text-sm font-medium text-gray-800">{s.siswa.nama}</p>
-                    <p className="text-xs text-gray-400">Kelas {s.siswa.kelas.nama} • {s.siswa.nis}</p>
-                  </td>
-                  <td className="px-4 py-3.5 text-sm text-gray-700">{s.aspek}</td>
-                  <td className="px-4 py-3.5">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${PREDIKAT_COLOR[s.predikat]}`}>
-                      {PREDIKAT_LABEL[s.predikat]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 text-xs text-gray-500">
-                    {new Date(s.tanggal).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        {/* Kartu info guru + statistik */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-sm font-bold text-gray-800 mb-4">
+              Informasi Guru Pengampu
+            </h2>
+            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+              <Info label="Nama Lengkap" value={guru.nama} />
+              <Info label="NIP" value={guru.nip} />
+              <Info label="Mata Pelajaran" value={guru.mapel} />
+              <Info
+                label="Semester / Tahun"
+                value={
+                  tahunAjaran
+                    ? `${tahunAjaran.semester === "GANJIL" ? "Ganjil" : "Genap"} / ${tahunAjaran.nama}`
+                    : "-"
+                }
+              />
+            </div>
+          </div>
+
+          <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-6 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-full bg-[#1B5E20] flex items-center justify-center mb-3">
+              <ShieldCheck className="w-6 h-6 text-white" />
+            </div>
+            <p className="text-sm font-bold text-emerald-800">Statistik Bulan Ini</p>
+            <p className="text-sm text-gray-700 mt-2">
+              <span className="font-bold">{statistik.positif}</span> Catatan Positif
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="font-bold text-rose-600">{statistik.pelanggaran}</span>{" "}
+              Pelanggaran Tercatat
+            </p>
+          </div>
         </div>
+
+        {/* Filter + riwayat (client) */}
+        <SikapRiwayat rows={rows} kelasList={kelasList} />
       </div>
     </main>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="text-sm font-semibold text-gray-800 mt-0.5">{value}</p>
+    </div>
   );
 }

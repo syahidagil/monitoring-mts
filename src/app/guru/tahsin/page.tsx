@@ -1,54 +1,63 @@
-﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getSiswaForTahsin } from "@/actions/guru/tahsin.action";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { getDataHalamanTahsin } from "@/actions/guru/tahsin.action";
+import TahsinSiswaList from "@/components/guru/tahsin/TahsinSiswaList";
 
 export default async function GuruTahsinPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "GURU") redirect("/login");
+  const data = await getDataHalamanTahsin();
+  if (!data) redirect("/login");
 
-  const siswa = await getSiswaForTahsin();
+  const { guru, tahunAjaran, kelasList, siswa } = data;
+  const inisialGuru = guru.nama
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((k) => k[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Tahsin Al-Quran</h1>
-          <p className="text-sm text-gray-500 mt-1">{siswa.length} siswa</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Input Tahsin Al-Qur&rsquo;an
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Pencatatan perkembangan bacaan (tajwid, makhraj, sifatul huruf) siswa
+          </p>
         </div>
 
-        {siswa.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400 text-sm">
-            Belum ada siswa di kelas yang Anda ampu
+        {/* Kartu profil guru */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 ring-2 ring-emerald-200 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg font-bold text-emerald-700">
+                  {inisialGuru}
+                </span>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900">{guru.nama}</p>
+                <p className="text-sm text-gray-500">
+                  NIP: {guru.nip} &middot; Program: Tahsin
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                Semester Aktif
+              </p>
+              <p className="text-sm font-bold text-gray-800 mt-0.5">
+                {tahunAjaran
+                  ? `${tahunAjaran.semester === "GANJIL" ? "Ganjil" : "Genap"} ${tahunAjaran.nama}`
+                  : "Belum diatur"}
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {siswa.map((s) => {
-              const lastTahsin = s.tahsin?.[0];
-              return (
-                <Link key={s.id} href={`/guru/tahsin/${s.id}`}
-                  className="flex items-center gap-4 bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-green-200 transition-all group">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-blue-700">{s.nama.charAt(0)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800">{s.nama}</p>
-                    <p className="text-xs text-gray-500">
-                      {s.nis} • Kelas {s.kelas.nama} • {s._count.tahsin} catatan
-                    </p>
-                    {lastTahsin && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Terakhir: {lastTahsin.materi}
-                      </p>
-                    )}
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-600 transition-colors flex-shrink-0" />
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        </div>
+
+        {/* Filter + tabel */}
+        <TahsinSiswaList siswa={siswa} kelasList={kelasList} />
       </div>
     </main>
   );

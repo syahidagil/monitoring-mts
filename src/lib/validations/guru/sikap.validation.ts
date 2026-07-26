@@ -1,14 +1,23 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 
+// Kategori sesuai jenis (dipakai di form & validasi longgar)
+export const KATEGORI_POSITIF = [
+  "Kedisiplinan", "Sosial", "Kebersihan", "Prestasi",
+  "Ibadah", "Kreativitas", "Kepemimpinan",
+] as const;
+
+export const KATEGORI_PELANGGARAN = [
+  "Keterlambatan", "Atribut", "Gadget", "Kekerasan",
+  "Ketidakjujuran", "Kebersihan", "Ketertiban",
+] as const;
+
+// Selaras model Sikap: jenisSikap, kategori, keterangan, tanggal, semester, tahunAjar
 export const sikapSchema = z.object({
-  siswaId:   z.number().positive("Siswa wajib dipilih"),
-  aspek:     z.string().min(1, "Aspek wajib diisi").max(100),
-  predikat:  z.enum(["SB","B","C","K"], {
-    errorMap: () => ({ message: "Pilih predikat yang valid" }),
-  }),
-  deskripsi: z.string().max(500).optional(),
-  semester:  z.enum(["GANJIL","GENAP"]),
-  tahunAjar: z.string().min(1),
+  siswaId:    z.coerce.number().int().positive("Siswa wajib dipilih"),
+  jenisSikap: z.enum(["POSITIF", "PELANGGARAN"], { message: "Pilih kategori perilaku" }),
+  kategori:   z.string().min(1, "Pilih jenis kategori").max(50),
+  keterangan: z.string().min(10, "Keterangan minimal 10 karakter").max(500),
+  tanggal:    z.coerce.date({ message: "Tanggal tidak valid" }),
 });
 
 export type SikapFormValues = z.infer<typeof sikapSchema>;

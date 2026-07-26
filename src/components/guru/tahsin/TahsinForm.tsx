@@ -1,43 +1,73 @@
-﻿"use client";
+"use client";
+
 import { useState, useTransition } from "react";
 import { createTahsin } from "@/actions/guru/tahsin.action";
+import { DAFTAR_SURAT, SURAT_BY_NOMOR, hitungJuz } from "@/lib/quran/surat";
 import { Save, CheckCircle, AlertCircle } from "lucide-react";
 
-const MATERI_LIST = [
-  "Makharijul Huruf","Sifatul Huruf","Hukum Nun Mati & Tanwin",
-  "Hukum Mim Mati","Mad dan Qashr","Waqaf dan Ibtida",
-  "Tafkhim dan Tarqiq","Idgham","Ikhfa","Iqlab",
+const ASPEK = [
+  { name: "tajwid", label: "Tajwid" },
+  { name: "makhraj", label: "Makhraj" },
+  { name: "sifatul", label: "Sifatul Huruf" },
+] as const;
+
+const NILAI_OPTIONS = [
+  { value: "L", label: "L" },
+  { value: "L_MIN", label: "L-" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "BELUM",     label: "Belum",     color: "bg-gray-100 text-gray-600"   },
-  { value: "PROSES",    label: "Proses",    color: "bg-blue-100 text-blue-700"   },
-  { value: "LULUS",     label: "Lulus",     color: "bg-green-100 text-green-700" },
-  { value: "MENGULANG", label: "Mengulang", color: "bg-red-100 text-red-700"     },
-];
-
-export default function TahsinForm({ siswaId, siswaName }: { siswaId: number; siswaName: string }) {
+export default function TahsinForm({
+  siswaId,
+  siswaName,
+}: {
+  siswaId: number;
+  siswaName: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState("");
-  const [error,   setError]   = useState("");
+  const [error, setError] = useState("");
+
+  const [nomorSurat, setNomorSurat] = useState<number>(0);
+  const [ayat, setAyat] = useState<number>(0);
+
+  const suratTerpilih = nomorSurat ? SURAT_BY_NOMOR[nomorSurat] : undefined;
+  const juzOtomatis = nomorSurat && ayat ? hitungJuz(nomorSurat, ayat) : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
+
+    if (!suratTerpilih) return setError("Silakan pilih surat terlebih dahulu");
+    if (!juzOtomatis) return setError("Isi ayat agar juz dapat dihitung");
+
     const fd = new FormData(e.currentTarget);
     fd.set("siswaId", String(siswaId));
+    fd.set("surat", suratTerpilih.namaLatin);
+    fd.set("juz", String(juzOtomatis));
+
     startTransition(async () => {
       const result = await createTahsin(fd);
-      if (result.success) { setSuccess(result.message); (e.target as HTMLFormElement).reset(); }
-      else setError(result.message);
+      if (result.success) {
+        setSuccess(result.message);
+        (e.target as HTMLFormElement).reset();
+        setNomorSurat(0);
+        setAyat(0);
+      } else {
+        setError(result.message);
+      }
     });
   }
 
-  const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white";
+  const inputClass =
+    "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white";
   const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4"
+    >
       <h3 className="font-bold text-gray-800 text-sm pb-3 border-b border-gray-100">
         Input Tahsin — {siswaName}
       </h3>
@@ -55,40 +85,144 @@ export default function TahsinForm({ siswaId, siswaName }: { siswaId: number; si
         </div>
       )}
 
-      <div className="space-y-4">
-        <div>
-          <label className={labelClass}>Materi <span className="text-red-500">*</span></label>
-          <select name="materi" required className={inputClass}>
-            <option value="">Pilih Materi</option>
-            {MATERI_LIST.map((m) => <option key={m} value={m}>{m}</option>)}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Surat */}
+        <div className="col-span-2">
+          <label className={labelClass}>
+            Surat <span className="text-red-500">*</span>
+          </label>
+          <input type="hidden" name="nomorSurat" value={nomorSurat || ""} />
+          <select
+            required
+            value={nomorSurat || ""}
+            onChange={(e) => setNomorSurat(Number(e.target.value))}
+            className={inputClass}
+          >
+            <option value="">Pilih Surat</option>
+            {DAFTAR_SURAT.map((s) => (
+              <option key={s.nomor} value={s.nomor}>
+                {s.nomor}. {s.namaLatin} ({s.jumlahAyat} ayat)
+              </option>
+            ))}
           </select>
         </div>
+
+        {/* Ayat */}
         <div>
-          <label className={labelClass}>Nilai (0-100)</label>
-          <input name="nilai" type="number" min="0" max="100" className={inputClass} placeholder="85" />
+          <label className={labelClass}>
+            Ayat ke- <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={suratTerpilih?.jumlahAyat ?? 286}
+            required
+            value={ayat || ""}
+            onChange={(e) => setAyat(Number(e.target.value))}
+            className={inputClass}
+            placeholder="mis. 5"
+          />
+          {suratTerpilih && (
+            <p className="text-xs text-gray-400 mt-1">
+              Maks {suratTerpilih.jumlahAyat} ayat
+            </p>
+          )}
         </div>
+
+        {/* Juz otomatis */}
         <div>
-          <label className={labelClass}>Status <span className="text-red-500">*</span></label>
-          <div className="grid grid-cols-4 gap-2">
-            {STATUS_OPTIONS.map((opt) => (
-              <label key={opt.value} className="cursor-pointer">
-                <input type="radio" name="status" value={opt.value} required className="sr-only peer" />
-                <div className={`text-center py-2 rounded-lg text-xs font-semibold border-2 border-transparent peer-checked:border-green-600 transition-all ${opt.color}`}>
-                  {opt.label}
-                </div>
-              </label>
-            ))}
+          <label className={labelClass}>Juz (otomatis)</label>
+          <input type="hidden" name="juz" value={juzOtomatis ?? ""} />
+          <div
+            className={`${inputClass} flex items-center ${
+              juzOtomatis ? "text-gray-900" : "text-gray-400"
+            }`}
+          >
+            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat"}
           </div>
         </div>
-        <div>
+
+        {/* Halaman */}
+        <div className="col-span-2">
+          <label className={labelClass}>
+            Halaman <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="halaman"
+            type="number"
+            min={1}
+            max={604}
+            required
+            className={inputClass}
+            placeholder="1-604"
+          />
+        </div>
+
+        {/* Penilaian 3 aspek: tajwid, makhraj, sifatul */}
+        <div className="col-span-2">
+          <label className={labelClass}>
+            Penilaian Aspek <span className="text-red-500">*</span>
+          </label>
+          <div className="space-y-2.5">
+            {ASPEK.map((aspek) => (
+              <div
+                key={aspek.name}
+                className="flex items-center justify-between gap-3 bg-gray-50 rounded-lg px-3 py-2"
+              >
+                <span className="text-sm text-gray-700">{aspek.label}</span>
+                <div className="flex gap-2">
+                  {NILAI_OPTIONS.map((o) => (
+                    <label key={o.value} className="cursor-pointer">
+                      <input
+                        type="radio"
+                        name={aspek.name}
+                        value={o.value}
+                        required
+                        className="sr-only peer"
+                      />
+                      <span
+                        className="inline-block w-11 text-center py-1.5 rounded-md text-xs font-semibold border-2 border-transparent bg-white text-gray-600 peer-checked:border-green-600 peer-checked:bg-green-50 peer-checked:text-green-700 transition-all"
+                      >
+                        {o.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-1.5">
+            L = Lancar, L- = Lancar dengan catatan
+          </p>
+        </div>
+
+        <div className="col-span-2">
           <label className={labelClass}>Catatan</label>
-          <textarea name="catatan" rows={2} className={`${inputClass} resize-none`} placeholder="Catatan tambahan..." />
+          <textarea
+            name="keterangan"
+            rows={2}
+            className={`${inputClass} resize-none`}
+            placeholder="Catatan tambahan (opsional)..."
+          />
         </div>
       </div>
 
-      <button type="submit" disabled={isPending}
-        className="w-full flex items-center justify-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
-        {isPending ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</> : <><Save className="w-4 h-4" />Simpan Tahsin</>}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full flex items-center justify-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
+      >
+        {isPending ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Menyimpan...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4" />
+            Simpan Tahsin
+          </>
+        )}
       </button>
     </form>
   );

@@ -279,15 +279,17 @@ model Nilai {
   siswa     Siswa     @relation(fields: [siswaId], references: [id])
   guru      Guru      @relation(fields: [guruId], references: [id])
   guruMapel GuruMapel @relation(fields: [guruMapelId], references: [idGuruMapel])
+  @@unique([siswaId, guruMapelId, jenis, semester, tahunAjar])
 
   @@map("nilai")
 }
 
 enum JenisNilai {
+  TUGAS
   HARIAN
+  PR        // <-- tambah baris ini
   UTS
   UAS
-  TUGAS
   PRAKTIK
 }
 
