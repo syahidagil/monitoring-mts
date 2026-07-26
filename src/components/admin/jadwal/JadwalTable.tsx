@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Edit, Trash2 } from "lucide-react";
@@ -69,9 +69,9 @@ export default function JadwalTable({ data }: { data: any[] }) {
                 </td>
                 <td className="px-4 py-3.5">
                   <p className="text-sm font-semibold text-gray-800">Kelas {j.kelas.nama}</p>
-                  <p className="text-xs text-gray-400">{j.kelas.tahunAjaran.nama}</p>
+                  <p className="text-xs text-gray-400">{j.tahunAjaran?.nama}</p>
                 </td>
-                <td className="px-4 py-3.5 text-sm text-gray-700">{j.mapel}</td>
+                <td className="px-4 py-3.5 text-sm text-gray-700">{j.mataPelajaran?.namaMapel ?? j.kodeMapel}</td>
                 <td className="px-4 py-3.5 text-sm text-gray-600">{j.guru.user.name}</td>
                 <td className="px-4 py-3.5">
                   <span className="text-xs font-mono bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">
@@ -84,7 +84,7 @@ export default function JadwalTable({ data }: { data: any[] }) {
                       className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                       <Edit className="w-3.5 h-3.5" /> Edit
                     </Link>
-                    <button onClick={() => setDeleteTarget({ id: j.id, label: `${j.hari} - ${j.mapel} (${j.kelas.nama})` })}
+                    <button onClick={() => setDeleteTarget({ id: j.id, label: `${j.hari} - ${j.mataPelajaran?.namaMapel ?? j.kodeMapel} (${j.kelas.nama})` })}
                       className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" /> Hapus
                     </button>

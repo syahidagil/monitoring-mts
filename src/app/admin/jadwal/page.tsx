@@ -1,4 +1,4 @@
-﻿import { getAllJadwal } from "@/actions/jadwal.action";
+import { getAllJadwal } from "@/actions/jadwal.action";
 import { getAllKelas } from "@/actions/kelas.action";
 import { getAllGuru } from "@/actions/guru.action";
 import Link from "next/link";
@@ -14,11 +14,15 @@ export default async function JadwalPage({ searchParams }: Props) {
   const guruId = params.guruId ?? undefined;
   const hari = params.hari ?? undefined;
 
-  const [jadwal, kelasList, guruList] = await Promise.all([
+  const [jadwalResult, kelasList, guruList] = await Promise.all([
     getAllJadwal({ kelasId, guruId, hari }),
     getAllKelas(),
     getAllGuru(),
   ]);
+
+  // getAllJadwal mengembalikan objek hasil paginasi { data, total, ... },
+  // bukan array langsung — jadi harus di-unwrap dulu sebelum dipakai.
+  const jadwal = jadwalResult.data;
 
   return (
     <div className="space-y-5">

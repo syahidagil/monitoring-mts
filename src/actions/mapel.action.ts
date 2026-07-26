@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -19,7 +19,7 @@ export async function createMapel(formData: FormData) {
   if (kodeExists) return { success: false, message: `Kode mapel ${kodeMapel} sudah digunakan` };
 
   const namaExists = await prisma.mataPelajaran.findFirst({
-    where: { namaMapel: { equals: namaMapel, mode: "insensitive" } },
+    where: { namaMapel: { equals: namaMapel } },
   });
   if (namaExists) return { success: false, message: `Mata pelajaran "${namaMapel}" sudah terdaftar` };
 

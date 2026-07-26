@@ -1,19 +1,27 @@
 "use client";
 
-import { ChangeEvent, FormHTMLAttributes } from "react";
+import { useRef } from "react";
 
-type Props = FormHTMLAttributes<HTMLFormElement>;
-
-// Form yang otomatis submit ketika salah satu field di dalamnya berubah
-// (mis. select/input filter). Dibungkus sebagai Client Component karena
-// event handler tidak bisa dilewatkan langsung dari Server Component.
-export default function AutoSubmitForm({ children, ...props }: Props) {
-  function handleChange(e: ChangeEvent<HTMLFormElement>) {
-    e.currentTarget.requestSubmit();
-  }
+/**
+ * Bungkus <form> filter di Server Component agar setiap <select>/<input>
+ * di dalamnya bisa auto-submit saat berubah, tanpa memasang event handler
+ * langsung di elemen milik Server Component (yang tidak diizinkan React).
+ */
+export default function AutoSubmitForm({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form {...props} onChange={handleChange}>
+    <form
+      ref={formRef}
+      className={className}
+      onChange={() => formRef.current?.requestSubmit()}
+    >
       {children}
     </form>
   );
