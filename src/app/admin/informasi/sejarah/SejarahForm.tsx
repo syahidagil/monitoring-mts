@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import { upsertSchoolInfo } from "@/actions/schoolInfo";
 import { Save, Eye } from "lucide-react";
+import ImageUploader from "@/components/admin/shared/ImageUploader";
 
 export default function SejarahForm({ data }: { data: any }) {
   const [isPending, startTransition] = useTransition();
@@ -9,10 +10,13 @@ export default function SejarahForm({ data }: { data: any }) {
   const [preview, setPreview] = useState(false);
   const [isi, setIsi] = useState(data?.isi ?? "");
   const [judul, setJudul] = useState(data?.judul ?? "Sejarah MTS Al-Amin Bintaro");
+  const [gambar, setGambar] = useState(data?.gambar ?? "");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    fd.set("gambar", gambar);
+
     startTransition(async () => {
       const result = await upsertSchoolInfo(fd);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
@@ -66,15 +70,14 @@ export default function SejarahForm({ data }: { data: any }) {
             />
           )}
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">URL Foto (opsional)</label>
-          <input
-            name="gambar"
-            defaultValue={data?.gambar ?? ""}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="/images/gedung-sekolah.jpg"
-          />
-        </div>
+
+        {/* Component Upload Foto Sejarah */}
+        <ImageUploader
+          label="Foto Gedung / Sejarah (opsional)"
+          value={gambar}
+          onChange={setGambar}
+          folder="sejarah"
+        />
       </div>
 
       <div className="flex justify-end">

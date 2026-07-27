@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -140,7 +140,7 @@ export async function getRekapSikapGuru(params?: {
 }
 
 // ── REKAP HAFALAN ─────────────────────────────────────────────────────────────
-export async function getRekapHafalanGuru(params?: { kelasId?: number }) {
+export async function getRekapHafalanGuru(params?: { kelasId?: number; siswaId?: number }) {
   const guruId = await getGuruId();
   if (!guruId) return [];
 
@@ -152,7 +152,13 @@ export async function getRekapHafalanGuru(params?: { kelasId?: number }) {
   const kelasIds = jadwal.map((j) => j.kelasId);
 
   return prisma.hafalan.findMany({
-    where: { siswa: { kelasId: { in: kelasIds }, statusTahfidz: true } },
+    where: {
+      siswa: {
+        kelasId: { in: kelasIds },
+        statusTahfidz: true,
+        ...(params?.siswaId && { id: params.siswaId }),
+      },
+    },
     include: {
       siswa: {
         select: {
@@ -166,7 +172,7 @@ export async function getRekapHafalanGuru(params?: { kelasId?: number }) {
 }
 
 // ── REKAP TAHSIN ──────────────────────────────────────────────────────────────
-export async function getRekapTahsinGuru(params?: { kelasId?: number }) {
+export async function getRekapTahsinGuru(params?: { kelasId?: number; siswaId?: number }) {
   const guruId = await getGuruId();
   if (!guruId) return [];
 
@@ -178,7 +184,13 @@ export async function getRekapTahsinGuru(params?: { kelasId?: number }) {
   const kelasIds = jadwal.map((j) => j.kelasId);
 
   return prisma.tahsin.findMany({
-    where: { siswa: { kelasId: { in: kelasIds } } },
+    where: {
+      siswa: {
+        kelasId: { in: kelasIds },
+        statusTahfidz: false,
+        ...(params?.siswaId && { id: params.siswaId }),
+      },
+    },
     include: {
       siswa: {
         select: {
@@ -188,6 +200,49 @@ export async function getRekapTahsinGuru(params?: { kelasId?: number }) {
       },
     },
     orderBy: [{ siswa: { nama: "asc" } }, { tanggal: "desc" }],
+  });
+}
+
+// ── DAFTAR SISWA GURU (TAHFIDZ & TAHSIN) ──────────────────────────────────────
+export async function getSiswaTahfidzGuru(kelasId?: number) {
+  const guruId = await getGuruId();
+  if (!guruId) return [];
+
+  const jadwal = await prisma.jadwal.findMany({
+    where: { guruId, ...(kelasId && { kelasId }) },
+    select: { kelasId: true },
+    distinct: ["kelasId"],
+  });
+  const kelasIds = jadwal.map((j) => j.kelasId);
+
+  return prisma.siswa.findMany({
+    where: { status: true, statusTahfidz: true, kelasId: { in: kelasIds } },
+    select: {
+      id: true, nis: true, nama: true,
+      kelas: { select: { id: true, nama: true } },
+    },
+    orderBy: { nama: "asc" },
+  });
+}
+
+export async function getSiswaTahsinGuru(kelasId?: number) {
+  const guruId = await getGuruId();
+  if (!guruId) return [];
+
+  const jadwal = await prisma.jadwal.findMany({
+    where: { guruId, ...(kelasId && { kelasId }) },
+    select: { kelasId: true },
+    distinct: ["kelasId"],
+  });
+  const kelasIds = jadwal.map((j) => j.kelasId);
+
+  return prisma.siswa.findMany({
+    where: { status: true, statusTahfidz: false, kelasId: { in: kelasIds } },
+    select: {
+      id: true, nis: true, nama: true,
+      kelas: { select: { id: true, nama: true } },
+    },
+    orderBy: { nama: "asc" },
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { createHafalan } from "@/actions/guru/hafalan.action";
 import { DAFTAR_SURAT, SURAT_BY_NOMOR, hitungJuz } from "@/lib/quran/surat";
 import { Save, CheckCircle, AlertCircle } from "lucide-react";
@@ -20,13 +20,18 @@ export default function HafalanForm({
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
-  // State untuk menghitung juz otomatis dari surat + ayat
+  // State untuk menghitung juz otomatis dari surat + ayat mulai/selesai
   const [nomorSurat, setNomorSurat] = useState<number>(0);
-  const [ayat, setAyat] = useState<number>(0);
+  const [ayatMulai, setAyatMulai] = useState<number>(0);
+  const [ayatSelesai, setAyatSelesai] = useState<number>(0);
+  const [halaman, setHalaman] = useState<string>("");
+  const [nilai, setNilai] = useState<string>("");
+  const [keterangan, setKeterangan] = useState<string>("");
 
   const suratTerpilih = nomorSurat ? SURAT_BY_NOMOR[nomorSurat] : undefined;
-  const juzOtomatis = nomorSurat && ayat ? hitungJuz(nomorSurat, ayat) : null;
+  const juzOtomatis = nomorSurat && ayatMulai ? hitungJuz(nomorSurat, ayatMulai) : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,23 +42,33 @@ export default function HafalanForm({
       setError("Silakan pilih surat terlebih dahulu");
       return;
     }
-    if (!juzOtomatis) {
-      setError("Isi ayat agar juz dapat dihitung");
+    if (!juzOtomatis || !ayatMulai || !ayatSelesai) {
+      setError("Isi rentang ayat (ayat mulai dan ayat selesai)");
+      return;
+    }
+    if (ayatSelesai < ayatMulai) {
+      setError("Ayat selesai tidak boleh lebih kecil dari ayat mulai");
       return;
     }
 
+    const rentangText = ayatMulai === ayatSelesai ? `Ayat ${ayatMulai}` : `Ayat ${ayatMulai}-${ayatSelesai}`;
+    const namaSuratLengkap = `${suratTerpilih.namaLatin} (${rentangText})`;
+
     const fd = new FormData(e.currentTarget);
     fd.set("siswaId", String(siswaId));
-    fd.set("surat", suratTerpilih.namaLatin);
+    fd.set("surat", namaSuratLengkap);
     fd.set("juz", String(juzOtomatis));
 
     startTransition(async () => {
       const result = await createHafalan(fd);
       if (result.success) {
         setSuccess(result.message);
-        (e.target as HTMLFormElement).reset();
         setNomorSurat(0);
-        setAyat(0);
+        setAyatMulai(0);
+        setAyatSelesai(0);
+        setHalaman("");
+        setNilai("");
+        setKeterangan("");
       } else {
         setError(result.message);
       }
@@ -66,6 +81,7 @@ export default function HafalanForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4"
     >
@@ -96,7 +112,12 @@ export default function HafalanForm({
           <select
             required
             value={nomorSurat || ""}
-            onChange={(e) => setNomorSurat(Number(e.target.value))}
+            onChange={(e) => {
+              const no = Number(e.target.value);
+              setNomorSurat(no);
+              setAyatMulai(1);
+              setAyatSelesai(1);
+            }}
             className={inputClass}
           >
             <option value="">Pilih Surat</option>
@@ -108,20 +129,42 @@ export default function HafalanForm({
           </select>
         </div>
 
-        {/* Ayat: dipakai untuk menghitung juz otomatis */}
+        {/* Rentang Ayat: Ayat Mulai & Ayat Selesai */}
         <div>
           <label className={labelClass}>
-            Ayat ke- <span className="text-red-500">*</span>
+            Ayat Mulai <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
             min={1}
             max={suratTerpilih?.jumlahAyat ?? 286}
             required
-            value={ayat || ""}
-            onChange={(e) => setAyat(Number(e.target.value))}
+            value={ayatMulai || ""}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setAyatMulai(val);
+              if (ayatSelesai && val > ayatSelesai) {
+                setAyatSelesai(val);
+              }
+            }}
             className={inputClass}
-            placeholder="mis. 5"
+            placeholder="mis. 1"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>
+            Ayat Selesai <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            min={ayatMulai || 1}
+            max={suratTerpilih?.jumlahAyat ?? 286}
+            required
+            value={ayatSelesai || ""}
+            onChange={(e) => setAyatSelesai(Number(e.target.value))}
+            className={inputClass}
+            placeholder="mis. 10"
           />
           {suratTerpilih && (
             <p className="text-xs text-gray-400 mt-1">
@@ -131,7 +174,7 @@ export default function HafalanForm({
         </div>
 
         {/* Juz otomatis (read-only) */}
-        <div>
+        <div className="col-span-2">
           <label className={labelClass}>Juz (otomatis)</label>
           <input type="hidden" name="juz" value={juzOtomatis ?? ""} />
           <div
@@ -139,7 +182,7 @@ export default function HafalanForm({
               juzOtomatis ? "text-gray-900" : "text-gray-400"
             }`}
           >
-            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat"}
+            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat mulai"}
           </div>
         </div>
 
@@ -154,6 +197,8 @@ export default function HafalanForm({
             min={1}
             max={604}
             required
+            value={halaman}
+            onChange={(e) => setHalaman(e.target.value)}
             className={inputClass}
             placeholder="1-604"
           />
@@ -164,7 +209,13 @@ export default function HafalanForm({
           <label className={labelClass}>
             Nilai <span className="text-red-500">*</span>
           </label>
-          <select name="nilai" required defaultValue="" className={inputClass}>
+          <select
+            name="nilai"
+            required
+            value={nilai}
+            onChange={(e) => setNilai(e.target.value)}
+            className={inputClass}
+          >
             <option value="" disabled>
               Pilih nilai
             </option>
@@ -181,6 +232,8 @@ export default function HafalanForm({
           <textarea
             name="keterangan"
             rows={2}
+            value={keterangan}
+            onChange={(e) => setKeterangan(e.target.value)}
             className={`${inputClass} resize-none`}
             placeholder="Catatan tambahan (opsional)..."
           />

@@ -27,6 +27,10 @@ export default function KelasInputForm({ tahunAjaran, guru, activeTahunAjaranId 
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const activeYear = String(activeTahunAjaranId ?? tahunAjaran.find((item) => item.aktif)?.id ?? tahunAjaran[0]?.id ?? "");
+  const [namaKelas, setNamaKelas] = useState("");
+  const [tahunAjaranId, setTahunAjaranId] = useState(activeYear);
+  const [waliKelasId, setWaliKelasId] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +41,9 @@ export default function KelasInputForm({ tahunAjaran, guru, activeTahunAjaranId 
       const result = await createKelas(formData);
       if (result.success) {
         setNotice({ type: "success", text: result.message ?? "Data Kelas Berhasil Disimpan!" });
-        formRef.current?.reset();
+        setNamaKelas("");
+        setTahunAjaranId(activeYear);
+        setWaliKelasId("");
       } else {
         setNotice({ type: "error", text: result.message });
       }
@@ -46,7 +52,6 @@ export default function KelasInputForm({ tahunAjaran, guru, activeTahunAjaranId 
 
   const inputClass = "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100";
   const labelClass = "mb-2 block text-sm font-semibold text-slate-700";
-  const activeYear = activeTahunAjaranId ?? tahunAjaran.find((item) => item.aktif)?.id ?? tahunAjaran[0]?.id ?? "";
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
@@ -82,14 +87,28 @@ export default function KelasInputForm({ tahunAjaran, guru, activeTahunAjaranId 
         <div className="space-y-6 p-6">
           <div>
             <label className={labelClass}>Nama Kelas <span className="text-rose-500">*</span></label>
-            <input name="nama" required maxLength={20} placeholder="Masukkan Nama Kelas (Contoh: VII A)" className={inputClass} />
+            <input
+              name="nama"
+              required
+              maxLength={20}
+              placeholder="Masukkan Nama Kelas (Contoh: VII A)"
+              value={namaKelas}
+              onChange={(e) => setNamaKelas(e.target.value)}
+              className={inputClass}
+            />
             <p className="mt-2 text-xs leading-5 text-slate-500">Pastikan format penulisan seragam (Contoh: VII A, VIII B, dst).</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className={labelClass}>Tahun Ajaran <span className="text-rose-500">*</span></label>
-              <select name="tahunAjaranId" defaultValue={activeYear} required className={inputClass}>
+              <select
+                name="tahunAjaranId"
+                required
+                value={tahunAjaranId}
+                onChange={(e) => setTahunAjaranId(e.target.value)}
+                className={inputClass}
+              >
                 {tahunAjaran.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.nama} {item.aktif ? "(Aktif)" : ""}
@@ -99,7 +118,12 @@ export default function KelasInputForm({ tahunAjaran, guru, activeTahunAjaranId 
             </div>
             <div>
               <label className={labelClass}>Wali Kelas (opsional)</label>
-              <select name="waliKelasId" defaultValue="" className={inputClass}>
+              <select
+                name="waliKelasId"
+                value={waliKelasId}
+                onChange={(e) => setWaliKelasId(e.target.value)}
+                className={inputClass}
+              >
                 <option value="">-- Pilih Wali Kelas --</option>
                 {guru.map((item) => (
                   <option key={item.id} value={item.id}>

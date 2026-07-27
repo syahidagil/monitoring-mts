@@ -1,7 +1,9 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import { upsertSchoolInfo, deleteSchoolInfo } from "@/actions/schoolInfo";
 import { Plus, Trash2, Edit, X, Save } from "lucide-react";
+import ImageUploader from "@/components/admin/shared/ImageUploader";
+import Image from "next/image";
 
 export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
   const [isPending, startTransition] = useTransition();
@@ -30,6 +32,7 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
     fd.append("isi", form.isi);
     fd.append("gambar", form.gambar);
     if (editData?.idInfo) fd.append("idInfo", String(editData.idInfo));
+
     startTransition(async () => {
       const result = await upsertSchoolInfo(fd);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
@@ -64,6 +67,7 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Foto</th>
               <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Nama Fasilitas</th>
               <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Deskripsi</th>
               <th className="text-center px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Aksi</th>
@@ -71,10 +75,19 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {fasilitas.length === 0 && (
-              <tr><td colSpan={3} className="text-center py-12 text-gray-400 text-sm">Belum ada fasilitas</td></tr>
+              <tr><td colSpan={4} className="text-center py-12 text-gray-400 text-sm">Belum ada fasilitas</td></tr>
             )}
             {fasilitas.map((item) => (
               <tr key={item.idInfo} className="hover:bg-gray-50">
+                <td className="px-5 py-4 w-20">
+                  {item.gambar ? (
+                    <div className="w-14 h-10 rounded-lg overflow-hidden border border-gray-200 relative bg-gray-100">
+                      <Image src={item.gambar} alt={item.judul} fill className="object-cover" unoptimized />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">No image</span>
+                  )}
+                </td>
                 <td className="px-5 py-4 text-sm font-medium text-gray-800">{item.judul}</td>
                 <td className="px-5 py-4 text-sm text-gray-500 max-w-xs truncate">{item.isi}</td>
                 <td className="px-5 py-4">
@@ -97,8 +110,8 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
               <h3 className="font-bold text-gray-900">{editData ? "Edit Fasilitas" : "Tambah Fasilitas"}</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
@@ -117,12 +130,15 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                   placeholder="Deskripsi singkat fasilitas..." />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">URL Foto (opsional)</label>
-                <input value={form.gambar} onChange={(e) => setForm({ ...form, gambar: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="/images/fasilitas.jpg" />
-              </div>
+
+              {/* Component Upload Foto Fasilitas */}
+              <ImageUploader
+                label="Foto Fasilitas (opsional)"
+                value={form.gambar}
+                onChange={(url) => setForm((prev) => ({ ...prev, gambar: url }))}
+                folder="fasilitas"
+              />
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)}
                   className="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50">

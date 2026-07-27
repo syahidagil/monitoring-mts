@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,10 +21,14 @@ const MENUS: MenuItem[] = [
   {
     label: "Data Akademik", icon: School,
     children: [
-      { label: "Data Siswa",       href: "/admin/data-siswa" },
-      { label: "Data Orang Tua",   href: "/admin/data-orangtua" },
-      { label: "Data Guru",        href: "/admin/data-guru" },
-      { label: "Data Kelas",       href: "/admin/data-kelas" },
+      { label: "Input Data Siswa",     href: "/admin/data-siswa/input" },
+      { label: "View Data Siswa",      href: "/admin/data-siswa" },
+      { label: "Input Data Orang Tua", href: "/admin/data-orangtua/input" },
+      { label: "View Data Orang Tua",  href: "/admin/data-orangtua" },
+      { label: "Input Data Guru",      href: "/admin/data-guru/input" },
+      { label: "View Data Guru",       href: "/admin/data-guru" },
+      { label: "Input Data Kelas",     href: "/admin/data-kelas/input" },
+      { label: "View Data Kelas",      href: "/admin/data-kelas" },
     ],
   },
   {
@@ -51,10 +55,10 @@ const MENUS: MenuItem[] = [
   {
     label: "Informasi Sekolah", icon: Building2,
     children: [
-      { label: "Sejarah",          href: "/admin/informasi/sejarah" },
+      { label: "Sejarah",            href: "/admin/informasi/sejarah" },
       { label: "Visi Misi & Tujuan", href: "/admin/informasi/visi-misi" },
-      { label: "Fasilitas",        href: "/admin/informasi/fasilitas" },
-      { label: "Kurikulum",        href: "/admin/informasi/kurikulum" },
+      { label: "Fasilitas",          href: "/admin/informasi/fasilitas" },
+      { label: "Kurikulum",          href: "/admin/informasi/kurikulum" },
     ],
   },
   {
@@ -73,8 +77,14 @@ const MENUS: MenuItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
 
+  const isChildActive = (href: string) => {
+    if (pathname === href) return true;
+    if (!href.endsWith("/input") && pathname.startsWith(href + "/")) return true;
+    return false;
+  };
+
   const defaultOpen = MENUS
-    .filter((m) => m.children?.some((c) => pathname.startsWith(c.href)))
+    .filter((m) => m.children?.some((c) => isChildActive(c.href)))
     .map((m) => m.label);
 
   const [openMenus, setOpenMenus] = useState<string[]>(
@@ -86,8 +96,7 @@ export default function Sidebar() {
       prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label]
     );
 
-  const isActive   = (href: string) => pathname === href;
-  const isChildActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string) => pathname === href;
   const isParentActive = (children: Child[]) =>
     children.some((c) => isChildActive(c.href));
 

@@ -1,4 +1,4 @@
-﻿import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import Link from "next/link";
 export default function Footer() {
   return (
@@ -58,7 +58,7 @@ export default function Footer() {
             <p className="font-semibold text-sm mb-5">Lokasi Madrasah</p>
             <div className="rounded-lg overflow-hidden h-36 bg-gray-700 mb-3">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.521!2d106.77!3d-6.28!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwMTYnNDguMCJTIDEwNsKwNDYnMTIuMCJF!5e0!3m2!1sid!2sid!4v1234567890"
+                src="https://maps.google.com/maps?q=MTs+Al-Amin+Bintaro&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -67,7 +67,7 @@ export default function Footer() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer"
+            <a href="https://maps.app.goo.gl/ipbmgcR5mNzBB6st7" target="_blank" rel="noopener noreferrer"
               className="block w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white text-sm font-semibold py-2.5 rounded-lg text-center transition-colors">
               Petunjuk Arah
             </a>

@@ -28,10 +28,11 @@ export default function TahsinForm({
   const [error, setError] = useState("");
 
   const [nomorSurat, setNomorSurat] = useState<number>(0);
-  const [ayat, setAyat] = useState<number>(0);
+  const [ayatMulai, setAyatMulai] = useState<number>(0);
+  const [ayatSelesai, setAyatSelesai] = useState<number>(0);
 
   const suratTerpilih = nomorSurat ? SURAT_BY_NOMOR[nomorSurat] : undefined;
-  const juzOtomatis = nomorSurat && ayat ? hitungJuz(nomorSurat, ayat) : null;
+  const juzOtomatis = nomorSurat && ayatMulai ? hitungJuz(nomorSurat, ayatMulai) : null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,11 +40,19 @@ export default function TahsinForm({
     setSuccess("");
 
     if (!suratTerpilih) return setError("Silakan pilih surat terlebih dahulu");
-    if (!juzOtomatis) return setError("Isi ayat agar juz dapat dihitung");
+    if (!juzOtomatis || !ayatMulai || !ayatSelesai) {
+      return setError("Isi rentang ayat (ayat mulai dan ayat selesai)");
+    }
+    if (ayatSelesai < ayatMulai) {
+      return setError("Ayat selesai tidak boleh lebih kecil dari ayat mulai");
+    }
+
+    const rentangText = ayatMulai === ayatSelesai ? `Ayat ${ayatMulai}` : `Ayat ${ayatMulai}-${ayatSelesai}`;
+    const namaSuratLengkap = `${suratTerpilih.namaLatin} (${rentangText})`;
 
     const fd = new FormData(e.currentTarget);
     fd.set("siswaId", String(siswaId));
-    fd.set("surat", suratTerpilih.namaLatin);
+    fd.set("surat", namaSuratLengkap);
     fd.set("juz", String(juzOtomatis));
 
     startTransition(async () => {
@@ -52,7 +61,8 @@ export default function TahsinForm({
         setSuccess(result.message);
         (e.target as HTMLFormElement).reset();
         setNomorSurat(0);
-        setAyat(0);
+        setAyatMulai(0);
+        setAyatSelesai(0);
       } else {
         setError(result.message);
       }
@@ -95,7 +105,12 @@ export default function TahsinForm({
           <select
             required
             value={nomorSurat || ""}
-            onChange={(e) => setNomorSurat(Number(e.target.value))}
+            onChange={(e) => {
+              const no = Number(e.target.value);
+              setNomorSurat(no);
+              setAyatMulai(1);
+              setAyatSelesai(1);
+            }}
             className={inputClass}
           >
             <option value="">Pilih Surat</option>
@@ -107,20 +122,42 @@ export default function TahsinForm({
           </select>
         </div>
 
-        {/* Ayat */}
+        {/* Rentang Ayat */}
         <div>
           <label className={labelClass}>
-            Ayat ke- <span className="text-red-500">*</span>
+            Ayat Mulai <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
             min={1}
             max={suratTerpilih?.jumlahAyat ?? 286}
             required
-            value={ayat || ""}
-            onChange={(e) => setAyat(Number(e.target.value))}
+            value={ayatMulai || ""}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setAyatMulai(val);
+              if (ayatSelesai && val > ayatSelesai) {
+                setAyatSelesai(val);
+              }
+            }}
             className={inputClass}
-            placeholder="mis. 5"
+            placeholder="mis. 1"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>
+            Ayat Selesai <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            min={ayatMulai || 1}
+            max={suratTerpilih?.jumlahAyat ?? 286}
+            required
+            value={ayatSelesai || ""}
+            onChange={(e) => setAyatSelesai(Number(e.target.value))}
+            className={inputClass}
+            placeholder="mis. 10"
           />
           {suratTerpilih && (
             <p className="text-xs text-gray-400 mt-1">
@@ -130,7 +167,7 @@ export default function TahsinForm({
         </div>
 
         {/* Juz otomatis */}
-        <div>
+        <div className="col-span-2">
           <label className={labelClass}>Juz (otomatis)</label>
           <input type="hidden" name="juz" value={juzOtomatis ?? ""} />
           <div
@@ -138,7 +175,7 @@ export default function TahsinForm({
               juzOtomatis ? "text-gray-900" : "text-gray-400"
             }`}
           >
-            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat"}
+            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat mulai"}
           </div>
         </div>
 

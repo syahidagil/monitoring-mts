@@ -10,7 +10,7 @@
       <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 w-full pt-24">
         <div className="max-w-2xl">
           <div className="inline-block bg-[#2E7D32] text-white text-xs font-semibold px-4 py-1.5 rounded-sm mb-6 tracking-wider uppercase">
-            Penerimaan Siswa Baru 2024/2025
+            Penerimaan Siswa Baru 2026/2027
           </div>
           <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
             Selamat Datang di<br />

@@ -1,4 +1,4 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -110,7 +110,7 @@ export default async function GuruAbsensiPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <div className="p-6">
       <div className="max-w-6xl mx-auto space-y-5">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Absensi Siswa</h1>
@@ -244,6 +244,6 @@ export default async function GuruAbsensiPage({ searchParams }: Props) {
 
         <JadwalAbsensiTable rows={rows} />
       </div>
-    </main>
+    </div>
   );
 }

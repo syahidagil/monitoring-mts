@@ -6,9 +6,10 @@ type Props = {
   data: any[];
   guruNama: string;
   kelasFilter?: string;
+  siswaFilter?: { nama: string; nis: string; kelas: string };
 };
 
-export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }: Props) {
+export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter, siswaFilter }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handleDownload() {
@@ -36,7 +37,7 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.setFontSize(9);
       doc.setTextColor(60, 60, 60);
       doc.text(
-        "Jl. Pesanggrahan No.1, Bintaro, Jakarta Selatan | Telp: (021) xxxx-xxxx",
+        "Jl. Pesanggrahan No.1, Bintaro, Jakarta Selatan | Telp: (021) 7388 1234",
         pageW / 2, 28, { align: "center" }
       );
       doc.text(
@@ -54,11 +55,14 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.setTextColor(27, 94, 32);
-      doc.text("REKAP EVALUASI HAFALAN AL-QUR'AN (TAHFIDZ)", pageW / 2, 49, { align: "center" });
+      const judulDoc = siswaFilter
+        ? `REKAP SETORAN HAFALAN SANTRI — ${siswaFilter.nama.toUpperCase()}`
+        : "REKAP SETORAN HAFALAN AL-QUR'AN (TAHFIDZ)";
+      doc.text(judulDoc, pageW / 2, 49, { align: "center" });
 
       doc.setLineWidth(0.4);
       doc.setDrawColor(27, 94, 32);
-      doc.line(pageW / 2 - 58, 51, pageW / 2 + 58, 51);
+      doc.line(pageW / 2 - 60, 51, pageW / 2 + 60, 51);
 
       // ── INFO ───────────────────────────────────────────────────────────────
       const infoY = 58;
@@ -67,39 +71,64 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.setFontSize(9);
       doc.setTextColor(50, 50, 50);
 
-      doc.setFont("helvetica", "bold");
-      doc.text("Guru Pengampu", colL, infoY);
-      doc.setFont("helvetica", "normal");
-      doc.text(`: ${guruNama}`, colL + 35, infoY);
+      if (siswaFilter) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Nama Santri", colL, infoY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${siswaFilter.nama} (NIS: ${siswaFilter.nis})`, colL + 32, infoY);
 
-      doc.setFont("helvetica", "bold");
-      doc.text("Kelas", colR, infoY);
-      doc.setFont("helvetica", "normal");
-      doc.text(`: ${kelasFilter || "Semua Kelas"}`, colR + 30, infoY);
+        doc.setFont("helvetica", "bold");
+        doc.text("Kelas", colL, infoY + 6);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${siswaFilter.kelas}`, colL + 32, infoY + 6);
 
-      doc.setFont("helvetica", "bold");
-      doc.text("Tanggal Cetak", colR, infoY + 6);
-      doc.setFont("helvetica", "normal");
-      doc.text(`: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, colR + 30, infoY + 6);
+        doc.setFont("helvetica", "bold");
+        doc.text("Guru Penguji", colR, infoY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${guruNama}`, colR + 30, infoY);
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Tanggal Cetak", colR, infoY + 6);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, colR + 30, infoY + 6);
+      } else {
+        doc.setFont("helvetica", "bold");
+        doc.text("Guru Penguji", colL, infoY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${guruNama}`, colL + 32, infoY);
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Kelas", colR, infoY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${kelasFilter || "Semua Kelas"}`, colR + 30, infoY);
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Tanggal Cetak", colR, infoY + 6);
+        doc.setFont("helvetica", "normal");
+        doc.text(`: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, colR + 30, infoY + 6);
+      }
 
       // ── TABEL ──────────────────────────────────────────────────────────────
       const tableStartY = infoY + 14;
 
       const rows = data.map((r, i) => [
         i + 1,
-        r.siswa.nama,
-        `Kelas ${r.siswa.kelas.nama}`,
-        r.surah ?? "-",
-        `${r.ayatMulai ?? "-"} - ${r.ayatSelesai ?? "-"}`,
-        r.juz !== null && r.juz !== undefined ? `Juz ${r.juz}` : "-",
-        r.nilai !== null && r.nilai !== undefined ? String(r.nilai) : "-",
-        r.status,
         new Date(r.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
-      ]);
+        siswaFilter ? r.surat : `${r.siswa.nama} (${r.siswa.kelas.nama})`,
+        siswaFilter ? `Juz ${r.juz ?? "-"}` : r.surat,
+        siswaFilter ? `Hal. ${r.halaman ?? "-"}` : `Juz ${r.juz ?? "-"}`,
+        siswaFilter ? (r.nilai === "L" ? "L" : "L-") : `Hal. ${r.halaman ?? "-"}`,
+        siswaFilter ? (r.keterangan || "-") : (r.nilai === "L" ? "L" : "L-"),
+        siswaFilter ? "" : (r.keterangan || "-"),
+      ].filter((val, idx) => siswaFilter ? idx <= 6 : true));
+
+      const headCols = siswaFilter
+        ? [["No", "Tanggal", "Surat & Rentang Ayat", "Juz", "Halaman", "Nilai", "Catatan"]]
+        : [["No", "Tanggal", "Nama Santri", "Surat & Rentang Ayat", "Juz", "Halaman", "Nilai", "Catatan"]];
 
       autoTable(doc, {
         startY: tableStartY,
-        head: [["No", "Nama Siswa", "Kelas", "Surah", "Ayat", "Juz", "Nilai", "Status", "Tanggal"]],
+        head: headCols,
         body: rows,
         margin: { left: margin, right: margin },
         styles: { fontSize: 8, cellPadding: 2.5, textColor: [40, 40, 40] },
@@ -110,27 +139,25 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
           halign: "center",
           fontSize: 8,
         },
-        columnStyles: {
+        columnStyles: siswaFilter ? {
+          0: { halign: "center", cellWidth: 10 },
+          1: { halign: "center", cellWidth: 26 },
+          2: { cellWidth: 55 },
+          3: { halign: "center", cellWidth: 18 },
+          4: { halign: "center", cellWidth: 18 },
+          5: { halign: "center", cellWidth: 18 },
+          6: { cellWidth: 35 },
+        } : {
           0: { halign: "center", cellWidth: 8 },
-          1: { cellWidth: 38 },
-          2: { halign: "center", cellWidth: 16 },
-          3: { cellWidth: 26 },
-          4: { halign: "center", cellWidth: 20 },
-          5: { halign: "center", cellWidth: 14 },
+          1: { halign: "center", cellWidth: 22 },
+          2: { cellWidth: 36 },
+          3: { cellWidth: 40 },
+          4: { halign: "center", cellWidth: 16 },
+          5: { halign: "center", cellWidth: 16 },
           6: { halign: "center", cellWidth: 14 },
-          7: { halign: "center", cellWidth: 20 },
-          8: { halign: "center", cellWidth: 22 },
+          7: { cellWidth: 28 },
         },
         alternateRowStyles: { fillColor: [245, 250, 245] },
-        didParseCell: (hookData) => {
-          if (hookData.section === "body" && hookData.column.index === 7) {
-            const st = String(hookData.cell.raw ?? "");
-            if (st === "LULUS") hookData.cell.styles.textColor = [21, 128, 61];
-            else if (st === "PROSES") hookData.cell.styles.textColor = [29, 78, 216];
-            else if (st === "MENGULANG") hookData.cell.styles.textColor = [185, 28, 28];
-            hookData.cell.styles.fontStyle = "bold";
-          }
-        },
       });
 
       // ── RINGKASAN ──────────────────────────────────────────────────────────
@@ -138,10 +165,10 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.setFontSize(8);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(100);
-      doc.text(`Total Record: ${data.length} data hafalan`, margin, finalY);
+      doc.text(`Total Record: ${data.length} setoran hafalan`, margin, finalY);
 
       // ── TANDA TANGAN ───────────────────────────────────────────────────────
-      const ttY = finalY + 14;
+      const ttY = finalY + 12;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(50, 50, 50);
@@ -149,15 +176,13 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.text("Mengetahui,", margin, ttY);
       doc.text("Guru Tahfidz", margin, ttY + 5);
       doc.setFont("helvetica", "bold");
-      doc.text(guruNama, margin, ttY + 30);
-      doc.setFont("helvetica", "normal");
+      doc.text(guruNama, margin, ttY + 28);
 
       const ttRightX = pageW - margin - 50;
       doc.text("Jakarta, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
       doc.text("Kepala Madrasah,", ttRightX, ttY + 5);
       doc.setFont("helvetica", "bold");
-      doc.text("(................................)", ttRightX, ttY + 30);
-      doc.setFont("helvetica", "normal");
+      doc.text("(................................)", ttRightX, ttY + 28);
 
       // ── FOOTER ─────────────────────────────────────────────────────────────
       const pageH = doc.internal.pageSize.getHeight();
@@ -168,7 +193,8 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter }:
       doc.setTextColor(160);
       doc.text("Dicetak oleh Sistem Monitoring MTS Al-Amin Bintaro", pageW / 2, pageH - 8, { align: "center" });
 
-      const fileName = `Rekap_Hafalan_${new Date().toISOString().split("T")[0]}.pdf`;
+      const namePart = siswaFilter ? siswaFilter.nama.replace(/[^a-zA-Z0-9]/g, "_") : "Semua";
+      const fileName = `Rekap_Hafalan_${namePart}_${new Date().toISOString().split("T")[0]}.pdf`;
       doc.save(fileName);
     } finally {
       setLoading(false);

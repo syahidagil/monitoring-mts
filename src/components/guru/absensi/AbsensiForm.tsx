@@ -297,25 +297,21 @@ export default function AbsensiForm({
                   </td>
                   {STATUS_OPTIONS.map((opt) => (
                     <td key={opt.value} className="px-4 py-3.5 text-center">
-                      <label className="flex items-center justify-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`status_${siswa.id}`}
-                          value={opt.value}
-                          checked={statuses[siswa.id] === opt.value}
-                          onChange={() => {
-                            setStatuses((prev) => ({ ...prev, [siswa.id]: opt.value }));
-                            if (opt.value === "HADIR") {
-                              setInvalidKetIds((prev) => {
-                                if (!prev.has(siswa.id)) return prev;
-                                const next = new Set(prev);
-                                next.delete(siswa.id);
-                                return next;
-                              });
-                            }
-                          }}
-                          className="sr-only"
-                        />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatuses((prev) => ({ ...prev, [siswa.id]: opt.value }));
+                          if (opt.value === "HADIR") {
+                            setInvalidKetIds((prev) => {
+                              if (!prev.has(siswa.id)) return prev;
+                              const next = new Set(prev);
+                              next.delete(siswa.id);
+                              return next;
+                            });
+                          }
+                        }}
+                        className="inline-flex items-center justify-center p-1 rounded-full focus:outline-none"
+                      >
                         <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                           statuses[siswa.id] === opt.value
                             ? "border-[#1B5E20] bg-[#1B5E20]"
@@ -325,7 +321,7 @@ export default function AbsensiForm({
                             <span className="w-2 h-2 rounded-full bg-white" />
                           )}
                         </span>
-                      </label>
+                      </button>
                     </td>
                   ))}
                   <td className="px-4 py-3.5">

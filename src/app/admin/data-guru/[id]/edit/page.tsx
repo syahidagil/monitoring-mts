@@ -26,7 +26,7 @@ export default async function EditGuruPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Form data utama guru */}
-      <GuruForm defaultValues={{ ...guru, ...guru.user }} isEdit guruId={guru.id} />
+      <GuruForm defaultValues={{ ...guru, ...guru.user }} isEdit guruId={guru.id} allMapel={allMapel} />
 
       {/* Kelola Mata Pelajaran Ampu */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

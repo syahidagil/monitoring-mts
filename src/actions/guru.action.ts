@@ -13,16 +13,19 @@ export async function createGuru(formData: FormData) {
   const password = formData.get("password") as string;
   const nama = (formData.get("nama") as string)?.trim();
   const nip = (formData.get("nip") as string)?.trim() || null;
-  const mapel = (formData.get("mapel") as string)?.trim();
   const noHp = (formData.get("noHp") as string)?.trim() || null;
   const alamat = (formData.get("alamat") as string)?.trim() || null;
   const pendidikan = (formData.get("pendidikan") as string)?.trim() || null;
   const status = formData.get("status") !== "false";
+  // Ambil semua kode mapel yang dipilih
+  const kodeMapelList = formData.getAll("kodeMapel") as string[];
+  // Simpan ringkasan nama mapel sebagai teks (diambil dari nama yang dikirim bersamaan)
+  const mapelNamaList = formData.getAll("mapelNama") as string[];
+  const mapel = mapelNamaList.join(", ") || "Belum ditentukan";
 
   if (!username) return { success: false, message: "Username wajib diisi" };
   if (!password || password.length < 6) return { success: false, message: "Password minimal 6 karakter" };
   if (!nama) return { success: false, message: "Nama wajib diisi" };
-  if (!mapel) return { success: false, message: "Mata pelajaran wajib diisi" };
 
   const userExists = await prisma.user.findUnique({ where: { username } });
   if (userExists) return { success: false, message: "Username sudah digunakan" };
@@ -41,6 +44,13 @@ export async function createGuru(formData: FormData) {
     await tx.guru.create({
       data: { id: user.id, nip, mapel, noHp, alamat, pendidikan },
     });
+    // Assign semua mapel yang dipilih
+    if (kodeMapelList.length > 0) {
+      await tx.guruMapel.createMany({
+        data: kodeMapelList.map((kodeMapel) => ({ idGuru: user.id, kodeMapel })),
+        skipDuplicates: true,
+      });
+    }
   });
 
   revalidatePath("/admin/data-guru");

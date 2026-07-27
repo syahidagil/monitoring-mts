@@ -14,6 +14,12 @@ export default function OrangtuaInputForm() {
   const [resetSignal, setResetSignal] = useState(0);
   const [studentError, setStudentError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [nama, setNama] = useState("");
+  const [noHp, setNoHp] = useState("");
+  const [alamat, setAlamat] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [statusAkun, setStatusAkun] = useState(true);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,7 +37,12 @@ export default function OrangtuaInputForm() {
       const result = await createOrangTua(formData);
       if (result.success) {
         setNotice({ type: "success", text: result.message ?? "Data orang tua berhasil disimpan." });
-        formRef.current?.reset();
+        setNama("");
+        setNoHp("");
+        setAlamat("");
+        setUsername("");
+        setPassword("");
+        setStatusAkun(true);
         setShowPassword(false);
         setResetSignal((current) => current + 1);
         setStudentError(null);
@@ -77,18 +88,38 @@ export default function OrangtuaInputForm() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className={labelClass}>Nama Lengkap <span className="text-rose-500">*</span></label>
-                <input name="nama" required placeholder="Contoh: Budi Santoso, S.T." className={inputClass} />
+                <input
+                  name="nama"
+                  required
+                  value={nama}
+                  onChange={(e) => setNama(e.target.value)}
+                  placeholder="Contoh: Budi Santoso, S.T."
+                  className={inputClass}
+                />
               </div>
               <div>
                 <label className={labelClass}>Nomor HP <span className="text-rose-500">*</span></label>
                 <div className="flex overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-emerald-600 focus-within:ring-4 focus-within:ring-emerald-100">
                   <span className="flex items-center border-r border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-600">+62</span>
-                  <input name="noHp" placeholder="81234567890" className="w-full px-4 py-3 text-sm outline-none" />
+                  <input
+                    name="noHp"
+                    value={noHp}
+                    onChange={(e) => setNoHp(e.target.value)}
+                    placeholder="81234567890"
+                    className="w-full px-4 py-3 text-sm outline-none"
+                  />
                 </div>
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>Alamat Lengkap</label>
-                <textarea name="alamat" rows={4} placeholder="Jl. Veteran No. 123, Bintaro, Pesanggrahan..." className={`${inputClass} resize-none`} />
+                <textarea
+                  name="alamat"
+                  rows={4}
+                  value={alamat}
+                  onChange={(e) => setAlamat(e.target.value)}
+                  placeholder="Jl. Veteran No. 123, Bintaro, Pesanggrahan..."
+                  className={`${inputClass} resize-none`}
+                />
               </div>
             </div>
           </div>
@@ -109,13 +140,30 @@ export default function OrangtuaInputForm() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className={labelClass}>Username <span className="text-rose-500">*</span></label>
-                <input name="username" required placeholder="walimurid2024" maxLength={50} className={inputClass} />
+                <input
+                  name="username"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="walimurid2024"
+                  maxLength={50}
+                  className={inputClass}
+                />
                 <p className="mt-2 text-xs leading-5 text-slate-500">Maksimal 50 karakter alfanumerik.</p>
               </div>
               <div>
                 <label className={labelClass}>Password <span className="text-rose-500">*</span></label>
                 <div className="flex overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-emerald-600 focus-within:ring-4 focus-within:ring-emerald-100">
-                  <input name="password" required minLength={8} type={showPassword ? "text" : "password"} placeholder="Minimal 8 karakter kombinasi huruf dan angka" className="w-full px-4 py-3 text-sm outline-none" />
+                  <input
+                    name="password"
+                    required
+                    minLength={8}
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimal 8 karakter kombinasi huruf dan angka"
+                    className="w-full px-4 py-3 text-sm outline-none"
+                  />
                   <button type="button" onClick={() => setShowPassword((current) => !current)} className="px-4 text-slate-500 transition hover:text-slate-700" aria-label="Tampilkan atau sembunyikan password">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -132,10 +180,11 @@ export default function OrangtuaInputForm() {
                   type="checkbox"
                   name="status"
                   value="true"
-                  defaultChecked
-                  onChange={(event) => {
-                    const hidden = event.currentTarget.previousElementSibling as HTMLInputElement;
-                    hidden.disabled = event.currentTarget.checked;
+                  checked={statusAkun}
+                  onChange={(e) => {
+                    setStatusAkun(e.currentTarget.checked);
+                    const hidden = e.currentTarget.previousElementSibling as HTMLInputElement;
+                    hidden.disabled = e.currentTarget.checked;
                   }}
                   className="peer sr-only"
                 />

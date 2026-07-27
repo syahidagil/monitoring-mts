@@ -1,18 +1,22 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { upsertSchoolInfo } from "@/actions/schoolInfo";
 import { Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import ImageUploader from "@/components/admin/shared/ImageUploader";
 
 export default function BeritaForm({ data }: { data?: any }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [gambar, setGambar] = useState(data?.gambar ?? "");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    fd.set("gambar", gambar);
+
     startTransition(async () => {
       const result = await upsertSchoolInfo(fd);
       if (result.success) {
@@ -47,12 +51,14 @@ export default function BeritaForm({ data }: { data?: any }) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
             placeholder="Tulis isi berita di sini..." />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">URL Foto (opsional)</label>
-          <input name="gambar" defaultValue={data?.gambar ?? ""}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            placeholder="https://... atau /images/berita.jpg" />
-        </div>
+
+        {/* Component Upload Foto Berita */}
+        <ImageUploader
+          label="Foto Sampul Berita (opsional)"
+          value={gambar}
+          onChange={setGambar}
+          folder="berita"
+        />
       </div>
 
       <div className="flex items-center justify-between">
