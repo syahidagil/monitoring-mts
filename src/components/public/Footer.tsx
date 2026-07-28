@@ -27,7 +27,7 @@ export default function Footer() {
           </div>
           <div>
             <p className="font-semibold text-sm mb-5">Tautan Cepat</p>
-            {["Sejarah Madrasah","Program Kurikulum","Galeri Kegiatan","Kontak Kami"].map((item) => (
+            {["Sejarah Madrasah","Program Kurikulum","Kontak Kami"].map((item) => (
               <a key={item} href="#" className="flex items-center gap-2 text-gray-400 hover:text-white text-sm py-1.5 transition-colors">
                 <span className="text-[#4CAF50] text-xs">&#9654;</span> {item}
               </a>
@@ -38,7 +38,7 @@ export default function Footer() {
             <div className="space-y-4">
               <div className="flex gap-3 text-sm text-gray-400">
                 <MapPin className="w-4 h-4 text-[#4CAF50] flex-shrink-0 mt-0.5" />
-                <span>Jl. Mawar Raya No. 45, Bintaro Jaya Sektor 2, Jakarta Selatan, 12330</span>
+                <span>Jl. Saleh Sungkar No.92, Bintaro, Ampenan Utara, Kec. Ampenan, Kota Mataram, Nusa Tenggara Bar. 83511</span>
               </div>
               <div className="flex gap-3 text-sm text-gray-400">
                 <Phone className="w-4 h-4 text-[#4CAF50] flex-shrink-0" />

@@ -71,7 +71,7 @@ export default async function GuruAbsensiPage({ searchParams }: Props) {
   const nowStr = new Date().toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Jakarta",
+    timeZone: "Asia/Makassar",
   });
 
   const absenHariIni = await prisma.absensi.findMany({

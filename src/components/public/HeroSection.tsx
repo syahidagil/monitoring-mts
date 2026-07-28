@@ -5,7 +5,7 @@
       <div className="absolute inset-0 bg-gradient-to-b from-[#1B5E20]/40 via-transparent to-transparent z-10" />
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/gedung-sekolah.jpg')" }}
+        style={{ backgroundImage: "url('/images/sekolah.jpeg')" }}
       />
       <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 w-full pt-24">
         <div className="max-w-2xl">
@@ -17,8 +17,7 @@
             <span className="text-[#4CAF50]">MTS Al-Amin Bintaro</span>
           </h1>
           <p className="text-white/80 text-base lg:text-lg leading-relaxed max-w-lg">
-            Madrasah Unggul dalam Prestasi, Berakhlak Islami, dan Berwawasan Global.
-            Membentuk Generasi Qurani yang Siap Menghadapi Masa Depan.
+            Terwujudnya generasi yang Hamilul qur’an, Aktif, Religius, Unggul dan Mandiri
           </p>
         </div>
       </div>

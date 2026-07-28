@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { label: "Sejarah", href: "#sejarah" },
@@ -44,15 +45,19 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2L3 7v11h5v-5h4v5h5V7L10 2z" fill="#1B5E20"/>
-              </svg>
+                  <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="relative w-[45px] h-[45px] flex-shrink-0">
+              <Image
+                src="/images/logo-mts.jpg"
+                alt="Logo MTS Al-Amin Bintaro"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-tight">MTS Al-Amin Bintaro</p>
-              <p className="text-green-300 text-[10px] leading-tight tracking-widest">UNGGUL • ISLAMI • GLOBAL</p>
+              <p className="text-green-300 text-[10px] leading-tight tracking-widest">• HARUM •</p>
             </div>
           </Link>
 
