@@ -43,7 +43,7 @@ export default function OrangtuaTable({ data }: { data: any[] }) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.length === 0 && (
-              <tr><td colSpan={7} className="text-center py-16 text-gray-400 text-sm">Belum ada data orang tua</td></tr>
+              <tr><td colSpan={7} className="text-center py-16 text-gray-400 text-sm">Belum ada data wali siswa</td></tr>
             )}
             {data.map((ortu, i) => {
               const anak = ortu.anak ?? [];
@@ -103,8 +103,8 @@ export default function OrangtuaTable({ data }: { data: any[] }) {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Hapus Data Orang Tua"
-        description={`Apakah Anda yakin ingin menghapus data orang tua "${deleteTarget?.nama}"? Relasi dengan siswa akan dilepas otomatis.`}
+        title="Hapus Data Wali Siswa"
+        description={`Apakah Anda yakin ingin menghapus data wali siswa "${deleteTarget?.nama}"? Relasi dengan siswa akan dilepas otomatis.`}
         isLoading={isPending}
       />
     </>

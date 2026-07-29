@@ -239,17 +239,17 @@ export default function AbsensiForm({
         </Link>
       </div>
 
-      {/* ── REKAP ABSENSI ────────────────────────────────────────── */}
+      {/*  */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        {/* <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#1B5E20]" />
             <h2 className="text-sm font-bold text-gray-800">Rekap Absensi</h2>
           </div>
           <span className="text-[10px] font-bold bg-blue-500 text-white px-2.5 py-1 rounded-full">FITUR BARU</span>
-        </div>
+        </div> */}
 
-        <div className="px-6 py-4 border-b border-gray-100">
+        {/* <div className="px-6 py-4 border-b border-gray-100">
           <div className="flex items-end gap-3 flex-wrap">
             <div>
               <label className="block text-xs text-gray-500 mb-1.5">Tanggal Awal</label>
@@ -273,7 +273,7 @@ export default function AbsensiForm({
               Pilih rentang tanggal untuk melihat rekap lengkap absensi siswa dari mata pelajaran {jadwalInfo.mapel}
             </p>
           </div>
-        </div>
+        </div> */}
 
         {/* ── TABEL ABSENSI ─────────────────────────────────────── */}
         <div className="overflow-x-auto">

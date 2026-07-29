@@ -12,7 +12,7 @@ export default async function EditOrangtuaPage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Edit Data Orang Tua</h1>
+        <h1 className="text-xl font-bold text-gray-900">Edit Data Wali Siswa</h1>
         <p className="text-sm text-gray-500 mt-1">Perbarui data: {ortu.user.name}</p>
       </div>
       <OrangtuaForm defaultValues={{ ...ortu, ...ortu.user }} isEdit ortuId={ortu.id} />

@@ -23,8 +23,8 @@ const MENUS: MenuItem[] = [
     children: [
       { label: "Input Data Siswa",     href: "/admin/data-siswa/input" },
       { label: "View Data Siswa",      href: "/admin/data-siswa" },
-      { label: "Input Data Orang Tua", href: "/admin/data-orangtua/input" },
-      { label: "View Data Orang Tua",  href: "/admin/data-orangtua" },
+      { label: "Input Data Wali", href: "/admin/data-orangtua/input" },
+      { label: "View Data Wali",  href: "/admin/data-orangtua" },
       { label: "Input Data Guru",      href: "/admin/data-guru/input" },
       { label: "View Data Guru",       href: "/admin/data-guru" },
       { label: "Input Data Kelas",     href: "/admin/data-kelas/input" },

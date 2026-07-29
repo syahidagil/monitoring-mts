@@ -24,7 +24,7 @@ export default function SejarahSection({
             <p className="text-gray-600 leading-relaxed mb-6">
               Dengan komitmen kuat pada integrasi kurikulum nasional dan
               nilai-nilai keislaman, MTS Al-Amin terus berkembang menjadi
-              sekolah unggulan di Tangerang Selatan.
+              sekolah unggulan di Mataram.
             </p>
             <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-100 rounded-xl p-4">
               <BookOpen className="w-5 h-5 flex-shrink-0" />
@@ -41,8 +41,8 @@ export default function SejarahSection({
               </div>
             </div>
             <div className="absolute -bottom-4 -left-4 bg-green-900 text-white rounded-xl px-5 py-3 shadow-lg">
-              <p className="text-2xl font-bold">29+</p>
-              <p className="text-xs text-green-300">Tahun Berpengalaman</p>
+              <p className="text-2xl font-bold"></p>
+              <p className="text-xs text-green-300"></p>
             </div>
           </div>
         </div>
