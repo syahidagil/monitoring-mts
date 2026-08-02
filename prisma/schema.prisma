@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,38 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─────────────────────────────────────────
-// AUTH
-// ─────────────────────────────────────────
-
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  role      Role     @default(ORANGTUA)
-  name      String
-  status    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relasi per role
-  guru          Guru?
-  orangTua      OrangTua?
-  informasiList InformasiSekolah[]
+  id             String             @id @default(cuid())
+  username       String             @unique
+  password       String
+  role           Role               @default(ORANGTUA)
+  name           String
+  status         Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  guru           Guru?
+  informasiList  InformasiSekolah[]
+  orangTua       OrangTua?
   pengumumanPmbm PengumumanPmbm[]
 
   @@map("users")
 }
-
-enum Role {
-  ADMIN
-  GURU
-  ORANGTUA
-}
-
-// ─────────────────────────────────────────
-// PROFIL PUBLIK
-// ─────────────────────────────────────────
 
 model InformasiSekolah {
   idInfo        Int          @id @default(autoincrement())
@@ -50,10 +32,282 @@ model InformasiSekolah {
   gambar        String?      @db.VarChar(255)
   tanggalUpdate DateTime     @default(now()) @updatedAt
   idUser        String
+  admin         User         @relation(fields: [idUser], references: [id], onDelete: NoAction)
 
-  admin User @relation(fields: [idUser], references: [id])
-
+  @@index([idUser], map: "informasi_sekolah_idUser_fkey")
   @@map("informasi_sekolah")
+}
+
+model TahunAjaran {
+  id        Int      @id @default(autoincrement())
+  nama      String   @unique @db.VarChar(20)
+  semester  Semester
+  aktif     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  jadwal    Jadwal[]
+  kelas     Kelas[]
+
+  @@map("tahun_ajaran")
+}
+
+model Kelas {
+  id            Int         @id @default(autoincrement())
+  nama          String      @db.VarChar(20)
+  tingkat       Int
+  tahunAjaranId Int
+  waliKelasId   String?
+  jadwal        Jadwal[]
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id], onDelete: NoAction)
+  waliKelas     Guru?       @relation("WaliKelas", fields: [waliKelasId], references: [id])
+  siswa         Siswa[]
+
+  @@index([tahunAjaranId], map: "kelas_tahunAjaranId_fkey")
+  @@index([waliKelasId], map: "kelas_waliKelasId_fkey")
+  @@map("kelas")
+}
+
+model Guru {
+  id                       String               @id
+  nip                      String?              @unique @db.VarChar(20)
+  mapel                    String               @db.VarChar(100)
+  noHp                     String?              @db.VarChar(20)
+  alamat                   String?              @db.Text
+  pendidikan               String?              @db.VarChar(100)
+  absensiDibuat            Absensi[]
+  catatanUmumAbsensiDibuat AbsensiCatatanUmum[]
+  user                     User                 @relation(fields: [id], references: [id], onDelete: NoAction)
+  guruMapel                GuruMapel[]
+  hafalanDibuat            Hafalan[]            @relation("GuruHafalan")
+  jadwal                   Jadwal[]
+  kelasWali                Kelas[]              @relation("WaliKelas")
+  nilaiDibuat              Nilai[]
+  sikapDibuat              Sikap[]              @relation("GuruSikap")
+  tahsinDibuat             Tahsin[]             @relation("GuruTahsin")
+
+  @@map("guru")
+}
+
+model OrangTua {
+  id        String  @id
+  noHp      String? @db.VarChar(20)
+  alamat    String? @db.Text
+  pekerjaan String? @db.VarChar(100)
+  user      User    @relation(fields: [id], references: [id], onDelete: NoAction)
+  anak      Siswa[]
+
+  @@map("orang_tua")
+}
+
+model Siswa {
+  id            Int          @id @default(autoincrement())
+  nis           String       @unique @db.VarChar(20)
+  nama          String       @db.VarChar(100)
+  jenisKelamin  JenisKelamin
+  tanggalLahir  DateTime     @db.Date
+  kelasId       Int
+  orangTuaId    String?
+  status        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  alamat        String?      @db.Text
+  namaAyah      String?      @db.VarChar(100)
+  namaIbu       String?      @db.VarChar(100)
+  statusTahfidz Boolean      @default(false)
+  tempatLahir   String?      @db.VarChar(50)
+  absensi       Absensi[]
+  hafalan       Hafalan[]
+  nilai         Nilai[]
+  sikap         Sikap[]
+  kelas         Kelas        @relation(fields: [kelasId], references: [id], onDelete: NoAction)
+  orangTua      OrangTua?    @relation(fields: [orangTuaId], references: [id])
+  tahsin        Tahsin[]
+
+  @@index([kelasId], map: "siswa_kelasId_fkey")
+  @@index([orangTuaId], map: "siswa_orangTuaId_fkey")
+  @@map("siswa")
+}
+
+model Jadwal {
+  id                 Int                  @id @default(autoincrement())
+  kelasId            Int
+  guruId             String
+  hari               Hari
+  jamMulai           String               @db.VarChar(5)
+  jamSelesai         String               @db.VarChar(5)
+  kodeMapel          String               @db.VarChar(5)
+  tahunAjaranId      Int
+  absensi            Absensi[]
+  catatanUmumAbsensi AbsensiCatatanUmum[]
+  guru               Guru                 @relation(fields: [guruId], references: [id], onDelete: NoAction)
+  kelas              Kelas                @relation(fields: [kelasId], references: [id], onDelete: NoAction)
+  mataPelajaran      MataPelajaran        @relation(fields: [kodeMapel], references: [kodeMapel], onDelete: NoAction)
+  tahunAjaran        TahunAjaran          @relation(fields: [tahunAjaranId], references: [id], onDelete: NoAction)
+
+  @@unique([kelasId, hari, jamMulai, tahunAjaranId])
+  @@unique([guruId, hari, jamMulai, tahunAjaranId])
+  @@index([kodeMapel], map: "jadwal_kodeMapel_fkey")
+  @@index([tahunAjaranId], map: "jadwal_tahunAjaranId_fkey")
+  @@map("jadwal")
+}
+
+model Absensi {
+  id         Int           @id @default(autoincrement())
+  siswaId    Int
+  jadwalId   Int
+  guruId     String
+  tanggal    DateTime      @db.Date
+  status     StatusAbsensi
+  keterangan String?       @db.VarChar(255)
+  createdAt  DateTime      @default(now())
+  guru       Guru          @relation(fields: [guruId], references: [id], onDelete: NoAction)
+  jadwal     Jadwal        @relation(fields: [jadwalId], references: [id], onDelete: NoAction)
+  siswa      Siswa         @relation(fields: [siswaId], references: [id], onDelete: NoAction)
+
+  @@unique([siswaId, jadwalId, tanggal])
+  @@index([guruId], map: "absensi_guruId_fkey")
+  @@index([jadwalId], map: "absensi_jadwalId_fkey")
+  @@map("absensi")
+}
+
+model AbsensiCatatanUmum {
+  id        Int      @id @default(autoincrement())
+  jadwalId  Int
+  tanggal   DateTime @db.Date
+  catatan   String   @db.Text
+  guruId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  guru      Guru     @relation(fields: [guruId], references: [id], onDelete: NoAction)
+  jadwal    Jadwal   @relation(fields: [jadwalId], references: [id], onDelete: NoAction)
+
+  @@unique([jadwalId, tanggal])
+  @@index([guruId], map: "absensi_catatan_umum_guruId_fkey")
+  @@map("absensi_catatan_umum")
+}
+
+model Nilai {
+  id          Int        @id @default(autoincrement())
+  siswaId     Int
+  guruId      String
+  jenis       JenisNilai
+  nilai       Decimal    @db.Decimal(5, 2)
+  semester    Semester
+  tahunAjar   String     @db.VarChar(20)
+  keterangan  String?    @db.VarChar(255)
+  tanggal     DateTime   @db.Date
+  guruMapelId Int
+  guru        Guru       @relation(fields: [guruId], references: [id], onDelete: NoAction)
+  guruMapel   GuruMapel  @relation(fields: [guruMapelId], references: [idGuruMapel], onDelete: NoAction)
+  siswa       Siswa      @relation(fields: [siswaId], references: [id], onDelete: NoAction)
+
+  @@unique([siswaId, guruMapelId, jenis, semester, tahunAjar])
+  @@index([guruId], map: "nilai_guruId_fkey")
+  @@index([guruMapelId], map: "nilai_guruMapelId_fkey")
+  @@map("nilai")
+}
+
+model Sikap {
+  id         Int        @id @default(autoincrement())
+  siswaId    Int
+  semester   Semester
+  tahunAjar  String     @db.VarChar(20)
+  tanggal    DateTime   @db.Date
+  guruId     String
+  jenisSikap JenisSikap
+  kategori   String     @db.VarChar(50)
+  keterangan String     @db.Text
+  createdAt  DateTime   @default(now())
+  guru       Guru       @relation("GuruSikap", fields: [guruId], references: [id], onDelete: NoAction)
+  siswa      Siswa      @relation(fields: [siswaId], references: [id], onDelete: NoAction)
+
+  @@index([guruId], map: "sikap_guruId_fkey")
+  @@index([siswaId], map: "sikap_siswaId_fkey")
+  @@map("sikap")
+}
+
+model Hafalan {
+  id         Int          @id @default(autoincrement())
+  siswaId    Int
+  juz        Int          @db.TinyInt
+  nilai      NilaiHafalan
+  tanggal    DateTime     @db.Date
+  guruId     String
+  hari       Hari
+  surat      String       @db.VarChar(50)
+  halaman    Int
+  keterangan String?      @db.Text
+  createdAt  DateTime     @default(now())
+  guru       Guru         @relation("GuruHafalan", fields: [guruId], references: [id], onDelete: NoAction)
+  siswa      Siswa        @relation(fields: [siswaId], references: [id], onDelete: NoAction)
+
+  @@index([guruId], map: "hafalan_guruId_fkey")
+  @@index([siswaId], map: "hafalan_siswaId_fkey")
+  @@map("hafalan")
+}
+
+model Tahsin {
+  id         Int          @id @default(autoincrement())
+  siswaId    Int
+  tanggal    DateTime     @db.Date
+  guruId     String
+  hari       Hari
+  juz        Int          @db.TinyInt
+  surat      String       @db.VarChar(50)
+  halaman    Int
+  tajwid     NilaiHafalan
+  makhraj    NilaiHafalan
+  sifatul    NilaiHafalan
+  keterangan String?      @db.Text
+  createdAt  DateTime     @default(now())
+  guru       Guru         @relation("GuruTahsin", fields: [guruId], references: [id], onDelete: NoAction)
+  siswa      Siswa        @relation(fields: [siswaId], references: [id], onDelete: NoAction)
+
+  @@index([guruId], map: "tahsin_guruId_fkey")
+  @@index([siswaId], map: "tahsin_siswaId_fkey")
+  @@map("tahsin")
+}
+
+model MataPelajaran {
+  kodeMapel String      @id @db.VarChar(5)
+  namaMapel String      @db.VarChar(20)
+  guruMapel GuruMapel[]
+  jadwal    Jadwal[]
+
+  @@map("mata_pelajaran")
+}
+
+model GuruMapel {
+  idGuruMapel   Int           @id @default(autoincrement())
+  idGuru        String        @db.VarChar(30)
+  kodeMapel     String        @db.VarChar(5)
+  guru          Guru          @relation(fields: [idGuru], references: [id], onDelete: NoAction)
+  mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel], onDelete: NoAction)
+  nilai         Nilai[]
+
+  @@unique([idGuru, kodeMapel])
+  @@index([kodeMapel], map: "guru_mapel_kodeMapel_fkey")
+  @@map("guru_mapel")
+}
+
+model PengumumanPmbm {
+  id        Int      @id @default(autoincrement())
+  judul     String   @db.VarChar(200)
+  deskripsi String?  @db.Text
+  filePath  String   @db.VarChar(255)
+  fileName  String   @db.VarChar(255)
+  tahun     String   @db.VarChar(20)
+  idUser    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  admin     User     @relation(fields: [idUser], references: [id], onDelete: NoAction)
+
+  @@index([idUser], map: "pengumuman_pmbm_idUser_fkey")
+  @@map("pengumuman_pmbm")
+}
+
+enum Role {
+  ADMIN
+  GURU
+  ORANGTUA
 }
 
 enum KategoriInfo {
@@ -70,144 +324,15 @@ enum KategoriInfo {
   statistik
 }
 
-// ─────────────────────────────────────────
-// DATA AKADEMIK
-// ─────────────────────────────────────────
-
-model TahunAjaran {
-  id        Int       @id @default(autoincrement())
-  nama      String    @unique @db.VarChar(20) // contoh: "2024/2025"
-  semester  Semester
-  aktif     Boolean   @default(false)
-  createdAt DateTime  @default(now())
-
-  kelas     Kelas[]
-  jadwal    Jadwal[]
-
-  @@map("tahun_ajaran")
-}
-
 enum Semester {
   GANJIL
   GENAP
-}
-
-model Kelas {
-  id           Int    @id @default(autoincrement())
-  nama         String @db.VarChar(20) // contoh: "7A", "8B"
-  tingkat      Int    // 7, 8, atau 9
-  tahunAjaranId Int
-  waliKelasId  String?
-
-  tahunAjaran TahunAjaran @relation(fields: [tahunAjaranId], references: [id])
-  waliKelas   Guru?       @relation("WaliKelas", fields: [waliKelasId], references: [id])
-
-  siswa       Siswa[]
-  jadwal      Jadwal[]
-
-  @@map("kelas")
-}
-
-model Guru {
-  id        String  @id
-  nip       String? @unique @db.VarChar(20)
-  mapel     String  @db.VarChar(100)
-  noHp      String? @db.VarChar(20)
-  alamat    String? @db.Text
-  pendidikan String? @db.VarChar(100)
-
-  user      User   @relation(fields: [id], references: [id])
-
-  kelasWali   Kelas[]   @relation("WaliKelas")
-  jadwal      Jadwal[]
-  guruMapel   GuruMapel[]
-  sikapDibuat   Sikap[]   @relation("GuruSikap")
-  hafalanDibuat Hafalan[] @relation("GuruHafalan")
-  tahsinDibuat  Tahsin[]  @relation("GuruTahsin")
-  nilaiDibuat   Nilai[]
-  absensiDibuat Absensi[]
-  catatanUmumAbsensiDibuat AbsensiCatatanUmum[]
-
-  @@map("guru")
-}
-
-model OrangTua {
-  id       String  @id
-  noHp     String? @db.VarChar(20)
-  alamat   String? @db.Text
-  pekerjaan String? @db.VarChar(100)
-
-  user User    @relation(fields: [id], references: [id])
-  anak Siswa[]
-
-  @@map("orang_tua")
-}
-
-model Siswa {
-  id           Int          @id @default(autoincrement())
-  nis          String       @unique @db.VarChar(20)
-  nama         String       @db.VarChar(100)
-  jenisKelamin JenisKelamin
-  tanggalLahir DateTime     @db.Date
-  tempatLahir  String?      @db.VarChar(50)
-  alamat       String?      @db.Text
-  namaAyah     String?      @db.VarChar(100)
-  namaIbu      String?      @db.VarChar(100)
-  statusTahfidz Boolean     @default(false)
-  kelasId      Int
-  orangTuaId   String?
-  status       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-
-  kelas    Kelas     @relation(fields: [kelasId], references: [id])
-  orangTua OrangTua? @relation(fields: [orangTuaId], references: [id])
-
-  absensi Absensi[]
-  nilai   Nilai[]
-  sikap   Sikap[]
-  hafalan Hafalan[]
-  tahsin  Tahsin[]
-
-  @@map("siswa")
 }
 
 enum JenisKelamin {
   L
   P
 }
-
-// ─────────────────────────────────────────
-// MONITORING — ABSENSI
-// ─────────────────────────────────────────
-
-model Jadwal {
-  id            Int    @id @default(autoincrement())
-  kelasId       Int                    // FK ke Kelas (sudah ada)
-  guruId        String                 // FK ke Guru (sudah ada)
-  kodeMapel     String @db.VarChar(5)  // FK ke MataPelajaran (BARU)
-  tahunAjaranId Int                    // FK ke TahunAjaran (BARU)
-  hari          Hari                   // enum (sudah ada)
-  jamMulai      String @db.VarChar(5)  // "07:30" (sudah ada)
-  jamSelesai    String @db.VarChar(5)  // "09:00" (sudah ada)
-
-  kelas         Kelas         @relation(fields: [kelasId], references: [id])
-  guru          Guru          @relation(fields: [guruId], references: [id])
-  mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
-  tahunAjaran   TahunAjaran   @relation(fields: [tahunAjaranId], references: [id])
-  absensi       Absensi[]
-  catatanUmumAbsensi AbsensiCatatanUmum[]
-
-  // Constraint: 1 kelas tidak boleh punya jadwal sama
-  // di hari + jam yang sama dalam 1 tahun ajaran
-  @@unique([kelasId, hari, jamMulai, tahunAjaranId])
-  
-  // Constraint: 1 guru tidak boleh ngajar 2 kelas
-  // di waktu yang sama
-  @@unique([guruId, hari, jamMulai, tahunAjaranId])
-  
-  @@map("jadwal")
-}
-
 
 enum Hari {
   SENIN
@@ -218,24 +343,6 @@ enum Hari {
   SABTU
 }
 
-model Absensi {
-  id        Int           @id @default(autoincrement())
-  siswaId   Int
-  jadwalId  Int
-  guruId    String
-  tanggal   DateTime      @db.Date
-  status    StatusAbsensi
-  keterangan String?      @db.VarChar(255)
-  createdAt DateTime      @default(now())
-
-  siswa  Siswa  @relation(fields: [siswaId], references: [id])
-  jadwal Jadwal @relation(fields: [jadwalId], references: [id])
-  guru   Guru   @relation(fields: [guruId], references: [id])
-
-  @@unique([siswaId, jadwalId, tanggal])
-  @@map("absensi")
-}
-
 enum StatusAbsensi {
   HADIR
   SAKIT
@@ -243,178 +350,21 @@ enum StatusAbsensi {
   ALPHA
 }
 
-// Catatan umum untuk seluruh kelas pada 1 sesi jadwal + tanggal tertentu
-model AbsensiCatatanUmum {
-  id       Int      @id @default(autoincrement())
-  jadwalId Int
-  tanggal  DateTime @db.Date
-  catatan  String   @db.Text
-  guruId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  jadwal Jadwal @relation(fields: [jadwalId], references: [id])
-  guru   Guru   @relation(fields: [guruId], references: [id])
-
-  @@unique([jadwalId, tanggal])
-  @@map("absensi_catatan_umum")
-}
-
-// ─────────────────────────────────────────
-// MONITORING — NILAI
-// ─────────────────────────────────────────
-
-model Nilai {
-  id           Int        @id @default(autoincrement())
-  siswaId      Int
-  guruId       String
-  guruMapelId  Int        // FK ke GuruMapel (TAMBAHKAN)
-  jenis        JenisNilai
-  nilai        Decimal    @db.Decimal(5, 2)  // 0-100
-  tanggal      DateTime   @db.Date
-  semester     Semester
-  tahunAjar    String     @db.VarChar(20)
-  keterangan   String?    @db.VarChar(255)
-
-  siswa     Siswa     @relation(fields: [siswaId], references: [id])
-  guru      Guru      @relation(fields: [guruId], references: [id])
-  guruMapel GuruMapel @relation(fields: [guruMapelId], references: [idGuruMapel])
-  @@unique([siswaId, guruMapelId, jenis, semester, tahunAjar])
-
-  @@map("nilai")
-}
-
 enum JenisNilai {
   TUGAS
   HARIAN
-  PR        // <-- tambah baris ini
+  PR
   UTS
   UAS
   PRAKTIK
 }
 
-// ─────────────────────────────────────────
-// MONITORING — SIKAP
-// ─────────────────────────────────────────
-
-model Sikap {
-  id         Int      @id @default(autoincrement())
-  siswaId    Int
-  guruId     String   // FK ke Guru (id_user role=guru)
-  tanggal    DateTime @db.Date
-  jenisSikap JenisSikap  // POSITIF atau PELANGGARAN
-  kategori   String   @db.VarChar(50)  // "Kedisiplinan", "Atribut", dll
-  keterangan String   @db.Text
-  semester   Semester
-  tahunAjar  String   @db.VarChar(20)
-  createdAt  DateTime @default(now())
-
-  siswa Siswa @relation(fields: [siswaId], references: [id])
-  guru  Guru  @relation("GuruSikap", fields: [guruId], references: [id])
-
-  @@map("sikap")
-}
 enum JenisSikap {
   POSITIF
   PELANGGARAN
 }
 
-// ─────────────────────────────────────────
-// MONITORING — HAFALAN
-// ─────────────────────────────────────────
-
-model Hafalan {
-  id        Int          @id @default(autoincrement())
-  siswaId   Int
-  guruId    String       // guru penguji
-  hari      Hari
-  tanggal   DateTime     @db.Date
-  juz       Int          @db.TinyInt  // 1-30
-  surat     String       @db.VarChar(50)  // nama surat
-  halaman   Int          // 1-604
-  nilai     NilaiHafalan // L atau L-
-  keterangan String?     @db.Text
-  createdAt  DateTime    @default(now())
-
-  siswa Siswa @relation(fields: [siswaId], references: [id])
-  guru  Guru  @relation("GuruHafalan", fields: [guruId], references: [id])
-
-  @@map("hafalan")
-}
-
 enum NilaiHafalan {
-  L      // Lancar
-  L_MIN  @map("L-")  // Lancar dengan catatan
-}
-
-// ─────────────────────────────────────────
-// MONITORING — TAHSIN
-// ─────────────────────────────────────────
-
-model Tahsin {
-  id         Int         @id @default(autoincrement())
-  siswaId    Int
-  guruId     String
-  hari       Hari
-  tanggal    DateTime    @db.Date
-  juz        Int         @db.TinyInt
-  surat      String      @db.VarChar(50)
-  halaman    Int
-  tajwid     NilaiHafalan
-  makhraj    NilaiHafalan
-  sifatul    NilaiHafalan
-  keterangan String?     @db.Text
-  createdAt  DateTime    @default(now())
-
-  siswa Siswa @relation(fields: [siswaId], references: [id])
-  guru  Guru  @relation("GuruTahsin", fields: [guruId], references: [id])
-
-  @@map("tahsin")
-}
-
-// ─────────────────────────────────────────
-// MATA PELAJARAN
-// ─────────────────────────────────────────
-
-model MataPelajaran {
-  kodeMapel String @id @db.VarChar(5)
-  namaMapel String @db.VarChar(20)
-
-  guruMapel GuruMapel[]
-  jadwal    Jadwal[]
-
-  @@map("mata_pelajaran")
-}
-
-// ─────────────────────────────────────────
-// RELASI GURU — MATA PELAJARAN
-// ─────────────────────────────────────────
-
-model GuruMapel {
-  idGuruMapel Int    @id @default(autoincrement())
-  idGuru      String @db.VarChar(30)
-  kodeMapel   String @db.VarChar(5)
-
-  guru         Guru          @relation(fields: [idGuru], references: [id])
-  mataPelajaran MataPelajaran @relation(fields: [kodeMapel], references: [kodeMapel])
-  nilai        Nilai[]
-
-  @@unique([idGuru, kodeMapel]) // 1 guru tidak bisa duplikat mapel yang sama
-  @@map("guru_mapel")
-}
-
-model PengumumanPmbm {
-  id          Int      @id @default(autoincrement())
-  judul       String   @db.VarChar(200)
-  deskripsi   String?  @db.Text
-  filePath    String   @db.VarChar(255)
-  fileName    String   @db.VarChar(255)
-  tahun       String   @db.VarChar(20)
-  idUser      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  admin User @relation(fields: [idUser], references: [id])
-
-  @@map("pengumuman_pmbm")
+  L
+  L_MIN @map("L-")
 }
