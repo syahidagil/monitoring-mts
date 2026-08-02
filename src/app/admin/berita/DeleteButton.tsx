@@ -10,7 +10,7 @@ export default function DeleteButton({ idInfo }: { idInfo: number }) {
   if (confirm) {
     return (
       <div className="flex items-center gap-1">
-        <button onClick={() => startTransition(() => deleteSchoolInfo(idInfo))}
+        <button onClick={() => startTransition(() => { void deleteSchoolInfo(idInfo); })}
           className="text-xs text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-colors" disabled={isPending}>
           {isPending ? "..." : "Hapus"}
         </button>

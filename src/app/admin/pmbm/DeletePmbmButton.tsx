@@ -10,7 +10,7 @@ export default function DeletePmbmButton({ id }: { id: number }) {
   if (confirm) {
     return (
       <div className="flex items-center gap-1">
-        <button onClick={() => startTransition(() => deletePengumuman(id))}
+        <button onClick={() => startTransition(() => { void deletePengumuman(id); })}
           disabled={isPending}
           className="text-xs text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-colors">
           {isPending ? "..." : "Hapus"}

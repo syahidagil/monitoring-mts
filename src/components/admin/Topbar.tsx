@@ -57,10 +57,10 @@ export default function Topbar({ user }: { user: any }) {
   const pageTitle = crumbs[crumbs.length - 1].label;
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 h-14 flex items-center justify-between flex-shrink-0">
+    <header className="bg-white border-b border-gray-200 px-4 lg:px-6 h-14 flex items-center justify-between flex-shrink-0 pl-16 lg:pl-6">
       {/* Breadcrumb */}
-      <div>
-        <div className="flex items-center gap-1.5 text-xs text-gray-400">
+      <div className="min-w-0">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400">
           <span>Admin</span>
           {crumbs.map((c, i) => (
             <span key={i} className="flex items-center gap-1.5">
@@ -73,11 +73,11 @@ export default function Topbar({ user }: { user: any }) {
             </span>
           ))}
         </div>
-        <p className="text-sm font-bold text-gray-800 mt-0.5">{pageTitle}</p>
+        <p className="text-sm font-bold text-gray-800 mt-0.5 truncate">{pageTitle}</p>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
@@ -94,9 +94,9 @@ export default function Topbar({ user }: { user: any }) {
         </div>
 
         <form action={logoutAction}>
-          <button className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 px-3 py-1.5 rounded-lg transition-colors">
+          <button className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors">
             <LogOut className="w-3.5 h-3.5" />
-            Keluar
+            <span className="hidden sm:inline">Keluar</span>
           </button>
         </form>
       </div>

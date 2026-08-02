@@ -1,7 +1,7 @@
 ﻿import {
   PrismaClient, Role, Semester, JenisKelamin,
-  StatusAbsensi, StatusHafalan, StatusTahsin,
-  Predikat, Hari, KategoriInfo
+  StatusAbsensi, Hari, KategoriInfo,
+  JenisNilai, JenisSikap, NilaiHafalan,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -321,9 +321,9 @@ async function main() {
   // ── JADWAL ─────────────────────────────────────────────────
   const jadwalList = [];
   const jadwalData = [
-    { kelasIdx: 0, guruIdx: 0, mapel: "Matematika", hari: Hari.SENIN,   jamMulai: "07:00", jamSelesai: "08:30" },
-    { kelasIdx: 0, guruIdx: 1, mapel: "Bahasa Indonesia", hari: Hari.SELASA, jamMulai: "07:00", jamSelesai: "08:30" },
-    { kelasIdx: 2, guruIdx: 2, mapel: "Fiqih", hari: Hari.RABU,    jamMulai: "09:00", jamSelesai: "10:30" },
+    { kelasIdx: 0, guruIdx: 0, kodeMapel: "MTK", hari: Hari.SENIN,   jamMulai: "07:00", jamSelesai: "08:30" },
+    { kelasIdx: 0, guruIdx: 1, kodeMapel: "BIN", hari: Hari.SELASA, jamMulai: "07:00", jamSelesai: "08:30" },
+    { kelasIdx: 2, guruIdx: 2, kodeMapel: "FIQ", hari: Hari.RABU,    jamMulai: "09:00", jamSelesai: "10:30" },
   ];
 
   for (const j of jadwalData) {
@@ -332,6 +332,7 @@ async function main() {
         kelasId: kelasList[j.kelasIdx].id,
         guruId: guruUsers[j.guruIdx].user.id,
         hari: j.hari,
+        tahunAjaranId: tahunAktif.id,
       },
     });
     if (!existing) {
@@ -339,7 +340,8 @@ async function main() {
         data: {
           kelasId: kelasList[j.kelasIdx].id,
           guruId: guruUsers[j.guruIdx].user.id,
-          mapel: j.mapel,
+          kodeMapel: j.kodeMapel,
+          tahunAjaranId: tahunAktif.id,
           hari: j.hari,
           jamMulai: j.jamMulai,
           jamSelesai: j.jamSelesai,
@@ -378,51 +380,89 @@ async function main() {
   console.log("Absensi selesai");
 
   // ── NILAI (sample) ─────────────────────────────────────────
-  await prisma.nilai.createMany({
-    data: [
-      { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, mapel: "Matematika", jenis: "HARIAN", nilai: 85, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, mapel: "Matematika", jenis: "UTS",    nilai: 78, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[1].id, guruId: guruUsers[1].user.id, mapel: "Bahasa Indonesia", jenis: "HARIAN", nilai: 90, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, mapel: "Fiqih", jenis: "UAS", nilai: 88, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-    ],
-    skipDuplicates: true,
-  });
+  const guruMapelRecords = await prisma.guruMapel.findMany();
+  const getGuruMapelId = (guruId: string, namaMapel: string) => {
+    const kodeMapel = mapelData.find((m) => m.namaMapel === namaMapel)?.kodeMapel;
+    return guruMapelRecords.find((gm) => gm.idGuru === guruId && gm.kodeMapel === kodeMapel)?.idGuruMapel;
+  };
+
+  const nilaiSeed = [
+    { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, mapel: "Matematika", jenis: JenisNilai.HARIAN, nilai: 85 },
+    { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, mapel: "Matematika", jenis: JenisNilai.UTS,    nilai: 78 },
+    { siswaId: siswaList[1].id, guruId: guruUsers[1].user.id, mapel: "Bahasa Indonesia", jenis: JenisNilai.HARIAN, nilai: 90 },
+    { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, mapel: "Fiqih", jenis: JenisNilai.UAS, nilai: 88 },
+  ];
+
+  for (const n of nilaiSeed) {
+    const guruMapelId = getGuruMapelId(n.guruId, n.mapel);
+    if (!guruMapelId) continue;
+    await prisma.nilai.upsert({
+      where: { siswaId_guruMapelId_jenis_semester_tahunAjar: { siswaId: n.siswaId, guruMapelId, jenis: n.jenis, semester: Semester.GANJIL, tahunAjar: "2025/2026" } },
+      update: {},
+      create: {
+        siswaId: n.siswaId,
+        guruId: n.guruId,
+        guruMapelId,
+        jenis: n.jenis,
+        nilai: n.nilai,
+        tanggal: new Date(),
+        semester: Semester.GANJIL,
+        tahunAjar: "2025/2026",
+      },
+    });
+  }
   console.log("Nilai selesai");
 
   // ── SIKAP (sample) ─────────────────────────────────────────
-  await prisma.sikap.createMany({
-    data: [
-      { siswaId: siswaList[0].id, aspek: "Kedisiplinan",  predikat: Predikat.B,  semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[0].id, aspek: "Sopan Santun",  predikat: Predikat.SB, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[1].id, aspek: "Kedisiplinan",  predikat: Predikat.SB, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-      { siswaId: siswaList[2].id, aspek: "Kerja Sama",    predikat: Predikat.B,  semester: Semester.GANJIL, tahunAjar: "2025/2026" },
-    ],
-    skipDuplicates: true,
-  });
+  const sikapSeed = [
+    { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, jenisSikap: JenisSikap.POSITIF,    kategori: "Kedisiplinan", keterangan: "Selalu datang tepat waktu dan mengikuti tata tertib sekolah." },
+    { siswaId: siswaList[0].id, guruId: guruUsers[1].user.id, jenisSikap: JenisSikap.POSITIF,    kategori: "Sopan Santun",  keterangan: "Bersikap sopan kepada guru dan teman." },
+    { siswaId: siswaList[1].id, guruId: guruUsers[0].user.id, jenisSikap: JenisSikap.POSITIF,    kategori: "Kedisiplinan", keterangan: "Sangat disiplin dalam mengerjakan tugas." },
+    { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, jenisSikap: JenisSikap.PELANGGARAN, kategori: "Kerja Sama",   keterangan: "Kurang aktif dalam kerja kelompok." },
+  ];
+
+  for (const s of sikapSeed) {
+    const existing = await prisma.sikap.findFirst({
+      where: { siswaId: s.siswaId, guruId: s.guruId, kategori: s.kategori, semester: Semester.GANJIL, tahunAjar: "2025/2026" },
+    });
+    if (!existing) {
+      await prisma.sikap.create({
+        data: { ...s, tanggal: new Date(), semester: Semester.GANJIL, tahunAjar: "2025/2026" },
+      });
+    }
+  }
   console.log("Sikap selesai");
 
   // ── HAFALAN (sample) ───────────────────────────────────────
-  await prisma.hafalan.createMany({
-    data: [
-      { siswaId: siswaList[0].id, surah: "Al-Fatihah", ayatMulai: 1, ayatSelesai: 7,  juz: 1, nilai: 95, status: StatusHafalan.LULUS },
-      { siswaId: siswaList[0].id, surah: "Al-Baqarah", ayatMulai: 1, ayatSelesai: 10, juz: 1, nilai: 80, status: StatusHafalan.PROSES },
-      { siswaId: siswaList[1].id, surah: "Al-Fatihah", ayatMulai: 1, ayatSelesai: 7,  juz: 1, nilai: 98, status: StatusHafalan.LULUS },
-      { siswaId: siswaList[2].id, surah: "Al-Ikhlas",  ayatMulai: 1, ayatSelesai: 4,  juz: 30, nilai: 92, status: StatusHafalan.LULUS },
-    ],
-    skipDuplicates: true,
-  });
+  const hafalanSeed = [
+    { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.SENIN, juz: 1,  surat: "Al-Fatihah", halaman: 1,   nilai: NilaiHafalan.L },
+    { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.RABU,  juz: 1,  surat: "Al-Baqarah", halaman: 2,   nilai: NilaiHafalan.L_MIN },
+    { siswaId: siswaList[1].id, guruId: guruUsers[2].user.id, hari: Hari.SENIN, juz: 1,  surat: "Al-Fatihah", halaman: 1,   nilai: NilaiHafalan.L },
+    { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, hari: Hari.JUMAT, juz: 30, surat: "Al-Ikhlas",  halaman: 604, nilai: NilaiHafalan.L },
+  ];
+
+  for (const h of hafalanSeed) {
+    const existing = await prisma.hafalan.findFirst({ where: { siswaId: h.siswaId, surat: h.surat, juz: h.juz } });
+    if (!existing) {
+      await prisma.hafalan.create({ data: { ...h, tanggal: new Date() } });
+    }
+  }
   console.log("Hafalan selesai");
 
   // ── TAHSIN (sample) ────────────────────────────────────────
-  await prisma.tahsin.createMany({
-    data: [
-      { siswaId: siswaList[0].id, materi: "Makharijul Huruf", nilai: 88, status: StatusTahsin.LULUS },
-      { siswaId: siswaList[0].id, materi: "Hukum Nun Mati",   nilai: 75, status: StatusTahsin.PROSES },
-      { siswaId: siswaList[1].id, materi: "Makharijul Huruf", nilai: 95, status: StatusTahsin.LULUS },
-      { siswaId: siswaList[2].id, materi: "Mad dan Qashr",    nilai: 82, status: StatusTahsin.LULUS },
-    ],
-    skipDuplicates: true,
-  });
+  const tahsinSeed = [
+    { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.SELASA, juz: 1, surat: "Makharijul Huruf", halaman: 1, tajwid: NilaiHafalan.L,     makhraj: NilaiHafalan.L,     sifatul: NilaiHafalan.L_MIN },
+    { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.KAMIS,  juz: 1, surat: "Hukum Nun Mati",   halaman: 3, tajwid: NilaiHafalan.L_MIN, makhraj: NilaiHafalan.L,     sifatul: NilaiHafalan.L },
+    { siswaId: siswaList[1].id, guruId: guruUsers[2].user.id, hari: Hari.SELASA, juz: 1, surat: "Makharijul Huruf", halaman: 1, tajwid: NilaiHafalan.L,     makhraj: NilaiHafalan.L,     sifatul: NilaiHafalan.L },
+    { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, hari: Hari.SELASA, juz: 1, surat: "Mad dan Qashr",    halaman: 5, tajwid: NilaiHafalan.L,     makhraj: NilaiHafalan.L_MIN, sifatul: NilaiHafalan.L },
+  ];
+
+  for (const t of tahsinSeed) {
+    const existing = await prisma.tahsin.findFirst({ where: { siswaId: t.siswaId, surat: t.surat, juz: t.juz } });
+    if (!existing) {
+      await prisma.tahsin.create({ data: { ...t, tanggal: new Date() } });
+    }
+  }
   console.log("Tahsin selesai");
 
   // ── KONTEN PUBLIK ──────────────────────────────────────────

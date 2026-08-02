@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Building2, Newspaper, Users,
   Settings, ChevronDown, ChevronRight, GraduationCap,
-  School, FileUp, Calendar, CalendarDays, BookOpen
+  School, FileUp, Calendar, CalendarDays, BookOpen, Menu, X
 } from "lucide-react";
 
 type Child = { label: string; href: string };
@@ -100,8 +100,28 @@ export default function Sidebar() {
   const isParentActive = (children: Child[]) =>
     children.some((c) => isChildActive(c.href));
 
+  const [open, setOpen] = useState(false);
+
   return (
-    <aside className="w-64 bg-[#1B5E20] flex flex-col h-full flex-shrink-0">
+    <>
+      {/* Mobile overlay */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 bg-black/40 z-30" onClick={() => setOpen(false)} />
+      )}
+
+      {/* Mobile toggle */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="lg:hidden fixed top-4 left-4 z-50 w-9 h-9 bg-[#1B5E20] text-white rounded-lg flex items-center justify-center shadow-lg"
+      >
+        {open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+      </button>
+
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#1B5E20] flex flex-col h-full flex-shrink-0 transform transition-transform duration-200 ${
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -124,6 +144,7 @@ export default function Sidebar() {
               <Link
                 key={menu.label}
                 href={menu.href}
+                onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                   isActive(menu.href)
                     ? "bg-white/20 text-white font-semibold"
@@ -163,6 +184,7 @@ export default function Sidebar() {
                     <Link
                       key={child.href}
                       href={child.href}
+                      onClick={() => setOpen(false)}
                       className={`block px-3 py-2 rounded-lg text-xs transition-all ${
                         isChildActive(child.href)
                           ? "bg-white/20 text-white font-semibold"
@@ -183,6 +205,7 @@ export default function Sidebar() {
       <div className="px-5 py-4 border-t border-white/10">
         <p className="text-green-400 text-xs text-center">v1.0.0 • 2026</p>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

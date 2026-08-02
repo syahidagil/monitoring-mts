@@ -52,8 +52,8 @@ export default function PenggunaClient({ users }: { users: any[] }) {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Pengguna</th>
@@ -95,7 +95,7 @@ export default function PenggunaClient({ users }: { users: any[] }) {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => startTransition(() => updateUserStatus(user.id, !user.status))}
+                    <button onClick={() => startTransition(() => { void updateUserStatus(user.id, !user.status); })}
                       className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-2.5 py-1.5 rounded-lg transition-colors">
                       {user.status ? "Nonaktifkan" : "Aktifkan"}
                     </button>
@@ -106,7 +106,7 @@ export default function PenggunaClient({ users }: { users: any[] }) {
                       Reset PW
                     </button>
                     <button onClick={() => {
-                      if (confirm("Hapus pengguna ini?")) startTransition(() => deleteUser(user.id));
+                      if (confirm("Hapus pengguna ini?")) startTransition(() => { void deleteUser(user.id); });
                     }} className="text-xs text-red-500 hover:text-red-600 border border-red-200 px-2.5 py-1.5 rounded-lg transition-colors">
                       Hapus
                     </button>

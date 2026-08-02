@@ -27,8 +27,8 @@ export default async function GuruJadwalPage() {
             Belum ada jadwal mengajar
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase">Hari</th>
