@@ -5,7 +5,7 @@ import { ArrowLeft, Eye, EyeOff, Loader2, Save, ShieldCheck, UserRound, X } from
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 
-import SiswaMultiSelect from "./SiswaMultiSelect";
+import SiswaMultiSelect from "../siswa/SiswaMultiSelect";
 
 export default function OrangtuaInputForm() {
   const formRef = useRef<HTMLFormElement>(null);
