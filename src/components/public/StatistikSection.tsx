@@ -26,14 +26,15 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 }
 
 const STATS = [
-  { icon: Users, label: "SISWA", value: 500, suffix: "+" },
-  { icon: GraduationCap, label: "GURU", value: 40, suffix: "+" },
-  { icon: Award, label: "PRESTASI", value: 100, suffix: "+" },
-  { icon: BookOpen, label: "ESKUL", value: 12, suffix: "" },
-];
+  { key: "siswa", icon: Users, label: "SISWA", suffix: "+" },
+  { key: "guru", icon: GraduationCap, label: "GURU", suffix: "+" },
+  { key: "prestasi", icon: Award, label: "PRESTASI", suffix: "+" },
+  { key: "eskul", icon: BookOpen, label: "ESKUL", suffix: "" },
+] as const;
 
-export default function StatistikSection({ statistik }: { statistik?: any }) {
-  const values = statistik?.isi?.split("|").map(Number) ?? [500, 40, 100, 12];
+type Counts = { siswa: number; guru: number; prestasi: number; eskul: number };
+
+export default function StatistikSection({ counts }: { counts: Counts }) {
   return (
     <section className="py-16 bg-white">
       <div className="max-w-5xl mx-auto px-6 lg:px-8">
@@ -42,11 +43,11 @@ export default function StatistikSection({ statistik }: { statistik?: any }) {
           <div className="w-12 h-1 bg-[#1B5E20] mx-auto mt-3 rounded-full" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {STATS.map(({ icon: Icon, label, value, suffix }, i) => (
+          {STATS.map(({ icon: Icon, label, key, suffix }) => (
             <div key={label} className="border border-gray-200 rounded-xl p-8 text-center hover:shadow-md transition-shadow">
               <Icon className="w-8 h-8 text-[#2E7D32] mx-auto mb-4" strokeWidth={1.5} />
               <p className="text-4xl font-bold text-gray-900 mb-2">
-                <CountUp target={values[i] ?? value} suffix={suffix} />
+                <CountUp target={counts[key]} suffix={suffix} />
               </p>
               <p className="text-xs font-semibold text-gray-500 tracking-widest">{label}</p>
             </div>

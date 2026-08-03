@@ -13,9 +13,13 @@ import QuoteSection from "@/components/public/QuoteSection";
 import Footer from "@/components/public/Footer";
 
 export default async function HomePage() {
-  const data = await prisma.informasiSekolah.findMany({
-    orderBy: { tanggalUpdate: "desc" },
-  });
+  const [data, siswaCount, guruCount, prestasiCount, eskulCount] = await Promise.all([
+    prisma.informasiSekolah.findMany({ orderBy: { tanggalUpdate: "desc" } }),
+    prisma.siswa.count({ where: { status: true } }),
+    prisma.guru.count(),
+    prisma.informasiSekolah.count({ where: { kategori: "prestasi" } }),
+    prisma.informasiSekolah.count({ where: { kategori: "ekstrakurikuler" } }),
+  ]);
 
   const get = (kategori: string) =>
     data.filter((d) => d.kategori === kategori);
@@ -24,7 +28,9 @@ export default async function HomePage() {
     <main className="bg-white">
       <Navbar />
       <HeroSection />
-      <StatistikSection statistik={get("statistik")[0]} />
+      <StatistikSection
+        counts={{ siswa: siswaCount, guru: guruCount, prestasi: prestasiCount, eskul: eskulCount }}
+      />
       <SejarahSection sejarah={get("sejarah")[0]} />
       <VisiMisiSection
         visi={get("visi")[0]}
