@@ -31,7 +31,7 @@ export async function createJadwal(formData: FormData) {
 
   const parsed = jadwalSchema.safeParse(raw);
   if (!parsed.success)
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
 
   const { hari, kodeMapel, jamMulai, jamSelesai, guruId, kelasId, tahunAjaranId } = parsed.data;
 
@@ -198,7 +198,7 @@ export async function updateJadwal(id: number, formData: FormData) {
 
   const parsed = jadwalSchema.safeParse(raw);
   if (!parsed.success)
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
 
   const { hari, kodeMapel, jamMulai, jamSelesai, guruId, kelasId, tahunAjaranId } = parsed.data;
 

@@ -27,7 +27,7 @@ export async function createUser(formData: FormData) {
   };
   const parsed = UserSchema.safeParse(raw);
   if (!parsed.success) {
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
   }
   const exists = await prisma.user.findUnique({ where: { username: raw.username } });
   if (exists) return { success: false, message: "Username sudah digunakan" };

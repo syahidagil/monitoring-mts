@@ -24,7 +24,7 @@ export async function upsertSchoolInfo(formData: FormData) {
   };
   const parsed = SchoolInfoSchema.safeParse(raw);
   if (!parsed.success) {
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
   }
   const idInfo = formData.get("idInfo");
   if (idInfo) {

@@ -17,7 +17,7 @@ export async function createTahunPelajaran(formData: FormData) {
 
   const parsed = tahunAjaranSchema.safeParse(raw);
   if (!parsed.success)
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
 
   // Cek duplikat kombinasi nama + semester
   const exists = await prisma.tahunAjaran.findFirst({
@@ -83,7 +83,7 @@ export async function updateTahunPelajaran(id: number, formData: FormData) {
 
   const parsed = tahunAjaranSchema.safeParse(raw);
   if (!parsed.success)
-    return { success: false, message: parsed.error.errors[0].message };
+    return { success: false, message: parsed.error.issues[0].message };
 
   // Cek apakah sudah punya jadwal (lewat kelas)
   const kelasCount = await prisma.kelas.count({ where: { tahunAjaranId: id } });
