@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import {
-  Eye, EyeOff, User, Lock, ArrowRight, AlertTriangle, Building2,
+  Eye, EyeOff, User, Lock, ArrowRight, ArrowLeft, AlertTriangle, Building2,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -70,7 +71,16 @@ export default function LoginPage() {
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-[440px] bg-white rounded-2xl shadow-md border border-gray-100 p-8">
-        
+
+        {/* Kembali ke website sekolah */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 hover:text-green-900 mb-5 transition"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Kembali ke Beranda
+        </Link>
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-3 border border-green-100">
