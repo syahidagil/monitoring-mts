@@ -275,6 +275,22 @@ export default function AbsensiForm({
           </div>
         </div> */}
 
+        {/* Rekap cepat */}
+        <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-4 text-xs text-gray-500">
+          <span>{siswaList.length} siswa</span>
+          {["HADIR","ALPHA","IZIN","SAKIT"].map((s) => (
+            rekap[s] ? (
+              <span key={s} className={`font-semibold ${
+                s === "HADIR" ? "text-green-600" :
+                s === "ALPHA" ? "text-red-600"   :
+                s === "IZIN"  ? "text-yellow-600" :
+                "text-blue-600"
+              }`}>{s[0]}: {rekap[s]}</span>
+            ) : null
+          ))}
+          <span className="ml-auto text-gray-300">Sistem Monitoring MTS Al-Amin Bintaro v2.0</span>
+        </div>
+
         {/* ── TABEL ABSENSI ─────────────────────────────────────── */}
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -355,22 +371,6 @@ export default function AbsensiForm({
               ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Rekap cepat di footer */}
-        <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-500">
-          <span>{siswaList.length} siswa</span>
-          {["HADIR","ALPHA","IZIN","SAKIT"].map((s) => (
-            rekap[s] ? (
-              <span key={s} className={`font-semibold ${
-                s === "HADIR" ? "text-green-600" :
-                s === "ALPHA" ? "text-red-600"   :
-                s === "IZIN"  ? "text-yellow-600" :
-                "text-blue-600"
-              }`}>{s[0]}: {rekap[s]}</span>
-            ) : null
-          ))}
-          <span className="ml-auto text-gray-300">Sistem Monitoring MTS Al-Amin Bintaro v2.0</span>
         </div>
       </div>
     </div>
