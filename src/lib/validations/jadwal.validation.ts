@@ -3,7 +3,7 @@
 export const jadwalSchema = z
   .object({
     hari: z.enum(["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"], {
-      errorMap: () => ({ message: "Pilih hari yang valid" }),
+      error: () => "Pilih hari yang valid",
     }),
     kodeMapel: z.string().min(1, "Pilih mata pelajaran"),
     jamMulai: z

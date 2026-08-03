@@ -10,7 +10,7 @@ export const tahunAjaranSchema = z.object({
       return t2 === t1 + 1;
     }, "Tahun kedua harus tahun pertama + 1 (contoh: 2025/2026)"),
   semester: z.enum(["GANJIL", "GENAP"], {
-    errorMap: () => ({ message: "Pilih semester Ganjil atau Genap" }),
+    error: () => "Pilih semester Ganjil atau Genap",
   }),
 });
 
