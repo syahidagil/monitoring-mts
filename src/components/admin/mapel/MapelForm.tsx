@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createMapel, updateMapel } from "@/actions/mapel.action";
 import { ArrowLeft, Save, CheckCircle, BookOpen, Info } from "lucide-react";
 import Link from "next/link";
@@ -37,6 +38,7 @@ export default function MapelForm({ defaultValues, isEdit, tahunAktif, onSuccess
 
       if (result.success) {
         setSuccess(true);
+        toast.success(isEdit ? "Data mata pelajaran berhasil diperbarui" : "Data mata pelajaran berhasil disimpan");
         if (onSuccess) {
           onSuccess();
         } else if (!isEdit) {

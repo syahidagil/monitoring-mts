@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createKelas, updateKelas } from "@/actions/kelas.action";
 import { ArrowLeft, Save, CheckCircle, List, Info } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +34,7 @@ export default function KelasForm({ tahunAjaran, guru, defaultValues, isEdit, ke
         : await createKelas(fd);
       if (result.success) {
         setSuccess(true);
+        toast.success(isEdit ? "Data kelas berhasil diperbarui" : "Data kelas berhasil disimpan");
         if (onSuccess) {
           onSuccess();
         } else if (!isEdit) {

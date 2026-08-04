@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createOrangTua, updateOrangTua } from "@/actions/orangtua.action";
 import { Save, Eye, EyeOff, CheckCircle, User, Shield, AlertCircle, Info } from "lucide-react";
 import Link from "next/link";
@@ -86,6 +87,7 @@ export default function OrangtuaForm({ defaultValues, isEdit, ortuId, onSuccess,
         : await createOrangTua(fd);
       if (result.success) {
         setSuccess(true);
+        toast.success(isEdit ? "Data orang tua/wali berhasil diperbarui" : "Data orang tua/wali berhasil disimpan");
         if (onSuccess) {
           onSuccess();
         } else if (isEdit) {

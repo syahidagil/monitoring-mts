@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createSiswa, updateSiswa } from "@/actions/siswa.action";
 import { Save, CheckCircle, UserPlus, Info, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -86,6 +87,7 @@ export default function SiswaForm({ kelas, orangtua, tahunAjaran, defaultValues,
         : await createSiswa(fd);
       if (result.success) {
         setSuccess(true);
+        toast.success(isEdit ? "Data siswa berhasil diperbarui" : "Data siswa berhasil disimpan");
         if (onSuccess) {
           onSuccess();
         } else if (isEdit) {

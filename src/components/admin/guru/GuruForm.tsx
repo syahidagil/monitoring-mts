@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createGuru, updateGuru } from "@/actions/guru.action";
 import { Save, Eye, EyeOff, CheckCircle, UserPlus, Info, AlertCircle, X, BookOpen } from "lucide-react";
 import Link from "next/link";
@@ -91,6 +92,7 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
         : await createGuru(fd);
       if (result.success) {
         setSuccess(true);
+        toast.success(isEdit ? "Data guru berhasil diperbarui" : "Data guru berhasil disimpan");
         if (onSuccess) {
           onSuccess();
         } else if (isEdit) {

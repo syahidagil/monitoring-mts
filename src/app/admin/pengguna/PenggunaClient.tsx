@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { createUser, deleteUser, updateUserStatus, resetPassword } from "@/actions/users";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Key, User } from "lucide-react";
 
@@ -25,7 +26,11 @@ export default function PenggunaClient({ users }: { users: any[] }) {
     startTransition(async () => {
       const result = await createUser(fd);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
-      if (result.success) { setShowModal(false); setTimeout(() => setMessage(null), 3000); }
+      if (result.success) {
+        toast.success(result.message);
+        setShowModal(false);
+        setTimeout(() => setMessage(null), 3000);
+      }
     });
   }
 

@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createTahunPelajaran, updateTahunPelajaran } from "@/actions/tahunAjaran.action";
 import { Save, ArrowLeft, Moon, Sun, Info, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export default function TahunPelajaranForm({ defaultValues, isEdit, taId, onSucc
         : await createTahunPelajaran(fd);
       if (result.success) {
         setSuccess(result.message);
+        toast.success(result.message);
         if (onSuccess) {
           setTimeout(() => onSuccess(), 900);
         } else if (isEdit) {
