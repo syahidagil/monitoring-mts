@@ -29,7 +29,7 @@ export default async function DetailOrangtuaPage({ params }: { params: Promise<{
             <p className="text-sm text-gray-500 mt-0.5">Informasi lengkap data wali siswa</p>
           </div>
         </div>
-        <Link href={`/admin/data-orangtua/${id}/edit`}
+        <Link href="/admin/data-orangtua"
           className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
           <Edit className="w-4 h-4" /> Edit Data
         </Link>

@@ -11,9 +11,11 @@ type Props = {
   isEdit?: boolean;
   guruId?: string;
   allMapel?: Mapel[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [] }: Props) {
+export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [], onSuccess, onCancel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
@@ -89,7 +91,9 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [] 
         : await createGuru(fd);
       if (result.success) {
         setSuccess(true);
-        if (isEdit) {
+        if (onSuccess) {
+          onSuccess();
+        } else if (isEdit) {
           router.push("/admin/data-guru");
         } else {
           resetForm();
@@ -338,12 +342,22 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [] 
             Pastikan data NIP dan Nama Lengkap sesuai dengan dokumen resmi kepegawaian.
           </div>
           <div className="flex gap-3">
-            <Link
-              href="/admin/data-guru"
-              className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Batal
-            </Link>
+            {onCancel ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Batal
+              </button>
+            ) : (
+              <Link
+                href="/admin/data-guru"
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Batal
+              </Link>
+            )}
             <button
               type="submit"
               disabled={isPending}

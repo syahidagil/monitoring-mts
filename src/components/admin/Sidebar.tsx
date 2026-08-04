@@ -21,14 +21,10 @@ const MENUS: MenuItem[] = [
   {
     label: "Data Akademik", icon: School,
     children: [
-      { label: "Input Data Siswa",     href: "/admin/data-siswa/input" },
-      { label: "View Data Siswa",      href: "/admin/data-siswa" },
-      { label: "Input Data Wali", href: "/admin/data-orangtua/input" },
-      { label: "View Data Wali",  href: "/admin/data-orangtua" },
-      { label: "Input Data Guru",      href: "/admin/data-guru/input" },
-      { label: "View Data Guru",       href: "/admin/data-guru" },
-      { label: "Input Data Kelas",     href: "/admin/data-kelas/input" },
-      { label: "View Data Kelas",      href: "/admin/data-kelas" },
+      { label: "Data Siswa",  href: "/admin/data-siswa" },
+      { label: "Data Wali",   href: "/admin/data-orangtua" },
+      { label: "Data Guru",   href: "/admin/data-guru" },
+      { label: "Data Kelas",  href: "/admin/data-kelas" },
     ],
   },
   {
@@ -41,15 +37,13 @@ const MENUS: MenuItem[] = [
   {
     label: "Mata Pelajaran", icon: BookOpen,
     children: [
-      { label: "Input Mata Pelajaran", href: "/admin/mata-pelajaran/input" },
-      { label: "View Mata Pelajaran",  href: "/admin/mata-pelajaran" },
+      { label: "Daftar Mata Pelajaran", href: "/admin/mata-pelajaran" },
     ],
   },
   {
     label: "Tahun Pelajaran", icon: CalendarDays,
     children: [
-      { label: "Input Tahun Pelajaran", href: "/admin/tahun-pelajaran/input" },
-      { label: "View Tahun Pelajaran",  href: "/admin/tahun-pelajaran" },
+      { label: "Kelola Tahun Pelajaran", href: "/admin/tahun-pelajaran" },
     ],
   },
   {

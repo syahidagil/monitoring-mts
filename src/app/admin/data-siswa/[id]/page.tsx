@@ -29,7 +29,7 @@ export default async function DetailSiswaPage({ params }: { params: Promise<{ id
             <p className="text-sm text-gray-500 mt-0.5">Informasi lengkap data siswa</p>
           </div>
         </div>
-        <Link href={`/admin/data-siswa/${id}/edit`}
+        <Link href="/admin/data-siswa"
           className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
           <Edit className="w-4 h-4" /> Edit Data
         </Link>

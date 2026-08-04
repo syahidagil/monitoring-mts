@@ -5,9 +5,9 @@ import { createTahunPelajaran, updateTahunPelajaran } from "@/actions/tahunAjara
 import { Save, ArrowLeft, Moon, Sun, Info, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
-type Props = { defaultValues?: any; isEdit?: boolean; taId?: number };
+type Props = { defaultValues?: any; isEdit?: boolean; taId?: number; onSuccess?: () => void; onCancel?: () => void };
 
-export default function TahunPelajaranForm({ defaultValues, isEdit, taId }: Props) {
+export default function TahunPelajaranForm({ defaultValues, isEdit, taId, onSuccess, onCancel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [semester, setSemester] = useState<"GANJIL" | "GENAP">(defaultValues?.semester ?? "GANJIL");
@@ -25,8 +25,13 @@ export default function TahunPelajaranForm({ defaultValues, isEdit, taId }: Prop
         : await createTahunPelajaran(fd);
       if (result.success) {
         setSuccess(result.message);
-        if (isEdit) setTimeout(() => router.push("/admin/tahun-pelajaran"), 1200);
-        else (e.target as HTMLFormElement).reset();
+        if (onSuccess) {
+          setTimeout(() => onSuccess(), 900);
+        } else if (isEdit) {
+          setTimeout(() => router.push("/admin/tahun-pelajaran"), 1200);
+        } else {
+          (e.target as HTMLFormElement).reset();
+        }
       } else {
         setError(result.message);
       }
@@ -138,10 +143,17 @@ export default function TahunPelajaranForm({ defaultValues, isEdit, taId }: Prop
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-400">* Wajib diisi</p>
         <div className="flex gap-3">
-          <Link href="/admin/tahun-pelajaran"
-            className="px-5 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            Batal
-          </Link>
+          {onCancel ? (
+            <button type="button" onClick={onCancel}
+              className="px-5 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              Batal
+            </button>
+          ) : (
+            <Link href="/admin/tahun-pelajaran"
+              className="px-5 py-2.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              Batal
+            </Link>
+          )}
           <button type="submit" disabled={isPending}
             className="flex items-center gap-2 bg-green-800 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
             {isPending ? (

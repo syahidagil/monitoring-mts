@@ -12,9 +12,11 @@ type Props = {
   isEdit?: boolean;
   kelasId?: number;
   defaultTahunAjaranId?: number;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export default function KelasForm({ tahunAjaran, guru, defaultValues, isEdit, kelasId, defaultTahunAjaranId }: Props) {
+export default function KelasForm({ tahunAjaran, guru, defaultValues, isEdit, kelasId, defaultTahunAjaranId, onSuccess, onCancel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
@@ -31,8 +33,13 @@ export default function KelasForm({ tahunAjaran, guru, defaultValues, isEdit, ke
         : await createKelas(fd);
       if (result.success) {
         setSuccess(true);
-        if (!isEdit) (e.target as HTMLFormElement).reset();
-        else router.push("/admin/data-kelas");
+        if (onSuccess) {
+          onSuccess();
+        } else if (!isEdit) {
+          (e.target as HTMLFormElement).reset();
+        } else {
+          router.push("/admin/data-kelas");
+        }
       } else {
         setError(result.message);
       }
@@ -124,10 +131,17 @@ export default function KelasForm({ tahunAjaran, guru, defaultValues, isEdit, ke
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
           <p className="text-xs text-gray-400">* Wajib diisi</p>
           <div className="flex gap-3">
-            <Link href="/admin/data-kelas"
-              className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-              Batal
-            </Link>
+            {onCancel ? (
+              <button type="button" onClick={onCancel}
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                Batal
+              </button>
+            ) : (
+              <Link href="/admin/data-kelas"
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                Batal
+              </Link>
+            )}
             <button type="submit" disabled={isPending}
               className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
               {isPending ? (

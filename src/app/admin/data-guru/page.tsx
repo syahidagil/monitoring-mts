@@ -1,8 +1,6 @@
 ﻿import { getAllGuru } from "@/actions/guru.action";
-import Link from "next/link";
-import { Plus } from "lucide-react";
-import GuruTable from "@/components/admin/guru/GuruTable";
-import GuruFilter from "@/components/admin/guru/GuruFilter";
+import { getAllMapel } from "@/actions/mapel.action";
+import GuruPageClient from "@/components/admin/guru/GuruPageClient";
 
 type Props = { searchParams: Promise<{ search?: string; status?: string }> };
 
@@ -11,7 +9,8 @@ export default async function DataGuruPage({ searchParams }: Props) {
   const search = params.search ?? "";
   const status = params.status;
 
-  let data = await getAllGuru();
+  const [allGuru, allMapel] = await Promise.all([getAllGuru(), getAllMapel()]);
+  let data = allGuru;
 
   if (search) {
     data = data.filter((g) =>
@@ -23,20 +22,5 @@ export default async function DataGuruPage({ searchParams }: Props) {
   if (status === "aktif") data = data.filter((g) => g.user.status);
   if (status === "nonaktif") data = data.filter((g) => !g.user.status);
 
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Data Guru</h1>
-          <p className="text-sm text-gray-500 mt-1">Total {data.length} guru terdaftar</p>
-        </div>
-        <Link href="/admin/data-guru/input"
-          className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
-          <Plus className="w-4 h-4" /> Tambah Guru
-        </Link>
-      </div>
-      <GuruFilter />
-      <GuruTable data={data} />
-    </div>
-  );
+  return <GuruPageClient data={data} allMapel={allMapel} />;
 }

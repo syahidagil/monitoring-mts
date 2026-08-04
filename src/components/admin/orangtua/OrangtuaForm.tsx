@@ -10,9 +10,11 @@ type Props = {
   defaultValues?: any;
   isEdit?: boolean;
   ortuId?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export default function OrangtuaForm({ defaultValues, isEdit, ortuId }: Props) {
+export default function OrangtuaForm({ defaultValues, isEdit, ortuId, onSuccess, onCancel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
@@ -84,7 +86,9 @@ export default function OrangtuaForm({ defaultValues, isEdit, ortuId }: Props) {
         : await createOrangTua(fd);
       if (result.success) {
         setSuccess(true);
-        if (isEdit) {
+        if (onSuccess) {
+          onSuccess();
+        } else if (isEdit) {
           router.push("/admin/data-orangtua");
         } else {
           resetForm();
@@ -278,12 +282,22 @@ export default function OrangtuaForm({ defaultValues, isEdit, ortuId }: Props) {
             Pastikan data yang diinputkan sudah sesuai dengan dokumen yang valid.
           </div>
           <div className="flex gap-3">
-            <Link
-              href="/admin/data-orangtua"
-              className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Batal
-            </Link>
+            {onCancel ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Batal
+              </button>
+            ) : (
+              <Link
+                href="/admin/data-orangtua"
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Batal
+              </Link>
+            )}
             <button
               type="submit"
               disabled={isPending}

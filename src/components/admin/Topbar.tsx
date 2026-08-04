@@ -8,19 +8,13 @@ type Crumb = { label: string; href?: string };
 const BREADCRUMBS: Record<string, Crumb[]> = {
   "/admin/dashboard":                    [{ label: "Dashboard" }],
   "/admin/data-siswa":                   [{ label: "Data Akademik" }, { label: "Data Siswa" }],
-  "/admin/data-siswa/input":             [{ label: "Data Akademik" }, { label: "Data Siswa", href: "/admin/data-siswa" }, { label: "Tambah Siswa" }],
   "/admin/data-guru":                    [{ label: "Data Akademik" }, { label: "Data Guru" }],
-  "/admin/data-guru/input":             [{ label: "Data Akademik" }, { label: "Data Guru", href: "/admin/data-guru" }, { label: "Tambah Guru" }],
   "/admin/data-orangtua":               [{ label: "Data Akademik" }, { label: "Data Orang Tua" }],
-  "/admin/data-orangtua/input":         [{ label: "Data Akademik" }, { label: "Data Orang Tua", href: "/admin/data-orangtua" }, { label: "Tambah Orang Tua" }],
   "/admin/data-kelas":                   [{ label: "Data Akademik" }, { label: "Data Kelas" }],
-  "/admin/data-kelas/input":             [{ label: "Data Akademik" }, { label: "Data Kelas", href: "/admin/data-kelas" }, { label: "Tambah Kelas" }],
   "/admin/jadwal":                       [{ label: "Jadwal" }, { label: "Manajemen Jadwal" }],
   "/admin/jadwal/input":                 [{ label: "Jadwal" }, { label: "Manajemen Jadwal", href: "/admin/jadwal" }, { label: "Input Jadwal" }],
   "/admin/mata-pelajaran":              [{ label: "Mata Pelajaran" }, { label: "Daftar Mata Pelajaran" }],
-  "/admin/mata-pelajaran/input":        [{ label: "Mata Pelajaran" }, { label: "Daftar Mata Pelajaran", href: "/admin/mata-pelajaran" }, { label: "Tambah Mapel" }],
   "/admin/tahun-pelajaran":             [{ label: "Tahun Pelajaran" }, { label: "Kelola Tahun Pelajaran" }],
-  "/admin/tahun-pelajaran/input":       [{ label: "Tahun Pelajaran" }, { label: "Kelola Tahun Pelajaran", href: "/admin/tahun-pelajaran" }, { label: "Input Tahun Pelajaran" }],
   "/admin/informasi/sejarah":           [{ label: "Informasi Sekolah" }, { label: "Sejarah" }],
   "/admin/informasi/visi-misi":         [{ label: "Informasi Sekolah" }, { label: "Visi Misi & Tujuan" }],
   "/admin/informasi/fasilitas":         [{ label: "Informasi Sekolah" }, { label: "Fasilitas" }],
@@ -39,13 +33,7 @@ function resolveCrumbs(pathname: string): Crumb[] {
   if (BREADCRUMBS[pathname]) return BREADCRUMBS[pathname];
   // Dynamic routes: edit
   if (pathname.includes("/edit")) {
-    if (pathname.startsWith("/admin/data-siswa"))     return [{ label: "Data Akademik" }, { label: "Data Siswa", href: "/admin/data-siswa" }, { label: "Edit Siswa" }];
-    if (pathname.startsWith("/admin/data-guru"))      return [{ label: "Data Akademik" }, { label: "Data Guru", href: "/admin/data-guru" }, { label: "Edit Guru" }];
-    if (pathname.startsWith("/admin/data-orangtua"))  return [{ label: "Data Akademik" }, { label: "Data Orang Tua", href: "/admin/data-orangtua" }, { label: "Edit Orang Tua" }];
-    if (pathname.startsWith("/admin/data-kelas"))     return [{ label: "Data Akademik" }, { label: "Data Kelas", href: "/admin/data-kelas" }, { label: "Edit Kelas" }];
     if (pathname.startsWith("/admin/jadwal"))          return [{ label: "Jadwal" }, { label: "Manajemen Jadwal", href: "/admin/jadwal" }, { label: "Edit Jadwal" }];
-    if (pathname.startsWith("/admin/mata-pelajaran")) return [{ label: "Mata Pelajaran" }, { label: "Daftar Mata Pelajaran", href: "/admin/mata-pelajaran" }, { label: "Edit Mata Pelajaran" }];
-    if (pathname.startsWith("/admin/tahun-pelajaran")) return [{ label: "Tahun Pelajaran" }, { label: "Kelola Tahun Pelajaran", href: "/admin/tahun-pelajaran" }, { label: "Edit Tahun Pelajaran" }];
     if (pathname.startsWith("/admin/berita"))          return [{ label: "Konten Website" }, { label: "Berita", href: "/admin/berita" }, { label: "Edit Berita" }];
   }
   return [{ label: "Admin Panel" }];

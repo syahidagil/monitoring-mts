@@ -1,11 +1,13 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Edit, Trash2, KeyRound } from "lucide-react";
 import { deleteGuru, resetPasswordGuru } from "@/actions/guru.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
+import GuruMapelManager from "./GuruMapelManager";
 
-export default function GuruTable({ data }: { data: any[] }) {
+type Mapel = { kodeMapel: string; namaMapel: string };
+
+export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]; allMapel?: Mapel[]; onEdit: (guru: any) => void }) {
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; nama: string } | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -97,10 +99,11 @@ export default function GuruTable({ data }: { data: any[] }) {
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex items-center justify-center gap-1.5">
-                    <Link href={`/admin/data-guru/${guru.id}/edit`}
+                    <button onClick={() => onEdit(guru)}
                       className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                       <Edit className="w-3.5 h-3.5" /> Edit
-                    </Link>
+                    </button>
+                    <GuruMapelManager guruId={guru.id} guruNama={guru.user.name} guruMapel={guru.guruMapel ?? []} allMapel={allMapel} />
                     <button onClick={() => handleReset(guru.id, guru.user.name)}
                       className="flex items-center gap-1 text-xs text-yellow-600 border border-yellow-200 px-2 py-1.5 rounded-lg hover:bg-yellow-50 transition-colors">
                       <KeyRound className="w-3.5 h-3.5" /> Reset PW

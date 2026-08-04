@@ -1,14 +1,13 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { deleteSiswa } from "@/actions/siswa.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
 
-type Props = { data: any[]; total: number; totalPages: number; currentPage: number };
+type Props = { data: any[]; total: number; totalPages: number; currentPage: number; onEdit: (siswa: any) => void };
 
-export default function SiswaTable({ data, total, totalPages, currentPage }: Props) {
+export default function SiswaTable({ data, total, totalPages, currentPage, onEdit }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -84,10 +83,10 @@ export default function SiswaTable({ data, total, totalPages, currentPage }: Pro
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex items-center justify-center gap-2">
-                    <Link href={`/admin/data-siswa/${siswa.id}/edit`}
+                    <button onClick={() => onEdit(siswa)}
                       className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                       <Edit className="w-3.5 h-3.5" /> Edit
-                    </Link>
+                    </button>
                     <button onClick={() => setDeleteTarget({ id: siswa.id, nama: siswa.nama })}
                       className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" /> Hapus

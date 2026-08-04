@@ -1,11 +1,10 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Edit, Trash2 } from "lucide-react";
 import { deleteOrangTua } from "@/actions/orangtua.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
 
-export default function OrangtuaTable({ data }: { data: any[] }) {
+export default function OrangtuaTable({ data, onEdit }: { data: any[]; onEdit: (ortu: any) => void }) {
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; nama: string } | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -82,10 +81,10 @@ export default function OrangtuaTable({ data }: { data: any[] }) {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center justify-center gap-2">
-                      <Link href={`/admin/data-orangtua/${ortu.id}/edit`}
+                      <button onClick={() => onEdit(ortu)}
                         className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                         <Edit className="w-3.5 h-3.5" /> Edit
-                      </Link>
+                      </button>
                       <button onClick={() => setDeleteTarget({ id: ortu.id, nama: ortu.user.name })}
                         className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                         <Trash2 className="w-3.5 h-3.5" /> Hapus

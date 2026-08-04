@@ -12,9 +12,11 @@ type Props = {
   defaultValues?: any;
   isEdit?: boolean;
   siswaId?: number;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export default function SiswaForm({ kelas, orangtua, tahunAjaran, defaultValues, isEdit, siswaId }: Props) {
+export default function SiswaForm({ kelas, orangtua, tahunAjaran, defaultValues, isEdit, siswaId, onSuccess, onCancel }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
@@ -84,7 +86,9 @@ export default function SiswaForm({ kelas, orangtua, tahunAjaran, defaultValues,
         : await createSiswa(fd);
       if (result.success) {
         setSuccess(true);
-        if (isEdit) {
+        if (onSuccess) {
+          onSuccess();
+        } else if (isEdit) {
           router.push("/admin/data-siswa");
         } else {
           resetForm();
@@ -340,12 +344,22 @@ export default function SiswaForm({ kelas, orangtua, tahunAjaran, defaultValues,
                 Pastikan seluruh data yang diinputkan sudah sesuai dengan berkas pendaftaran siswa.
               </div>
               <div className="flex gap-3 justify-end">
-                <Link
-                  href="/admin/data-siswa"
-                  className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  Batal
-                </Link>
+                {onCancel ? (
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Batal
+                  </button>
+                ) : (
+                  <Link
+                    href="/admin/data-siswa"
+                    className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Batal
+                  </Link>
+                )}
                 <button
                   type="submit"
                   disabled={isPending}
