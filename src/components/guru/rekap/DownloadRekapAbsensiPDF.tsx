@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
+import { drawKopSurat } from "@/lib/pdf/kopSurat";
 
 type RekapRow = {
   siswa: { id: number; nis: string; nama: string };
@@ -42,53 +43,24 @@ export default function DownloadRekapAbsensiPDF({
       const margin = 15;
 
       // ── KOP SURAT ──────────────────────────────────────────────────────────
-      // Garis atas kop
-      doc.setDrawColor(27, 94, 32);
-      doc.setLineWidth(1.5);
-      doc.line(margin, 12, pageW - margin, 12);
-
-      // Nama sekolah
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(27, 94, 32);
-      doc.text("MTS AL-AMIN BINTARO", pageW / 2, 22, { align: "center" });
-
-      // Sub kop
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(60, 60, 60);
-      doc.text(
-        "Jl. Pesanggrahan No.1, Bintaro, Jakarta Selatan | Telp: (021) xxxx-xxxx",
-        pageW / 2, 28, { align: "center" }
-      );
-      doc.text(
-        "Email: info@mtsalamin.sch.id | Website: www.mtsalamin.sch.id",
-        pageW / 2, 33, { align: "center" }
-      );
-
-      // Garis bawah kop (double line)
-      doc.setDrawColor(27, 94, 32);
-      doc.setLineWidth(1.5);
-      doc.line(margin, 37, pageW - margin, 37);
-      doc.setLineWidth(0.5);
-      doc.line(margin, 39, pageW - margin, 39);
+      await drawKopSurat(doc, pageW, margin);
 
       // ── JUDUL DOKUMEN ──────────────────────────────────────────────────────
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.setTextColor(27, 94, 32);
-      doc.text("REKAP ABSENSI SISWA", pageW / 2, 49, { align: "center" });
+      doc.text("REKAP ABSENSI SISWA", pageW / 2, 50, { align: "center" });
 
       doc.setLineWidth(0.4);
       doc.setDrawColor(27, 94, 32);
-      doc.line(pageW / 2 - 35, 51, pageW / 2 + 35, 51);
+      doc.line(pageW / 2 - 35, 52, pageW / 2 + 35, 52);
 
       // ── INFO REKAP ─────────────────────────────────────────────────────────
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(50, 50, 50);
 
-      const infoY = 58;
+      const infoY = 59;
       const colL = margin;
       const colR = pageW / 2 + 5;
 

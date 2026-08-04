@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import type { SantriTahfidz } from "@/actions/guru/hafalan.action";
+import { drawKopSurat } from "@/lib/pdf/kopSurat";
 
 type Props = {
   data: SantriTahfidz[];
@@ -25,45 +26,20 @@ export default function DownloadTahfidzPDF({ data, guruNama, namaKelas, tahunAja
       const margin = 15;
 
       // ── KOP SURAT ──────────────────────────────────────────────────────────
-      doc.setDrawColor(27, 94, 32);
-      doc.setLineWidth(1.5);
-      doc.line(margin, 12, pageW - margin, 12);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(27, 94, 32);
-      doc.text("MTS AL-AMIN BINTARO", pageW / 2, 22, { align: "center" });
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(60, 60, 60);
-      doc.text(
-        "Jl. Pesanggrahan No.1, Bintaro, Jakarta Selatan | Telp: (021) xxxx-xxxx",
-        pageW / 2, 28, { align: "center" }
-      );
-      doc.text(
-        "Email: info@mtsalamin.sch.id | Website: www.mtsalamin.sch.id",
-        pageW / 2, 33, { align: "center" }
-      );
-
-      doc.setDrawColor(27, 94, 32);
-      doc.setLineWidth(1.5);
-      doc.line(margin, 37, pageW - margin, 37);
-      doc.setLineWidth(0.5);
-      doc.line(margin, 39, pageW - margin, 39);
+      await drawKopSurat(doc, pageW, margin);
 
       // ── JUDUL ──────────────────────────────────────────────────────────────
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.setTextColor(27, 94, 32);
-      doc.text("REKAP PROGRESS HAFALAN AL-QUR'AN (TAHFIDZ)", pageW / 2, 49, { align: "center" });
+      doc.text("REKAP PROGRESS HAFALAN AL-QUR'AN (TAHFIDZ)", pageW / 2, 50, { align: "center" });
 
       doc.setLineWidth(0.4);
       doc.setDrawColor(27, 94, 32);
-      doc.line(pageW / 2 - 60, 51, pageW / 2 + 60, 51);
+      doc.line(pageW / 2 - 60, 52, pageW / 2 + 60, 52);
 
       // ── INFO ───────────────────────────────────────────────────────────────
-      const infoY = 58;
+      const infoY = 59;
       const colL = margin;
       const colR = pageW / 2 + 5;
       doc.setFontSize(9);

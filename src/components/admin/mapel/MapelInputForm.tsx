@@ -65,7 +65,7 @@ export default function MapelInputForm({ academicYearLabel }: Props) {
             </div>
           </div>
           <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
-            Academic Year {academicYearLabel}
+            Tahun Pelajaran {academicYearLabel}
           </span>
         </div>
 

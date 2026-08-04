@@ -12,7 +12,6 @@ const BREADCRUMBS: Record<string, Crumb[]> = {
   "/admin/data-orangtua":               [{ label: "Data Akademik" }, { label: "Data Orang Tua" }],
   "/admin/data-kelas":                   [{ label: "Data Akademik" }, { label: "Data Kelas" }],
   "/admin/jadwal":                       [{ label: "Jadwal" }, { label: "Manajemen Jadwal" }],
-  "/admin/jadwal/input":                 [{ label: "Jadwal" }, { label: "Manajemen Jadwal", href: "/admin/jadwal" }, { label: "Input Jadwal" }],
   "/admin/mata-pelajaran":              [{ label: "Mata Pelajaran" }, { label: "Daftar Mata Pelajaran" }],
   "/admin/tahun-pelajaran":             [{ label: "Tahun Pelajaran" }, { label: "Kelola Tahun Pelajaran" }],
   "/admin/informasi/sejarah":           [{ label: "Informasi Sekolah" }, { label: "Sejarah" }],
@@ -33,7 +32,6 @@ function resolveCrumbs(pathname: string): Crumb[] {
   if (BREADCRUMBS[pathname]) return BREADCRUMBS[pathname];
   // Dynamic routes: edit
   if (pathname.includes("/edit")) {
-    if (pathname.startsWith("/admin/jadwal"))          return [{ label: "Jadwal" }, { label: "Manajemen Jadwal", href: "/admin/jadwal" }, { label: "Edit Jadwal" }];
     if (pathname.startsWith("/admin/berita"))          return [{ label: "Konten Website" }, { label: "Berita", href: "/admin/berita" }, { label: "Edit Berita" }];
   }
   return [{ label: "Admin Panel" }];

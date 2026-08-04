@@ -1,6 +1,5 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { Edit, Trash2 } from "lucide-react";
 import { deleteJadwal } from "@/actions/jadwal.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
@@ -15,7 +14,12 @@ const HARI_COLOR: Record<string, string> = {
   SABTU: "bg-pink-50 text-pink-700",
 };
 
-export default function JadwalTable({ data }: { data: any[] }) {
+type Props = {
+  data: any[];
+  onEdit: (item: any) => void;
+};
+
+export default function JadwalTable({ data, onEdit }: Props) {
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -80,10 +84,12 @@ export default function JadwalTable({ data }: { data: any[] }) {
                 </td>
                 <td className="px-4 py-3.5">
                   <div className="flex items-center justify-center gap-2">
-                    <Link href={`/admin/jadwal/${j.id}/edit`}
-                      className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                    <button
+                      onClick={() => onEdit(j)}
+                      className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
                       <Edit className="w-3.5 h-3.5" /> Edit
-                    </Link>
+                    </button>
                     <button onClick={() => setDeleteTarget({ id: j.id, label: `${j.hari} - ${j.mataPelajaran?.namaMapel ?? j.kodeMapel} (${j.kelas.nama})` })}
                       className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" /> Hapus

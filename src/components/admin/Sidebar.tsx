@@ -30,8 +30,7 @@ const MENUS: MenuItem[] = [
   {
     label: "Jadwal", icon: Calendar,
     children: [
-      { label: "Input Jadwal", href: "/admin/jadwal/input" },
-      { label: "View Jadwal",  href: "/admin/jadwal" },
+      { label: "Kelola Jadwal",  href: "/admin/jadwal" },
     ],
   },
   {
