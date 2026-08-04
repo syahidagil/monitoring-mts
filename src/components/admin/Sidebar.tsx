@@ -27,12 +27,7 @@ const MENUS: MenuItem[] = [
       { label: "Data Kelas",  href: "/admin/data-kelas" },
     ],
   },
-  {
-    label: "Jadwal", icon: Calendar,
-    children: [
-      { label: "Kelola Jadwal",  href: "/admin/jadwal" },
-    ],
-  },
+  { label: "Jadwal", href: "/admin/jadwal", icon: Calendar },
   {
     label: "Mata Pelajaran", icon: BookOpen,
     children: [

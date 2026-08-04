@@ -67,7 +67,24 @@ export default async function GuruAbsensiPage({ searchParams }: Props) {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayName = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"][new Date().getDay()];
+  
+  // Gunakan timezone Asia/Makassar untuk hari dan waktu agar konsisten
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Makassar",
+    weekday: "long",
+  });
+  const hariInggris = formatter.format(new Date());
+  const hariMap: Record<string, string> = {
+    "Sunday": "MINGGU",
+    "Monday": "SENIN",
+    "Tuesday": "SELASA",
+    "Wednesday": "RABU",
+    "Thursday": "KAMIS",
+    "Friday": "JUMAT",
+    "Saturday": "SABTU",
+  };
+  const todayName = hariMap[hariInggris] || "SENIN";
+  
   const nowStr = new Date().toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",

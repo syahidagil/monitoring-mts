@@ -35,8 +35,23 @@ export default async function GuruDashboard() {
 
   const totalSiswa = kelas.reduce((a, k) => a + k._count.siswa, 0);
 
-  // Jadwal hari ini yang belum ada absensinya
-  const todayName = ["MINGGU","SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU"][new Date().getDay()];
+  // Jadwal hari ini yang belum ada absensinya - gunakan timezone Asia/Makassar
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Makassar",
+    weekday: "long",
+  });
+  const hariInggris = formatter.format(new Date());
+  const hariMap: Record<string, string> = {
+    "Sunday": "MINGGU",
+    "Monday": "SENIN",
+    "Tuesday": "SELASA",
+    "Wednesday": "RABU",
+    "Thursday": "KAMIS",
+    "Friday": "JUMAT",
+    "Saturday": "SABTU",
+  };
+  const todayName = hariMap[hariInggris] || "SENIN";
+  
   const jadwalHari = jadwal.filter((j) => j.hari === todayName);
   const jadwalBelumAbsensi = await Promise.all(
     jadwalHari.map(async (j) => {
