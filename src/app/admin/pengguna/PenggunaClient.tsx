@@ -1,8 +1,8 @@
 ﻿"use client";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createUser, deleteUser, updateUserStatus, resetPassword } from "@/actions/users";
-import { Plus, Trash2, ToggleLeft, ToggleRight, Key, User } from "lucide-react";
+import { Plus, Trash2, ToggleLeft, ToggleRight, Key, User, Search } from "lucide-react";
 
 const ROLES = ["ADMIN", "GURU", "ORANGTUA"] as const;
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Admin", GURU: "Guru", ORANGTUA: "Orang Tua" };
@@ -17,8 +17,22 @@ export default function PenggunaClient({ users }: { users: any[] }) {
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"semua" | "aktif" | "nonaktif">("semua");
 
-  const filtered = users.filter((u) => u.role === activeTab);
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return users.filter((u) => {
+      if (u.role !== activeTab) return false;
+      if (statusFilter === "aktif" && !u.status) return false;
+      if (statusFilter === "nonaktif" && u.status) return false;
+      if (!query) return true;
+      return (
+        u.name.toLowerCase().includes(query) ||
+        u.username.toLowerCase().includes(query)
+      );
+    });
+  }, [activeTab, search, statusFilter, users]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,6 +68,37 @@ export default function PenggunaClient({ users }: { users: any[] }) {
         <button onClick={() => setShowModal(true)}
           className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
           <Plus className="w-4 h-4" /> Tambah Pengguna
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="relative flex-1 min-w-60">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari nama atau username..."
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+        >
+          <option value="semua">Semua Status</option>
+          <option value="aktif">Aktif</option>
+          <option value="nonaktif">Nonaktif</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => {
+            setSearch("");
+            setStatusFilter("semua");
+          }}
+          className="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Reset Filter
         </button>
       </div>
 
