@@ -11,14 +11,15 @@ export async function drawKopSurat(doc: jsPDF, pageW: number, margin: number): P
   
   // Load dan tambahkan logo di kiri dan kanan
   try {
-    const logoPath = "/images/logo-mts.jpg";
+    const logoPathKiri = "/images/logo-mts.jpg";
+    const logoPathKanan = "/images/kemenag.png";
     const logoLeft = margin + 2;
     const logoRight = pageW - margin - logoSize - 2;
     
     // Logo kiri
-    doc.addImage(logoPath, "JPEG", logoLeft, logoY, logoSize, logoSize);
+    doc.addImage(logoPathKiri, "JPEG", logoLeft, logoY, logoSize, logoSize);
     // Logo kanan
-    doc.addImage(logoPath, "JPEG", logoRight, logoY, logoSize, logoSize);
+    doc.addImage(logoPathKanan, "JPEG", logoRight, logoY, logoSize, logoSize);
   } catch (error) {
     console.warn("Logo tidak dapat dimuat:", error);
   }
