@@ -1,4 +1,4 @@
-import { Target, Eye, Flag } from "lucide-react";
+// import { Target, Eye, Flag } from "lucide-react";
 import type { InformasiSekolah } from "@prisma/client";
 
 export default function VisiMisiSection({
@@ -25,9 +25,9 @@ export default function VisiMisiSection({
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Visi */}
           <div className="bg-green-900 rounded-2xl p-8 text-white">
-            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6">
+            {/* <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6">
               <Eye className="w-6 h-6" />
-            </div>
+            </div> */}
             <p className="text-green-400 text-xs font-semibold tracking-widest uppercase mb-3">
               Visi
             </p>
@@ -38,9 +38,9 @@ export default function VisiMisiSection({
 
           {/* Misi */}
           <div className="bg-green-50 border border-green-100 rounded-2xl p-8">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-6">
+            {/* <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-6">
               <Target className="w-6 h-6 text-green-700" />
-            </div>
+            </div> */}
             <p className="text-green-600 text-xs font-semibold tracking-widest uppercase mb-3">
               Misi
             </p>
@@ -58,16 +58,16 @@ export default function VisiMisiSection({
 
           {/* Tujuan */}
           <div className="bg-gray-50 border border-gray-100 rounded-2xl p-8">
-            <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-6">
+            {/* <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-6">
               <Flag className="w-6 h-6 text-gray-700" />
-            </div>
+            </div> */}
             <p className="text-gray-500 text-xs font-semibold tracking-widest uppercase mb-3">
               Tujuan
             </p>
             <ul className="space-y-3">
               {tujuanList.map((item, i) => (
                 <li key={i} className="flex gap-3 text-sm text-gray-700">
-                  <span className="text-green-600 font-bold flex-shrink-0">→</span>
+                  <span className="text-green-600 font-bold flex-shrink-0">{i + 1}.</span>
                   {item}
                 </li>
               ))}

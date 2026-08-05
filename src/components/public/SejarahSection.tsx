@@ -26,19 +26,19 @@ export default function SejarahSection({
               nilai-nilai keislaman, MTS Al-Amin terus berkembang menjadi
               sekolah unggulan di Mataram.
             </p>
-            <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-100 rounded-xl p-4">
+            {/* <div className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-100 rounded-xl p-4">
               <BookOpen className="w-5 h-5 flex-shrink-0" />
               <p className="text-sm font-medium">
                 Berdiri sejak 2022 · Lebih dari 50+ alumni
               </p>
-            </div>
+            </div> */}
           </div>
           <div className="relative">
             <div className="aspect-[4/3] bg-gradient-to-br from-green-800 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
-              <div className="text-center text-white/40">
+              {/* <div className="text-center text-white/40">
                 <BookOpen className="w-16 h-16 mx-auto mb-3" />
                 <p className="text-sm">Foto Gedung Sekolah</p>
-              </div>
+              </div> */}
             </div>
             <div className="absolute -bottom-4 -left-4 bg-green-900 text-white rounded-xl px-5 py-3 shadow-lg">
               <p className="text-2xl font-bold"></p>

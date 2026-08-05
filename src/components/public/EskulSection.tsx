@@ -1,7 +1,7 @@
-import { BookOpen, Dumbbell, Cpu, Music, Shield, Palette } from "lucide-react";
+// import { BookOpen, Dumbbell, Cpu, Music, Shield, Palette } from "lucide-react";
 import type { InformasiSekolah } from "@prisma/client";
 
-const ICONS = [BookOpen, Dumbbell, Cpu, Music, Shield, Palette];
+// const ICONS = [BookOpen, Dumbbell, Cpu, Music, Shield, Palette];
 
 export default function EskulSection({
   eskul,
@@ -21,7 +21,7 @@ export default function EskulSection({
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {eskul.map((item, i) => {
-            const Icon = ICONS[i % ICONS.length];
+            // const Icon = ICONS[i % ICONS.length];
             const [jadwal, pembina, deskripsi] = item.isi.split("|");
             return (
               <div
@@ -29,9 +29,9 @@ export default function EskulSection({
                 className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-green-700" />
-                  </div>
+                    {/* <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-green-700" />
+                    </div> */}
                   <div>
                     <h3 className="font-semibold text-gray-900">{item.judul}</h3>
                     <p className="text-xs text-green-600">{jadwal}</p>

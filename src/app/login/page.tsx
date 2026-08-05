@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import {
-  Eye, EyeOff, User, Lock, ArrowRight, ArrowLeft, AlertTriangle, Building2,
+  Eye, EyeOff, User, Lock, ArrowRight, ArrowLeft, AlertTriangle,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -83,9 +83,9 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-3 border border-green-100">
+          {/* <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-3 border border-green-100">
             <Building2 className="w-8 h-8 text-green-800" />
-          </div>
+          </div> */}
           <h1 className="font-serif text-xl font-semibold text-green-900 tracking-tight">
             MTS Al-Amin Bintaro
           </h1>

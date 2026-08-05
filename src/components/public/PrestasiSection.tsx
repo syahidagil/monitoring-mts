@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trophy } from "lucide-react";
+// import { Trophy } from "lucide-react";
 import type { InformasiSekolah } from "@prisma/client";
 
 const FILTERS = ["Semua", "Akademik", "Non-Akademik", "Islami", "Nasional"];
@@ -61,9 +61,9 @@ export default function PrestasiSection({
               key={item.idInfo}
               className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex gap-4 items-start"
             >
-              <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center flex-shrink-0">
+              {/* <div className="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Trophy className="w-5 h-5 text-yellow-500" />
-              </div>
+              </div> */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900 text-sm mb-1">
                   {item.judul}

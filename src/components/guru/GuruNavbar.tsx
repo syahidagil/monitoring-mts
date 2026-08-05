@@ -1,12 +1,13 @@
 ﻿"use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/actions/auth.action";
 import {
   LayoutDashboard, Calendar, ClipboardCheck,
   Star, Heart, BookMarked, BookOpen,
-  BarChart2, User, LogOut, GraduationCap, Menu, X
+  BarChart2, User, LogOut, Menu, X
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -44,8 +45,14 @@ export default function GuruNavbar({ user, semesterAktif }: { user: any; semeste
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-              <GraduationCap className="w-5 h-5 text-[#1B5E20]" />
+            <div className="relative w-9 h-9 bg-white rounded-lg overflow-hidden flex-shrink-0">
+              <Image
+                src="/images/logo-mts.jpg"
+                alt="Logo MTS Al-Amin"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-tight">MTS AL-AMIN</p>
