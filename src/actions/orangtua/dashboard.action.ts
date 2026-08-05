@@ -77,23 +77,109 @@ export async function getDashboardOrangTua() {
   for (const a of anakIds) absensiMap[a] = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0 };
   for (const row of absensi) absensiMap[row.siswaId][row.status] = row._count._all;
 
-  // 5 nilai terbaru (semua anak)
-  const nilai = await prisma.nilai.findMany({
-    where: { siswaId: { in: anakIds } },
-    take: 5,
-    orderBy: { tanggal: "desc" },
-    include: {
-      siswa: { select: { nama: true } },
-      guruMapel: { include: { mataPelajaran: { select: { namaMapel: true } } } },
-    },
-  });
+  const [absensiTerbaru, nilai, sikap, tahsin, hafalan] = await prisma.$transaction([
+    prisma.absensi.findMany({
+      where: { siswaId: { in: anakIds } },
+      take: 5,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        siswa: { select: { id: true, nama: true } },
+        jadwal: { include: { mataPelajaran: { select: { namaMapel: true } } } },
+      },
+    }),
+    prisma.nilai.findMany({
+      where: { siswaId: { in: anakIds } },
+      take: 5,
+      orderBy: [{ tanggal: "desc" }, { id: "desc" }],
+      include: {
+        siswa: { select: { id: true, nama: true } },
+        guruMapel: { include: { mataPelajaran: { select: { namaMapel: true } } } },
+      },
+    }),
+    prisma.sikap.findMany({
+      where: { siswaId: { in: anakIds } },
+      take: 5,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: { siswa: { select: { id: true, nama: true } } },
+    }),
+    prisma.tahsin.findMany({
+      where: { siswaId: { in: anakIds } },
+      take: 5,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: { siswa: { select: { id: true, nama: true } } },
+    }),
+    prisma.hafalan.findMany({
+      where: { siswaId: { in: anakIds } },
+      take: 5,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: { siswa: { select: { id: true, nama: true } } },
+    }),
+  ]);
+
+  type MonitoringTerbaru = {
+    key: string;
+    jenis: "Absensi" | "Nilai" | "Sikap" | "Tahsin" | "Hafalan";
+    judul: string;
+    deskripsi: string;
+    tanggal: Date;
+    href: string;
+  };
+
+  const monitoringTerbaru: MonitoringTerbaru[] = [
+    ...absensiTerbaru.map((r) => ({
+      key: `absensi-${r.id}`,
+      jenis: "Absensi" as const,
+      judul: `${r.status}`,
+      deskripsi: `${r.siswa.nama} • ${r.jadwal.mataPelajaran.namaMapel}`,
+      tanggal: r.createdAt,
+      href: `/orangtua/absensi?siswaId=${r.siswa.id}`,
+    })),
+    ...nilai.map((r) => ({
+      key: `nilai-${r.id}`,
+      jenis: "Nilai" as const,
+      judul: `${r.jenis} ${Number(r.nilai)}`,
+      deskripsi: `${r.siswa.nama} • ${r.guruMapel.mataPelajaran.namaMapel}`,
+      tanggal: r.tanggal,
+      href: `/orangtua/nilai?siswaId=${r.siswa.id}`,
+    })),
+    ...sikap.map((r) => ({
+      key: `sikap-${r.id}`,
+      jenis: "Sikap" as const,
+      judul: r.jenisSikap === "POSITIF" ? "Sikap Positif" : "Pelanggaran",
+      deskripsi: `${r.siswa.nama} • ${r.kategori}`,
+      tanggal: r.createdAt,
+      href: `/orangtua/sikap?siswaId=${r.siswa.id}`,
+    })),
+    ...tahsin.map((r) => ({
+      key: `tahsin-${r.id}`,
+      jenis: "Tahsin" as const,
+      judul: `Tahsin Juz ${r.juz}`,
+      deskripsi: `${r.siswa.nama} • ${r.surat}`,
+      tanggal: r.createdAt,
+      href: `/orangtua/tahsin?siswaId=${r.siswa.id}`,
+    })),
+    ...hafalan.map((r) => ({
+      key: `hafalan-${r.id}`,
+      jenis: "Hafalan" as const,
+      judul: `Hafalan Juz ${r.juz}`,
+      deskripsi: `${r.siswa.nama} • ${r.surat}`,
+      tanggal: r.createdAt,
+      href: `/orangtua/hafalan?siswaId=${r.siswa.id}`,
+    })),
+  ]
+    .sort((a, b) => b.tanggal.getTime() - a.tanggal.getTime())
+    .slice(0, 5);
 
   return {
     ortu: { user: ortu.user, anak: ortu.anak },
     absensiMap,
+    monitoringTerbaru,
     nilaiTerbaru: nilai.map((n) => ({
-      id: n.id, nilai: Number(n.nilai), jenis: n.jenis,
-      mapel: n.guruMapel.mataPelajaran.namaMapel, siswaNama: n.siswa.nama,
+      id: n.id,
+      nilai: Number(n.nilai),
+      jenis: n.jenis,
+      mapel: n.guruMapel.mataPelajaran.namaMapel,
+      siswaNama: n.siswa.nama,
     })),
   };
 }
