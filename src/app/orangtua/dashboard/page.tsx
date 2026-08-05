@@ -28,11 +28,11 @@ export default async function OrangtuaDashboard() {
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-green-50 p-5 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Portal Orang Tua</p>
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Portal Orang Tua</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">Selamat Datang, {namaOrtu}</h1>
         <p className="text-sm text-gray-600 mt-2">
-          {namaAnak ? `Monitoring terbaru untuk: ${namaAnak}` : "Pantau perkembangan anak Anda di sini"},
+          {namaAnak ? `Monitoring terbaru untuk: ${namaAnak}` : "Pantau perkembangan anak Anda di sini."}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -40,7 +40,7 @@ export default async function OrangtuaDashboard() {
             <span className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-500">Belum ada data anak</span>
           ) : (
             ortu.anak.map((a) => (
-              <span key={a.id} className="text-xs px-3 py-1 rounded-full bg-white border border-emerald-100 text-emerald-700 font-medium">
+              <span key={a.id} className="text-xs px-3 py-1 rounded-full bg-gray-50 border border-gray-200 text-gray-700 font-medium">
                 {a.nama} • {a.kelas.nama}
               </span>
             ))
