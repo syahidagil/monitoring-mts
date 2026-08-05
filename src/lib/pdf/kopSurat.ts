@@ -32,7 +32,7 @@ export async function drawKopSurat(doc: jsPDF, pageW: number, margin: number): P
   // Yayasan
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.setTextColor(27, 94, 32);
+  doc.setTextColor(60, 60, 60);
   doc.text("YAYASAN AL-AMIN PEJERUK", pageW / 2, 15.5, { align: "center" });
 
   // Nama madrasah
@@ -57,7 +57,7 @@ export async function drawKopSurat(doc: jsPDF, pageW: number, margin: number): P
   );
 
   // Garis bawah kop (double line)
-  doc.setDrawColor(27, 94, 32);
+  doc.setDrawColor(60, 60, 60);
   doc.setLineWidth(1.2);
   doc.line(margin, 38, pageW - margin, 38);
   doc.setLineWidth(0.5);
