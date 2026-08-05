@@ -61,7 +61,7 @@ export async function drawKopSurat(doc: jsPDF, pageW: number, margin: number): P
   doc.setLineWidth(1.2);
   doc.line(margin, 38, pageW - margin, 38);
   doc.setLineWidth(0.5);
-  doc.line(margin, 40, pageW - margin, 40);
+  doc.line(margin, 40, pageW - margin, 40); 
 
   return 40;
 }
