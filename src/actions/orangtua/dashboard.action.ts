@@ -64,18 +64,8 @@ export async function getDashboardOrangTua() {
   if (!ortu) return null;
 
   const anakIds = ortu.anak.map((a) => a.id);
+  const anakAktifId = ortu.anak[0]?.id;
   const now = new Date();
-  const awalBulan = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Absensi bulan ini per anak
-  const absensi = await prisma.absensi.groupBy({
-    by: ["siswaId", "status"],
-    where: { siswaId: { in: anakIds }, tanggal: { gte: awalBulan } },
-    _count: { _all: true },
-  });
-  const absensiMap: Record<number, Record<string, number>> = {};
-  for (const a of anakIds) absensiMap[a] = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0 };
-  for (const row of absensi) absensiMap[row.siswaId][row.status] = row._count._all;
 
   const [absensiTerbaru, nilai, sikap, tahsin, hafalan] = await prisma.$transaction([
     prisma.absensi.findMany({
@@ -117,7 +107,7 @@ export async function getDashboardOrangTua() {
   ]);
 
   const nilaiUntukGrafik = await prisma.nilai.findMany({
-    where: { siswaId: { in: anakIds } },
+    where: anakAktifId ? { siswaId: anakAktifId } : { siswaId: { in: [] } },
     select: { nilai: true, tanggal: true },
     orderBy: { tanggal: "asc" },
   });
@@ -202,9 +192,50 @@ export async function getDashboardOrangTua() {
     .sort((a, b) => b.tanggal.getTime() - a.tanggal.getTime())
     .slice(0, 5);
 
+  const ringkasanTerbaru = {
+    updateTerakhir: monitoringTerbaru[0] ?? null,
+    absensi: absensiTerbaru[0]
+      ? {
+          judul: absensiTerbaru[0].status,
+          deskripsi: `${absensiTerbaru[0].siswa.nama} • ${absensiTerbaru[0].jadwal.mataPelajaran.namaMapel}`,
+          tanggal: absensiTerbaru[0].createdAt,
+        }
+      : null,
+    nilai: nilai[0]
+      ? {
+          judul: `${nilai[0].jenis} ${Number(nilai[0].nilai)}`,
+          deskripsi: `${nilai[0].siswa.nama} • ${nilai[0].guruMapel.mataPelajaran.namaMapel}`,
+          tanggal: nilai[0].tanggal,
+        }
+      : null,
+    sikap: sikap[0]
+      ? {
+          judul: sikap[0].jenisSikap === "POSITIF" ? "Sikap Positif" : "Pelanggaran",
+          deskripsi: `${sikap[0].siswa.nama} • ${sikap[0].kategori}`,
+          tanggal: sikap[0].createdAt,
+        }
+      : null,
+    tahsin: tahsin[0]
+      ? {
+          judul: `Juz ${tahsin[0].juz}`,
+          deskripsi: `${tahsin[0].siswa.nama} • ${tahsin[0].surat}`,
+          tanggal: tahsin[0].createdAt,
+        }
+      : null,
+    hafalan: hafalan[0]
+      ? {
+          judul: `Juz ${hafalan[0].juz}`,
+          deskripsi: `${hafalan[0].siswa.nama} • ${hafalan[0].surat}`,
+          tanggal: hafalan[0].createdAt,
+        }
+      : null,
+  };
+
   return {
     ortu: { user: ortu.user, anak: ortu.anak },
-    absensiMap,
+    anakAktifId,
+    anakAktifNama: ortu.anak.find((a) => a.id === anakAktifId)?.nama ?? null,
+    ringkasanTerbaru,
     monitoringTerbaru,
     nilaiPerkembangan,
     nilaiTerbaru: nilai.map((n) => ({
