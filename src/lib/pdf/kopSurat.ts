@@ -19,15 +19,15 @@ export async function drawKopSurat(doc: jsPDF, pageW: number, margin: number): P
     // Logo kiri
     doc.addImage(logoPathKiri, "JPEG", logoLeft, logoY, logoSize, logoSize);
     // Logo kanan
-    doc.addImage(logoPathKanan, "JPEG", logoRight, logoY, logoSize, logoSize);
+    doc.addImage(logoPathKanan, "PNG", logoRight, logoY, logoSize, logoSize);
   } catch (error) {
     console.warn("Logo tidak dapat dimuat:", error);
   }
 
   // Garis atas kop
-  doc.setDrawColor(27, 94, 32);
-  doc.setLineWidth(1.2);
-  doc.line(margin, 10, pageW - margin, 10);
+  // doc.setDrawColor(27, 94, 32);
+  // doc.setLineWidth(1.2);
+  // doc.line(margin, 10, pageW - margin, 10);
 
   // Yayasan
   doc.setFont("helvetica", "bold");
