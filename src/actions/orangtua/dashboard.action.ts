@@ -116,6 +116,38 @@ export async function getDashboardOrangTua() {
     }),
   ]);
 
+  const nilaiUntukGrafik = await prisma.nilai.findMany({
+    where: { siswaId: { in: anakIds } },
+    select: { nilai: true, tanggal: true },
+    orderBy: { tanggal: "asc" },
+  });
+
+  const bulanMap = new Map<string, { label: string; total: number; count: number }>();
+  const nowMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(nowMonth.getFullYear(), nowMonth.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    bulanMap.set(key, {
+      label: d.toLocaleDateString("id-ID", { month: "short" }),
+      total: 0,
+      count: 0,
+    });
+  }
+
+  for (const n of nilaiUntukGrafik) {
+    const d = new Date(n.tanggal);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const bucket = bulanMap.get(key);
+    if (!bucket) continue;
+    bucket.total += Number(n.nilai);
+    bucket.count += 1;
+  }
+
+  const nilaiPerkembangan = Array.from(bulanMap.values()).map((b) => ({
+    label: b.label,
+    jumlah: b.count > 0 ? Number((b.total / b.count).toFixed(1)) : 0,
+  }));
+
   type MonitoringTerbaru = {
     key: string;
     jenis: "Absensi" | "Nilai" | "Sikap" | "Tahsin" | "Hafalan";
@@ -174,6 +206,7 @@ export async function getDashboardOrangTua() {
     ortu: { user: ortu.user, anak: ortu.anak },
     absensiMap,
     monitoringTerbaru,
+    nilaiPerkembangan,
     nilaiTerbaru: nilai.map((n) => ({
       id: n.id,
       nilai: Number(n.nilai),
