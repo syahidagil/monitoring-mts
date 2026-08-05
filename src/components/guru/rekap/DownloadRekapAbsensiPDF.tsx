@@ -175,7 +175,7 @@ export default function DownloadRekapAbsensiPDF({
 
       // Kanan — Kepala Sekolah
       const ttRightX = pageW - margin - 50;
-      doc.text("Jakarta, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
+      doc.text("Mataram, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
       doc.text("Kepala Madrasah,", ttRightX, ttY + 5);
       doc.setFont("helvetica", "bold");
       doc.text("(................................)", ttRightX, ttY + 30);

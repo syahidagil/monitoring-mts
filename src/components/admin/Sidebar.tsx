@@ -28,18 +28,8 @@ const MENUS: MenuItem[] = [
     ],
   },
   { label: "Jadwal", href: "/admin/jadwal", icon: Calendar },
-  {
-    label: "Mata Pelajaran", icon: BookOpen,
-    children: [
-      { label: "Daftar Mata Pelajaran", href: "/admin/mata-pelajaran" },
-    ],
-  },
-  {
-    label: "Tahun Pelajaran", icon: CalendarDays,
-    children: [
-      { label: "Kelola Tahun Pelajaran", href: "/admin/tahun-pelajaran" },
-    ],
-  },
+  { label: "Mata Pelajaran", href: "/admin/mata-pelajaran", icon: BookOpen },
+  { label: "Tahun Pelajaran", href: "/admin/tahun-pelajaran", icon: CalendarDays },
   {
     label: "Informasi Sekolah", icon: Building2,
     children: [

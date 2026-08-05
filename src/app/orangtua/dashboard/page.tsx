@@ -12,6 +12,7 @@ export default async function OrangtuaDashboard() {
   if (!data) redirect("/login");
 
   const { ortu, absensiMap, nilaiTerbaru } = data;
+  const namaAnak = ortu.anak.map((a) => a.nama).join(", ");
   const totalNilai = ortu.anak.reduce((a, c) => a + c._count.nilai, 0);
   const totalHafalan = ortu.anak.reduce((a, c) => a + c._count.hafalan, 0);
   const totalSikap = ortu.anak.reduce((a, c) => a + c._count.sikap, 0);
@@ -26,8 +27,10 @@ export default async function OrangtuaDashboard() {
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
-        <p className="text-sm text-gray-500 mt-1">{ortu.user.name} — Portal Monitoring Anak</p>
+        <h1 className="text-2xl font-bold text-gray-900">Selamat Datang Wali Murid</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {namaAnak ? `Wali murid dari: ${namaAnak}` : "Portal Monitoring Anak"}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

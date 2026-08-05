@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { label: "Profil Guru",      href: "/guru/profil",     icon: User            },
 ];
 
-export default function GuruNavbar({ user }: { user: any }) {
+export default function GuruNavbar({ user, semesterAktif }: { user: any; semesterAktif: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -76,7 +76,7 @@ export default function GuruNavbar({ user }: { user: any }) {
         <div className="px-4 py-4 border-t border-white/10 space-y-3">
           <div className="bg-white/10 rounded-xl px-3 py-3">
             <p className="text-green-300 text-[10px] font-semibold uppercase tracking-wider">Semester Aktif</p>
-            <p className="text-white text-xs font-bold mt-0.5">Ganjil 2025/2026</p>
+            <p className="text-white text-xs font-bold mt-0.5">{semesterAktif}</p>
           </div>
           <form action={logoutAction}>
             <button className="w-full flex items-center gap-2.5 text-sm text-red-300 hover:text-red-200 hover:bg-red-900/20 px-3 py-2 rounded-lg transition-colors">
