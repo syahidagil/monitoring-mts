@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getDashboardOrangTua } from "@/actions/orangtua/dashboard.action";
 import Link from "next/link";
 import LineChartMini from "@/components/orangtua/LineChartMini";
-import { BookOpen, BookMarked, Heart, Calendar, Activity, ArrowUpRight, Star } from "lucide-react";
+// import { BookOpen, BookMarked, Heart, Calendar, Activity, ArrowUpRight, Star } from "lucide-react";
 
 export default async function OrangtuaDashboard() {
   const data = await getDashboardOrangTua();
@@ -17,42 +17,42 @@ export default async function OrangtuaDashboard() {
     {
       label: "Total Monitoring",
       total: ringkasanJumlah.monitoring,
-      icon: Activity,
+      // icon: Activity,
       color: "bg-emerald-50 text-emerald-700",
       keterangan: `Gabungan absensi, nilai, sikap, tahsin, dan tahfizh untuk ${jumlahAnak} anak`,
     },
     {
       label: "Total Absensi",
       total: ringkasanJumlah.absensi,
-      icon: Calendar,
+      // icon: Calendar,
       color: "bg-lime-50 text-lime-700",
       keterangan: `Total data absensi yang diinput guru untuk ${jumlahAnak} anak`,
     },
     {
       label: "Total Nilai",
       total: ringkasanJumlah.nilai,
-      icon: BookOpen,
+      // icon: BookOpen,
       color: "bg-blue-50 text-blue-700",
       keterangan: `Total data nilai yang diinput guru untuk ${jumlahAnak} anak`,
     },
     {
       label: "Total Sikap",
       total: ringkasanJumlah.sikap,
-      icon: Heart,
+      // icon: Heart,
       color: "bg-rose-50 text-rose-700",
       keterangan: `Total data sikap yang diinput guru untuk ${jumlahAnak} anak`,
     },
     {
       label: "Total Tahsin",
       total: ringkasanJumlah.tahsin,
-      icon: Star,
+      // icon: Star,
       color: "bg-amber-50 text-amber-700",
       keterangan: `Total data tahsin yang diinput guru untuk ${jumlahAnak} anak`,
     },
     {
       label: "Total Tahfizh",
       total: ringkasanJumlah.hafalan,
-      icon: BookMarked,
+      // icon: BookMarked,
       color: "bg-violet-50 text-violet-700",
       keterangan: `Total data tahfizh yang diinput guru untuk ${jumlahAnak} anak`,
     },
@@ -82,10 +82,10 @@ export default async function OrangtuaDashboard() {
         </div>
 
         <div className="xl:col-span-8 grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {kartu.map(({ label, total, icon: Icon, color, keterangan }) => (
+          {kartu.map(({ label, total, color, keterangan }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
               <div className={`w-9 h-9 ${color} rounded-lg flex items-center justify-center mb-3`}>
-                <Icon className="w-4 h-4" />
+                {/* <Icon className="w-4 h-4" /> */}
               </div>
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{label}</p>
               <p className="text-2xl font-bold text-gray-900 mt-2">{total}</p>
@@ -100,7 +100,7 @@ export default async function OrangtuaDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
         <div className="xl:col-span-7 bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
           <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="w-4 h-4 text-emerald-600" />
+            {/* <BookOpen className="w-4 h-4 text-emerald-600" /> */}
             <h3 className="text-sm font-bold text-gray-800">
               {anakAktifNama ? `Grafik Perkembangan Nilai ${anakAktifNama}` : "Grafik Perkembangan Nilai Anak"}
             </h3>
@@ -111,7 +111,7 @@ export default async function OrangtuaDashboard() {
         <div className="xl:col-span-5 space-y-5">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-4 h-4 text-blue-600" />
+              {/* <Activity className="w-4 h-4 text-blue-600" /> */}
               <h3 className="text-sm font-bold text-gray-800">Monitoring Terbaru</h3>
             </div>
             {monitoringTerbaru.length === 0 ? (
@@ -140,7 +140,7 @@ export default async function OrangtuaDashboard() {
                       <p className="text-sm font-semibold text-gray-800 group-hover:text-emerald-700">{item.judul}</p>
                       <p className="text-xs text-gray-400 truncate">{item.deskripsi}</p>
                     </div>
-                    <ArrowUpRight className="w-4 h-4 text-gray-300 mt-1 shrink-0 transition group-hover:text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    {/* <ArrowUpRight className="w-4 h-4 text-gray-300 mt-1 shrink-0 transition group-hover:text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /> */}
                   </Link>
                 ))}
               </div>

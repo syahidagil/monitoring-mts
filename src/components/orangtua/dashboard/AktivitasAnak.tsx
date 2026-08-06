@@ -1,4 +1,4 @@
-﻿import { Calendar, TrendingUp } from "lucide-react";
+﻿// import { Calendar, TrendingUp } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR:"bg-green-100 text-green-700", SAKIT:"bg-blue-100 text-blue-700",
@@ -18,7 +18,7 @@ export default function AktivitasAnak({ anak, absensiMap, nilaiTerbaru }: {
       {/* Absensi bulan ini */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-4 h-4 text-green-600" />
+          {/* <Calendar className="w-4 h-4 text-green-600" /> */}
           <h3 className="text-sm font-bold text-gray-800">Absensi Bulan Ini</h3>
         </div>
         {anak.map((a) => {
@@ -41,7 +41,7 @@ export default function AktivitasAnak({ anak, absensiMap, nilaiTerbaru }: {
       {/* Nilai terbaru */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-4 h-4 text-blue-600" />
+          {/* <TrendingUp className="w-4 h-4 text-blue-600" /> */}
           <h3 className="text-sm font-bold text-gray-800">Nilai Terbaru</h3>
         </div>
         {nilaiTerbaru.length === 0 ? (
