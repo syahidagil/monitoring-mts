@@ -138,6 +138,18 @@ export async function getDashboardOrangTua() {
     jumlah: b.count > 0 ? Number((b.total / b.count).toFixed(1)) : 0,
   }));
 
+  const totalData = ortu.anak.reduce(
+    (acc, anak) => {
+      acc.absensi += anak._count.absensi;
+      acc.nilai += anak._count.nilai;
+      acc.sikap += anak._count.sikap;
+      acc.tahsin += anak._count.tahsin;
+      acc.hafalan += anak._count.hafalan;
+      return acc;
+    },
+    { absensi: 0, nilai: 0, sikap: 0, tahsin: 0, hafalan: 0 }
+  );
+
   type MonitoringTerbaru = {
     key: string;
     jenis: "Absensi" | "Nilai" | "Sikap" | "Tahsin" | "Hafalan";
@@ -235,6 +247,14 @@ export async function getDashboardOrangTua() {
     ortu: { user: ortu.user, anak: ortu.anak },
     anakAktifId,
     anakAktifNama: ortu.anak.find((a) => a.id === anakAktifId)?.nama ?? null,
+    ringkasanJumlah: {
+      absensi: totalData.absensi,
+      nilai: totalData.nilai,
+      sikap: totalData.sikap,
+      tahsin: totalData.tahsin,
+      hafalan: totalData.hafalan,
+      monitoring: totalData.absensi + totalData.nilai + totalData.sikap + totalData.tahsin + totalData.hafalan,
+    },
     ringkasanTerbaru,
     monitoringTerbaru,
     nilaiPerkembangan,

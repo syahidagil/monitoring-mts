@@ -4,29 +4,58 @@ import Link from "next/link";
 import LineChartMini from "@/components/orangtua/LineChartMini";
 import { BookOpen, BookMarked, Heart, Calendar, Activity, ArrowUpRight, Star } from "lucide-react";
 
-function formatTanggalSingkat(tanggal: Date | string) {
-  return new Date(tanggal).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default async function OrangtuaDashboard() {
   const data = await getDashboardOrangTua();
   if (!data) redirect("/login");
 
-  const { ortu, anakAktifNama, ringkasanTerbaru, monitoringTerbaru, nilaiPerkembangan } = data;
+  const { ortu, anakAktifNama, ringkasanJumlah, monitoringTerbaru, nilaiPerkembangan } = data;
   const namaOrtu = ortu.user?.name || "Wali Murid";
   const namaAnak = ortu.anak.map((a) => a.nama).join(", ");
+  const jumlahAnak = ortu.anak.length;
 
   const kartu = [
-    { label: "Update Terakhir", data: ringkasanTerbaru.updateTerakhir, icon: Activity, color: "bg-emerald-50 text-emerald-700" },
-    { label: "Absensi Terbaru", data: ringkasanTerbaru.absensi, icon: Calendar, color: "bg-lime-50 text-lime-700" },
-    { label: "Nilai Terbaru", data: ringkasanTerbaru.nilai, icon: BookOpen, color: "bg-blue-50 text-blue-700" },
-    { label: "Sikap Terbaru", data: ringkasanTerbaru.sikap, icon: Heart, color: "bg-rose-50 text-rose-700" },
-    { label: "Tahsin Terbaru", data: ringkasanTerbaru.tahsin, icon: Star, color: "bg-amber-50 text-amber-700" },
-    { label: "Tahfizh Terbaru", data: ringkasanTerbaru.hafalan, icon: BookMarked, color: "bg-violet-50 text-violet-700" },
+    {
+      label: "Total Monitoring",
+      total: ringkasanJumlah.monitoring,
+      icon: Activity,
+      color: "bg-emerald-50 text-emerald-700",
+      keterangan: `Gabungan absensi, nilai, sikap, tahsin, dan tahfizh untuk ${jumlahAnak} anak`,
+    },
+    {
+      label: "Total Absensi",
+      total: ringkasanJumlah.absensi,
+      icon: Calendar,
+      color: "bg-lime-50 text-lime-700",
+      keterangan: `Total data absensi yang diinput guru untuk ${jumlahAnak} anak`,
+    },
+    {
+      label: "Total Nilai",
+      total: ringkasanJumlah.nilai,
+      icon: BookOpen,
+      color: "bg-blue-50 text-blue-700",
+      keterangan: `Total data nilai yang diinput guru untuk ${jumlahAnak} anak`,
+    },
+    {
+      label: "Total Sikap",
+      total: ringkasanJumlah.sikap,
+      icon: Heart,
+      color: "bg-rose-50 text-rose-700",
+      keterangan: `Total data sikap yang diinput guru untuk ${jumlahAnak} anak`,
+    },
+    {
+      label: "Total Tahsin",
+      total: ringkasanJumlah.tahsin,
+      icon: Star,
+      color: "bg-amber-50 text-amber-700",
+      keterangan: `Total data tahsin yang diinput guru untuk ${jumlahAnak} anak`,
+    },
+    {
+      label: "Total Tahfizh",
+      total: ringkasanJumlah.hafalan,
+      icon: BookMarked,
+      color: "bg-violet-50 text-violet-700",
+      keterangan: `Total data tahfizh yang diinput guru untuk ${jumlahAnak} anak`,
+    },
   ];
 
   return (
@@ -53,20 +82,15 @@ export default async function OrangtuaDashboard() {
         </div>
 
         <div className="xl:col-span-8 grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {kartu.map(({ label, data: item, icon: Icon, color }) => (
+          {kartu.map(({ label, total, icon: Icon, color, keterangan }) => (
             <div key={label} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
               <div className={`w-9 h-9 ${color} rounded-lg flex items-center justify-center mb-3`}>
                 <Icon className="w-4 h-4" />
               </div>
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{label}</p>
-              <p className="text-lg font-bold text-gray-900 mt-2">
-                {item?.judul ?? "Belum ada data"}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">{total}</p>
               <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-8">
-                {item?.deskripsi ?? "Data monitoring terbaru akan tampil di sini."}
-              </p>
-              <p className="text-[11px] text-gray-400 mt-3">
-                {item?.tanggal ? formatTanggalSingkat(item.tanggal) : "Menunggu input guru"}
+                {keterangan}
               </p>
             </div>
           ))}
