@@ -2,14 +2,13 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getTahsinAnak } from "@/actions/orangtua/tahsin.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
-import type { Semester } from "@prisma/client";
 
 const NILAI: Record<string, { teks: string; kelas: string }> = {
   L: { teks: "L", kelas: "bg-green-100 text-green-700" },
   L_MIN: { teks: "L-", kelas: "bg-amber-100 text-amber-700" },
 };
 
-type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string }> };
 
 export default async function TahsinPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -20,7 +19,6 @@ export default async function TahsinPage({ searchParams }: Props) {
   const data = await getTahsinAnak({
     siswaId,
     tahunAjar: sp.tahunAjar,
-    semester: sp.semester as Semester | undefined,
   });
   if (!data) redirect("/orangtua/dashboard");
 
@@ -41,15 +39,6 @@ export default async function TahsinPage({ searchParams }: Props) {
             className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
             {data.tahunAjarList.map((t) => (
               <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Semester</label>
-          <select name="semester" defaultValue={data.semester}
-            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            {data.semesterOptions.map((s) => (
-              <option key={s} value={s}>Semester {s === "GANJIL" ? "Ganjil" : "Genap"}</option>
             ))}
           </select>
         </div>

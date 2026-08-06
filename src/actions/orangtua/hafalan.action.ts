@@ -2,19 +2,18 @@
 
 import { prisma } from "@/lib/prisma";
 import { resolveAnak } from "./dashboard.action";
-import type { Semester } from "@prisma/client";
 
-function getPeriodeAkademik(tanggal: Date): { tahunAjar: string; semester: Semester } {
+function getPeriodeAkademik(tanggal: Date): { tahunAjar: string } {
   const d = new Date(tanggal);
   const bulan = d.getMonth() + 1;
   if (bulan >= 7) {
-    return { tahunAjar: `${d.getFullYear()}/${d.getFullYear() + 1}`, semester: "GANJIL" };
+    return { tahunAjar: `${d.getFullYear()}/${d.getFullYear() + 1}` };
   }
-  return { tahunAjar: `${d.getFullYear() - 1}/${d.getFullYear()}`, semester: "GENAP" };
+  return { tahunAjar: `${d.getFullYear() - 1}/${d.getFullYear()}` };
 }
 
-/** Monitoring hafalan (tahfidz) anak. Hafalan tak punya semester -> pakai seluruh data. */
-export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester }) {
+/** Monitoring hafalan (tahfidz) anak. Hafalan berjalan terus dari awal sampai anak lulus. */
+export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: string }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
 
@@ -26,16 +25,14 @@ export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: strin
 
   const rowsDenganPeriode = rows.map((r) => {
     const periode = getPeriodeAkademik(r.tanggal);
-    return { ...r, tahunAjar: periode.tahunAjar, semester: periode.semester };
+    return { ...r, tahunAjar: periode.tahunAjar };
   });
 
   const nowPeriode = getPeriodeAkademik(new Date());
   const tahunAjarList = Array.from(new Set(rowsDenganPeriode.map((r) => r.tahunAjar))).sort((a, b) => b.localeCompare(a));
   const tahunAjar = opts.tahunAjar ?? tahunAjarList[0] ?? nowPeriode.tahunAjar;
-  const semester = opts.semester ?? nowPeriode.semester;
-  const semesterOptions: Semester[] = ["GANJIL", "GENAP"];
 
-  const rowsFiltered = rowsDenganPeriode.filter((r) => r.tahunAjar === tahunAjar && r.semester === semester);
+  const rowsFiltered = rowsDenganPeriode.filter((r) => r.tahunAjar === tahunAjar);
 
   const juzSet = new Set(rowsFiltered.map((r) => r.juz));
   const juzTertinggi = rowsFiltered.length > 0 ? Math.max(...rowsFiltered.map((r) => r.juz)) : 0;
@@ -58,9 +55,7 @@ export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: strin
   return {
     anak,
     tahunAjar,
-    semester,
     tahunAjarList: tahunAjarList.length > 0 ? tahunAjarList : [nowPeriode.tahunAjar],
-    semesterOptions,
     ringkasan: {
       juzTertinggi,
       jumlahJuz: juzSet.size,
