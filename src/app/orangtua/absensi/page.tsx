@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getAbsensiAnak } from "@/actions/orangtua/absensi.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import type { Semester } from "@prisma/client";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR: "bg-green-100 text-green-700", SAKIT: "bg-blue-100 text-blue-700",
@@ -9,7 +10,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahun?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahunAjar?: string; semester?: string }> };
 
 export default async function AbsensiPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -18,9 +19,9 @@ export default async function AbsensiPage({ searchParams }: Props) {
 
   const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
   const bulan = sp.bulan ? Number(sp.bulan) : new Date().getMonth() + 1;
-  const tahun = sp.tahun ? Number(sp.tahun) : new Date().getFullYear();
+  const semester = sp.semester as Semester | undefined;
 
-  const data = await getAbsensiAnak({ siswaId, bulan, tahun });
+  const data = await getAbsensiAnak({ siswaId, bulan, tahunAjar: sp.tahunAjar, semester });
   if (!data) redirect("/orangtua/dashboard");
 
   const kartu = [
@@ -45,8 +46,22 @@ export default async function AbsensiPage({ searchParams }: Props) {
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
           {BULAN.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
         </select>
-        <input type="number" name="tahun" defaultValue={tahun} min={2020} max={2030}
-          className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+        <select name="tahunAjar" defaultValue={data.tahunAjar}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          {data.tahunAjarList.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <select name="semester" defaultValue={data.semester}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          {data.semesterOptions.map((s) => (
+            <option key={s} value={s}>
+              Semester {s === "GANJIL" ? "Ganjil" : "Genap"}
+            </option>
+          ))}
+        </select>
         <button className="bg-[#1B5E20] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#2E7D32]">Tampilkan</button>
         <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
           Kehadiran: <span className="font-bold text-emerald-700">{data.persentase}%</span>

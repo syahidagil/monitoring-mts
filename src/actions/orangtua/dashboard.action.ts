@@ -18,7 +18,7 @@ export async function getAnakList() {
     where: { orangTuaId: id, status: true },
     select: {
       id: true, nis: true, nama: true, statusTahfidz: true,
-      kelas: { select: { id: true, nama: true, tahunAjaran: { select: { nama: true, semester: true } } } },
+      kelas: { select: { id: true, nama: true, tahunAjaran: { select: { id: true, nama: true, semester: true } } } },
     },
     orderBy: { nama: "asc" },
   });
@@ -35,7 +35,7 @@ export async function resolveAnak(siswaId?: number) {
     where: { orangTuaId: id, status: true, ...(siswaId ? { id: siswaId } : {}) },
     select: {
       id: true, nis: true, nama: true, statusTahfidz: true,
-      kelas: { select: { id: true, nama: true, tahunAjaran: { select: { nama: true, semester: true } } } },
+      kelas: { select: { id: true, nama: true, tahunAjaran: { select: { id: true, nama: true, semester: true } } } },
     },
     orderBy: { nama: "asc" },
   });

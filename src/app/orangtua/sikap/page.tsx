@@ -7,7 +7,7 @@ import type { Semester } from "@prisma/client";
 
 const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 
-type Props = { searchParams: Promise<{ siswaId?: string; semester?: string; bulan?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string; bulan?: string }> };
 
 export default async function SikapPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -17,7 +17,12 @@ export default async function SikapPage({ searchParams }: Props) {
   const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
   const bulan = sp.bulan ? Number(sp.bulan) : new Date().getMonth() + 1;
 
-  const data = await getSikapAnak({ siswaId, semester: sp.semester as Semester | undefined, bulan });
+  const data = await getSikapAnak({
+    siswaId,
+    tahunAjar: sp.tahunAjar,
+    semester: sp.semester as Semester | undefined,
+    bulan,
+  });
   if (!data) redirect("/orangtua/dashboard");
 
   return (
@@ -33,11 +38,21 @@ export default async function SikapPage({ searchParams }: Props) {
       <form method="get" className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <input type="hidden" name="siswaId" value={siswaId} />
         <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tahun Pelajaran</label>
+          <select name="tahunAjar" defaultValue={data.tahunAjar}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            {data.tahunAjarList.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        <div>
           <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Pilih Semester</label>
           <select name="semester" defaultValue={data.semester}
             className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="GANJIL">Ganjil {data.tahunAjar}</option>
-            <option value="GENAP">Genap {data.tahunAjar}</option>
+            {data.semesterOptions.map((s) => (
+              <option key={s} value={s}>Semester {s === "GANJIL" ? "Ganjil" : "Genap"}</option>
+            ))}
           </select>
         </div>
         <div>

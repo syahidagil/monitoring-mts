@@ -5,12 +5,24 @@ import { resolveAnak } from "./dashboard.action";
 import type { Semester } from "@prisma/client";
 
 /** Monitoring sikap anak. Filter semester + bulan (opsional). */
-export async function getSikapAnak(opts: { siswaId?: number; semester?: Semester; bulan?: number }) {
+export async function getSikapAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester; bulan?: number }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
 
-  const semester = opts.semester ?? anak.kelas.tahunAjaran.semester;
-  const tahunAjar = anak.kelas.tahunAjaran.nama;
+  const opsiRaw = await prisma.sikap.findMany({
+    where: { siswaId: anak.id },
+    select: { tahunAjar: true, semester: true },
+    distinct: ["tahunAjar", "semester"],
+    orderBy: [{ tahunAjar: "desc" }, { semester: "desc" }],
+  });
+
+  const fallbackTahunAjar = anak.kelas.tahunAjaran.nama;
+  const fallbackSemester = anak.kelas.tahunAjaran.semester;
+  const tahunAjar = opts.tahunAjar ?? opsiRaw[0]?.tahunAjar ?? fallbackTahunAjar;
+  const semester = opts.semester ?? opsiRaw.find((o) => o.tahunAjar === tahunAjar)?.semester ?? fallbackSemester;
+
+  const tahunAjarList = Array.from(new Set(opsiRaw.map((o) => o.tahunAjar)));
+  const semesterOptions: Semester[] = ["GANJIL", "GENAP"];
 
   const rows = await prisma.sikap.findMany({
     where: { siswaId: anak.id, semester, tahunAjar },
@@ -27,7 +39,12 @@ export async function getSikapAnak(opts: { siswaId?: number; semester?: Semester
   const pelanggaran = bulanRows.filter((r) => r.jenisSikap === "PELANGGARAN").length;
 
   return {
-    anak, semester, tahunAjar, bulan,
+    anak,
+    semester,
+    tahunAjar,
+    tahunAjarList: tahunAjarList.length > 0 ? tahunAjarList : [fallbackTahunAjar],
+    semesterOptions,
+    bulan,
     statistik: { total: bulanRows.length, positif, pelanggaran },
     rows: bulanRows.map((r) => ({
       id: r.id,

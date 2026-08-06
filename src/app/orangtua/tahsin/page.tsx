@@ -2,13 +2,14 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getTahsinAnak } from "@/actions/orangtua/tahsin.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import type { Semester } from "@prisma/client";
 
 const NILAI: Record<string, { teks: string; kelas: string }> = {
   L: { teks: "L", kelas: "bg-green-100 text-green-700" },
   L_MIN: { teks: "L-", kelas: "bg-amber-100 text-amber-700" },
 };
 
-type Props = { searchParams: Promise<{ siswaId?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string }> };
 
 export default async function TahsinPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -16,7 +17,11 @@ export default async function TahsinPage({ searchParams }: Props) {
   if (anakList.length === 0) redirect("/login");
 
   const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
-  const data = await getTahsinAnak({ siswaId });
+  const data = await getTahsinAnak({
+    siswaId,
+    tahunAjar: sp.tahunAjar,
+    semester: sp.semester as Semester | undefined,
+  });
   if (!data) redirect("/orangtua/dashboard");
 
   return (
@@ -27,6 +32,31 @@ export default async function TahsinPage({ searchParams }: Props) {
         anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
         aktifId={siswaId}
       />
+
+      <form method="get" className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-5">
+        <input type="hidden" name="siswaId" value={siswaId} />
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tahun Pelajaran</label>
+          <select name="tahunAjar" defaultValue={data.tahunAjar}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            {data.tahunAjarList.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Semester</label>
+          <select name="semester" defaultValue={data.semester}
+            className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            {data.semesterOptions.map((s) => (
+              <option key={s} value={s}>Semester {s === "GANJIL" ? "Ganjil" : "Genap"}</option>
+            ))}
+          </select>
+        </div>
+        <button className="ml-auto bg-[#1B5E20] text-white text-sm px-5 py-2.5 rounded-lg hover:bg-[#2E7D32]">
+          Terapkan Filter
+        </button>
+      </form>
 
       {/* Kartu ringkas + persentase per aspek */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">

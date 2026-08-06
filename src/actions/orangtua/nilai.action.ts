@@ -10,12 +10,24 @@ const LABEL: Record<string, string> = {
 };
 
 /** Monitoring nilai anak — dikelompokkan per mapel, kolom per jenis (sesuai desain). */
-export async function getNilaiAnak(opts: { siswaId?: number; semester?: Semester }) {
+export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
 
-  const semester = opts.semester ?? anak.kelas.tahunAjaran.semester;
-  const tahunAjar = anak.kelas.tahunAjaran.nama;
+  const opsiRaw = await prisma.nilai.findMany({
+    where: { siswaId: anak.id },
+    select: { tahunAjar: true, semester: true },
+    distinct: ["tahunAjar", "semester"],
+    orderBy: [{ tahunAjar: "desc" }, { semester: "desc" }],
+  });
+
+  const fallbackTahunAjar = anak.kelas.tahunAjaran.nama;
+  const fallbackSemester = anak.kelas.tahunAjaran.semester;
+  const tahunAjar = opts.tahunAjar ?? opsiRaw[0]?.tahunAjar ?? fallbackTahunAjar;
+  const semester = opts.semester ?? opsiRaw.find((o) => o.tahunAjar === tahunAjar)?.semester ?? fallbackSemester;
+
+  const tahunAjarList = Array.from(new Set(opsiRaw.map((o) => o.tahunAjar)));
+  const semesterOptions: Semester[] = ["GANJIL", "GENAP"];
 
   const rows = await prisma.nilai.findMany({
     where: { siswaId: anak.id, semester, tahunAjar },
@@ -54,7 +66,11 @@ export async function getNilaiAnak(opts: { siswaId?: number; semester?: Semester
 
   const semua = rows.map((r) => Number(r.nilai));
   return {
-    anak, semester, tahunAjar,
+    anak,
+    semester,
+    tahunAjar,
+    tahunAjarList: tahunAjarList.length > 0 ? tahunAjarList : [fallbackTahunAjar],
+    semesterOptions,
     urutanJenis: URUTAN.map((j) => ({ key: j, label: LABEL[j] })),
     perMapel,
     ringkasan: {

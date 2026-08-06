@@ -10,7 +10,7 @@ function warnaNilai(n: number) {
   return "text-rose-600";
 }
 
-type Props = { searchParams: Promise<{ siswaId?: string; semester?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string }> };
 
 export default async function NilaiPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -18,7 +18,11 @@ export default async function NilaiPage({ searchParams }: Props) {
   if (anakList.length === 0) redirect("/login");
 
   const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
-  const data = await getNilaiAnak({ siswaId, semester: sp.semester as Semester | undefined });
+  const data = await getNilaiAnak({
+    siswaId,
+    tahunAjar: sp.tahunAjar,
+    semester: sp.semester as Semester | undefined,
+  });
   if (!data) redirect("/orangtua/dashboard");
 
   const maks = 100;
@@ -32,14 +36,21 @@ export default async function NilaiPage({ searchParams }: Props) {
         aktifId={siswaId}
       />
 
-      {/* Filter semester */}
+      {/* Filter tahun pelajaran + semester */}
       <form method="get" className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <span className="text-sm text-gray-500 font-medium">Filter:</span>
         <input type="hidden" name="siswaId" value={siswaId} />
+        <select name="tahunAjar" defaultValue={data.tahunAjar}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          {data.tahunAjarList.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
         <select name="semester" defaultValue={data.semester}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-          <option value="GANJIL">Semester Ganjil</option>
-          <option value="GENAP">Semester Genap</option>
+          {data.semesterOptions.map((s) => (
+            <option key={s} value={s}>Semester {s === "GANJIL" ? "Ganjil" : "Genap"}</option>
+          ))}
         </select>
         <button className="ml-auto bg-[#1B5E20] text-white text-sm px-5 py-2 rounded-lg hover:bg-[#2E7D32]">Terapkan</button>
       </form>
