@@ -22,7 +22,7 @@ export default function VisiMisiSection({
             Visi, Misi & Tujuan
           </h2>
         </div>
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6 lg:items-start">
           {/* Visi */}
           <div className="bg-green-900 rounded-2xl p-8 text-white">
             {/* <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6">
