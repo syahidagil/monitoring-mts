@@ -1,6 +1,6 @@
 ﻿"use client";
 import { useEffect, useRef, useState } from "react";
-import { Users, GraduationCap, Award, BookOpen } from "lucide-react";
+// import { Users, GraduationCap, Award, BookOpen } from "lucide-react";
 
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -26,10 +26,10 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 }
 
 const STATS = [
-  { key: "siswa", icon: Users, label: "SISWA", suffix: "+" },
-  { key: "guru", icon: GraduationCap, label: "GURU", suffix: "+" },
-  { key: "prestasi", icon: Award, label: "PRESTASI", suffix: "+" },
-  { key: "eskul", icon: BookOpen, label: "ESKUL", suffix: "" },
+  { key: "siswa",  label: "SISWA", suffix: "+" },
+  { key: "guru",  label: "GURU", suffix: "+" },
+  { key: "prestasi", label: "PRESTASI", suffix: "+" },
+  { key: "eskul", label: "ESKUL", suffix: "" },
 ] as const;
 
 type Counts = { siswa: number; guru: number; prestasi: number; eskul: number };
@@ -43,9 +43,8 @@ export default function StatistikSection({ counts }: { counts: Counts }) {
           <div className="w-12 h-1 bg-[#1B5E20] mx-auto mt-3 rounded-full" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {STATS.map(({ icon: Icon, label, key, suffix }) => (
+          {STATS.map(({ label, key, suffix }) => (
             <div key={label} className="border border-gray-200 rounded-xl p-8 text-center hover:shadow-md transition-shadow">
-              <Icon className="w-8 h-8 text-[#2E7D32] mx-auto mb-4" strokeWidth={1.5} />
               <p className="text-4xl font-bold text-gray-900 mb-2">
                 <CountUp target={counts[key]} suffix={suffix} />
               </p>
