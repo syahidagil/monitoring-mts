@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react";
+import Image from "next/image";
 import type { InformasiSekolah } from "@prisma/client";
 
 export default function SejarahSection({
@@ -34,15 +34,15 @@ export default function SejarahSection({
             </div> */}
           </div>
           <div className="relative">
-            <div className="aspect-[4/3] bg-gradient-to-br from-green-800 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
-              {/* <div className="text-center text-white/40">
-                <BookOpen className="w-16 h-16 mx-auto mb-3" />
-                <p className="text-sm">Foto Gedung Sekolah</p>
-              </div> */}
-            </div>
-            <div className="absolute -bottom-4 -left-4 bg-green-900 text-white rounded-xl px-5 py-3 shadow-lg">
-              <p className="text-2xl font-bold"></p>
-              <p className="text-xs text-green-300"></p>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
+              <Image
+                src="/images/depan.jpeg"
+                alt="Tampak depan sekolah"
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                priority
+              />
             </div>
           </div>
         </div>
