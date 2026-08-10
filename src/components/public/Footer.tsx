@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+﻿import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import Link from "next/link";
 export default function Footer() {
   return (
@@ -48,10 +48,10 @@ export default function Footer() {
                 <Mail className="w-4 h-4 text-[#4CAF50] flex-shrink-0" />
                 <span>info@mtsalaminbintaro.sch.id</span>
               </div>
-              <div className="flex gap-3 text-sm text-gray-400">
+              {/* <div className="flex gap-3 text-sm text-gray-400">
                 <Clock className="w-4 h-4 text-[#4CAF50] flex-shrink-0" />
                 <span>Senin - Jumat: 07:00 - 15:30</span>
-              </div>
+              </div> */}
             </div>
           </div>
           <div>
