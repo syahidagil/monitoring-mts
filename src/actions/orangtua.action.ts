@@ -16,10 +16,10 @@ export async function createOrangTua(formData: FormData) {
   const alamat = (formData.get("alamat") as string)?.trim() || null;
   const pekerjaan = (formData.get("pekerjaan") as string)?.trim() || null;
   const status = formData.get("status") !== "false";
-  const siswaIdsRaw = formData.get("siswaIds") as string;
-  const siswaIds: number[] = siswaIdsRaw
-    ? siswaIdsRaw.split(",").map(Number).filter(Boolean)
-    : [];
+  const siswaIds: number[] = formData
+    .getAll("siswaIds")
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0);
 
   if (!nama) return { success: false, message: "Nama wajib diisi" };
   if (!username) return { success: false, message: "Username wajib diisi" };
@@ -94,10 +94,10 @@ export async function updateOrangTua(id: string, formData: FormData) {
   const alamat = (formData.get("alamat") as string)?.trim() || null;
   const pekerjaan = (formData.get("pekerjaan") as string)?.trim() || null;
   const status = formData.get("status") !== "false";
-  const siswaIdsRaw = formData.get("siswaIds") as string;
-  const newSiswaIds: number[] = siswaIdsRaw
-    ? siswaIdsRaw.split(",").map(Number).filter(Boolean)
-    : [];
+  const newSiswaIds: number[] = formData
+    .getAll("siswaIds")
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value > 0);
 
   if (!nama) return { success: false, message: "Nama wajib diisi" };
 
