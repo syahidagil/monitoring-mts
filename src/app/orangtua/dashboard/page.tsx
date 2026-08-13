@@ -2,17 +2,23 @@ import { redirect } from "next/navigation";
 import { getDashboardOrangTua } from "@/actions/orangtua/dashboard.action";
 import Link from "next/link";
 import LineChartMini from "@/components/orangtua/LineChartMini";
+import ChildSwitcher from "@/components/orangtua/ChildSwitcher";
 import { BookOpen, BookMarked, Heart, Calendar, Activity, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export default async function OrangtuaDashboard() {
-  const data = await getDashboardOrangTua();
+type Props = { searchParams: Promise<{ siswaId?: string }> };
+
+export default async function OrangtuaDashboard({ searchParams }: Props) {
+  const sp = await searchParams;
+  const selectedSiswaId = sp.siswaId ? Number(sp.siswaId) : undefined;
+  const data = await getDashboardOrangTua(selectedSiswaId);
   if (!data) redirect("/login");
 
-  const { ortu, anakAktifNama, ringkasanJumlah, monitoringTerbaru, nilaiPerkembangan } = data;
+  const { ortu, anakAktifId, anakAktifNama, ringkasanJumlah, monitoringTerbaru, nilaiPerkembangan } = data;
   const namaOrtu = ortu.user?.name || "Wali Murid";
   const namaAnak = ortu.anak.map((a) => a.nama).join(", ");
   const jumlahAnak = ortu.anak.length;
+  const anakList = ortu.anak.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }));
 
   const kartu: Array<{
     label: string;
@@ -108,11 +114,16 @@ export default async function OrangtuaDashboard() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
         <div className="xl:col-span-7 bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center gap-2 mb-4">
-            {/* <BookOpen className="w-4 h-4 text-emerald-600" /> */}
-            <h3 className="text-sm font-bold text-gray-800">
-              {anakAktifNama ? `Grafik Perkembangan Nilai ${anakAktifNama}` : "Grafik Perkembangan Nilai Anak"}
-            </h3>
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-sm font-bold text-gray-800">
+                {anakAktifNama ? `Grafik Perkembangan Nilai ${anakAktifNama}` : "Grafik Perkembangan Nilai Anak"}
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Pilih anak untuk melihat perkembangan nilainya.
+              </p>
+            </div>
+            <ChildSwitcher anakList={anakList} aktifId={anakAktifId ?? anakList[0]?.id ?? 0} />
           </div>
           <LineChartMini data={nilaiPerkembangan} />
         </div>

@@ -42,7 +42,7 @@ export async function resolveAnak(siswaId?: number) {
 }
 
 /** Ringkasan untuk dashboard: kartu statistik gabungan semua anak. */
-export async function getDashboardOrangTua() {
+export async function getDashboardOrangTua(activeSiswaId?: number) {
   const id = await getOrangTuaId();
   if (!id) return null;
 
@@ -64,7 +64,9 @@ export async function getDashboardOrangTua() {
   if (!ortu) return null;
 
   const anakIds = ortu.anak.map((a) => a.id);
-  const anakAktifId = ortu.anak[0]?.id;
+  const anakAktifId = ortu.anak.some((a) => a.id === activeSiswaId)
+    ? activeSiswaId
+    : ortu.anak[0]?.id;
   const now = new Date();
 
   const [absensiTerbaru, nilai, sikap, tahsin, hafalan] = await prisma.$transaction([
