@@ -75,7 +75,7 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         <div className="xl:col-span-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Portal Orang Tua</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Portal Wali Siswa</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">Selamat Datang, {namaOrtu}</h1>
           <p className="text-sm text-gray-600 mt-2">
             {namaAnak ? `Monitoring terbaru untuk: ${namaAnak}` : "Pantau perkembangan anak Anda di sini."}
