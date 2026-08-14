@@ -53,7 +53,7 @@ export default function OrangtuaSidebar({ user }: { user: { name?: string | null
             </div>
             <div>
               <p className="text-white font-bold text-sm leading-tight">MTS Al-Amin</p>
-              <p className="text-green-300 text-[10px] leading-tight tracking-wide">PARENT PORTAL</p>
+              <p className="text-green-300 text-[10px] leading-tight tracking-wide">PORTAL WALI SISWA</p>
             </div>
           </div>
         </div>

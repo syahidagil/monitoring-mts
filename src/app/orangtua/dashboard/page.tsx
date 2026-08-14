@@ -120,7 +120,7 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
                 {anakAktifNama ? `Grafik Perkembangan Nilai ${anakAktifNama}` : "Grafik Perkembangan Nilai Anak"}
               </h3>
               <p className="text-xs text-gray-500 mt-1">
-                Pilih anak untuk melihat perkembangan nilainya.
+                Pilih anak
               </p>
             </div>
             <ChildSwitcher anakList={anakList} aktifId={anakAktifId ?? anakList[0]?.id ?? 0} />
