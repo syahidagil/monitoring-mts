@@ -7,10 +7,10 @@ import type { InformasiSekolah } from "@prisma/client";
 const FILTERS = ["Semua", "Akademik", "Non-Akademik", "Islami", "Nasional"];
 
 const BADGE_COLORS: Record<string, string> = {
-  Akademik: "bg-blue-100 text-blue-700",
-  "Non-Akademik": "bg-yellow-100 text-yellow-700",
-  Islami: "bg-green-100 text-green-700",
-  Nasional: "bg-purple-100 text-purple-700",
+  Akademik: ,
+  "Non-Akademik": ,
+  Islami: ,
+  Nasional: ,
 };
 
 export default function PrestasiSection({
