@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -277,14 +277,17 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
               <label className={labelClass}>Username <span className="text-red-500 normal-case">*</span></label>
               <input
                 name="username"
-                required={!isEdit}
-                disabled={isEdit}
+                required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={`${inputClass} ${isEdit ? "bg-gray-100 text-gray-500" : ""}`}
+                className={inputClass}
                 placeholder="buat_username"
               />
-              <p className="text-xs text-gray-400 mt-1.5">Akan digunakan guru untuk login ke sistem</p>
+              <p className="text-xs text-gray-400 mt-1.5">
+                {isEdit
+                  ? "Ubah dengan hati-hati — username ini dipakai guru untuk login ke sistem."
+                  : "Akan digunakan guru untuk login ke sistem"}
+              </p>
             </div>
 
             <div>
