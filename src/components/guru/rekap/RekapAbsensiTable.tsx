@@ -4,7 +4,7 @@ import { Search, Download } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR:"bg-green-100 text-green-700", SAKIT:"bg-blue-100 text-blue-700",
-  IZIN:"bg-yellow-100 text-yellow-700", ALPHA:"bg-red-100 text-red-700",
+  IZIN:"bg-yellow-100 text-yellow-700", ALPA:"bg-red-100 text-red-700",
 };
 
 export default function RekapAbsensiTable({ data }: { data: any[] }) {
@@ -15,7 +15,7 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
   );
 
   const totalHadir = filtered.reduce((a, r) => a + r.HADIR, 0);
-  const totalAlpha = filtered.reduce((a, r) => a + r.ALPHA, 0);
+  const totalAlpa = filtered.reduce((a, r) => a + r.ALPA, 0);
 
   return (
     <div className="space-y-4">
@@ -28,7 +28,7 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
         </div>
         <div className="flex items-center gap-3 text-xs text-gray-500">
           <span className="font-semibold text-green-700">{totalHadir} Hadir</span>
-          <span className="font-semibold text-red-600">{totalAlpha} Alpha</span>
+          <span className="font-semibold text-red-600">{totalAlpa} Alpa</span>
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
                   <td className="px-4 py-3 text-center text-sm font-semibold text-green-700">{r.HADIR}</td>
                   <td className="px-4 py-3 text-center text-sm font-semibold text-blue-700">{r.SAKIT}</td>
                   <td className="px-4 py-3 text-center text-sm font-semibold text-yellow-700">{r.IZIN}</td>
-                  <td className="px-4 py-3 text-center text-sm font-semibold text-red-700">{r.ALPHA}</td>
+                  <td className="px-4 py-3 text-center text-sm font-semibold text-red-700">{r.ALPA}</td>
                   <td className="px-4 py-3 text-center text-sm text-gray-600">{r.total}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`text-xs font-bold px-2 py-1 rounded-full ${Number(pct) >= 80 ? "bg-green-100 text-green-700" : Number(pct) >= 60 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
@@ -77,7 +77,7 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
           </tbody>
         </table>
         <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
-          {filtered.length} siswa • H=Hadir, S=Sakit, I=Izin, A=Alpha
+          {filtered.length} siswa • H=Hadir, S=Sakit, I=Izin, A=Alpa
         </div>
       </div>
     </div>

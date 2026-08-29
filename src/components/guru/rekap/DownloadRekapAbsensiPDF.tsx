@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { drawKopSurat } from "@/lib/pdf/kopSurat";
@@ -9,7 +9,7 @@ type RekapRow = {
   HADIR: number;
   SAKIT: number;
   IZIN: number;
-  ALPHA: number;
+  ALPA: number;
   total: number;
 };
 
@@ -100,7 +100,7 @@ export default function DownloadRekapAbsensiPDF({
           r.HADIR,
           r.SAKIT,
           r.IZIN,
-          r.ALPHA,
+          r.ALPA,
           r.total,
           `${pct}%`,
         ];
@@ -108,28 +108,30 @@ export default function DownloadRekapAbsensiPDF({
 
       autoTable(doc, {
         startY: tableStartY,
-        head: [["No", "Nama Siswa", "NIS", "Kelas", "Hadir", "Sakit", "Izin", "Alpha", "Total", "% Hadir"]],
+        head: [["No", "Nama Siswa", "NIS", "Kelas", "Hadir", "Sakit", "Izin", "Alpa", "Total", "% Hadir"]],
         body: rows,
         margin: { left: margin, right: margin },
-        styles: { fontSize: 8, cellPadding: 3, textColor: [40, 40, 40] },
+        styles: { fontSize: 8, cellPadding: { top: 3, right: 2, bottom: 3, left: 2 }, textColor: [40, 40, 40], valign: "middle", lineColor: [220, 220, 220], lineWidth: 0.1 },
         headStyles: {
           fillColor: [27, 94, 32],
           textColor: 255,
           fontStyle: "bold",
           halign: "center",
+          valign: "middle",
           fontSize: 8,
+          cellPadding: { top: 4, right: 2, bottom: 4, left: 2 },
         },
         columnStyles: {
-          0: { halign: "center", cellWidth: 8 },
-          1: { cellWidth: 45 },
-          2: { cellWidth: 22 },
-          3: { halign: "center", cellWidth: 14 },
+          0: { halign: "center", cellWidth: 10 },
+          1: { cellWidth: 46 },
+          2: { halign: "center", cellWidth: 16 },
+          3: { halign: "center", cellWidth: 12 },
           4: { halign: "center", cellWidth: 14 },
           5: { halign: "center", cellWidth: 14 },
           6: { halign: "center", cellWidth: 12 },
-          7: { halign: "center", cellWidth: 12 },
+          7: { halign: "center", cellWidth: 16 },
           8: { halign: "center", cellWidth: 14 },
-          9: { halign: "center", cellWidth: 16 },
+          9: { halign: "center", cellWidth: 20 },
         },
         alternateRowStyles: { fillColor: [245, 250, 245] },
         didParseCell: (hookData) => {
@@ -150,13 +152,13 @@ export default function DownloadRekapAbsensiPDF({
       const totalH = data.reduce((a, r) => a + r.HADIR, 0);
       const totalS = data.reduce((a, r) => a + r.SAKIT, 0);
       const totalI = data.reduce((a, r) => a + r.IZIN, 0);
-      const totalA = data.reduce((a, r) => a + r.ALPHA, 0);
+      const totalA = data.reduce((a, r) => a + r.ALPA, 0);
 
       doc.setFontSize(8);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(100);
       doc.text(
-        `Total: ${data.length} siswa  •  Hadir: ${totalH}  •  Sakit: ${totalS}  •  Izin: ${totalI}  •  Alpha: ${totalA}`,
+        `Total: ${data.length} siswa  •  Hadir: ${totalH}  •  Sakit: ${totalS}  •  Izin: ${totalI}  •  Alpa: ${totalA}`,
         margin, finalY
       );
 
