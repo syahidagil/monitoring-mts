@@ -5,7 +5,7 @@ import { Save, ArrowLeft, FileText, Info, CheckCircle, AlertCircle } from "lucid
 import Link from "next/link";
 
 const STATUS_OPTIONS = [
-  { value: "ALPHA", label: "ALPA"  },
+  { value: "ALPA", label: "ALPA"  },
   { value: "HADIR", label: "HADIR" },
   { value: "IZIN",  label: "IZIN"  },
   { value: "SAKIT", label: "SAKIT" },
@@ -278,11 +278,11 @@ export default function AbsensiForm({
         {/* Rekap cepat */}
         <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-4 text-xs text-gray-500">
           <span>{siswaList.length} siswa</span>
-          {["HADIR","ALPHA","IZIN","SAKIT"].map((s) => (
+          {["HADIR","ALPA","IZIN","SAKIT"].map((s) => (
             rekap[s] ? (
               <span key={s} className={`font-semibold ${
                 s === "HADIR" ? "text-green-600" :
-                s === "ALPHA" ? "text-red-600"   :
+                s === "ALPA" ? "text-red-600"   :
                 s === "IZIN"  ? "text-yellow-600" :
                 "text-blue-600"
               }`}>{s[0]}: {rekap[s]}</span>

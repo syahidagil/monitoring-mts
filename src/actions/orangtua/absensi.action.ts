@@ -55,7 +55,7 @@ export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; t
     return tanggal.getMonth() + 1 === bulan;
   });
 
-  const rekap = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0 };
+  const rekap = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPA: 0 };
   for (const r of rowsFilteredBulan) rekap[r.status]++;
   const total = rowsFilteredBulan.length;
 

@@ -6,7 +6,7 @@ import type { Semester } from "@prisma/client";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR: "bg-green-100 text-green-700", SAKIT: "bg-blue-100 text-blue-700",
-  IZIN: "bg-yellow-100 text-yellow-700", ALPHA: "bg-red-100 text-red-700",
+  IZIN: "bg-yellow-100 text-yellow-700", ALPA: "bg-red-100 text-red-700",
 };
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
@@ -28,7 +28,7 @@ export default async function AbsensiPage({ searchParams }: Props) {
     { label: "Hadir", value: data.rekap.HADIR, color: "bg-green-50 text-green-700 border-green-100" },
     { label: "Sakit", value: data.rekap.SAKIT, color: "bg-blue-50 text-blue-700 border-blue-100" },
     { label: "Izin", value: data.rekap.IZIN, color: "bg-yellow-50 text-yellow-700 border-yellow-100" },
-    { label: "Alpha", value: data.rekap.ALPHA, color: "bg-red-50 text-red-700 border-red-100" },
+    { label: "Alpa", value: data.rekap.ALPA, color: "bg-red-50 text-red-700 border-red-100" },
   ];
 
   return (
