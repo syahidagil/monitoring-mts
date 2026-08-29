@@ -107,7 +107,7 @@ CREATE TABLE `absensi` (
     `jadwalId` INTEGER NOT NULL,
     `guruId` VARCHAR(191) NOT NULL,
     `tanggal` DATE NOT NULL,
-    `status` ENUM('HADIR', 'SAKIT', 'IZIN', 'ALPHA') NOT NULL,
+    `status` ENUM('HADIR', 'SAKIT', 'IZIN', 'ALPA') NOT NULL,
     `keterangan` VARCHAR(255) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
