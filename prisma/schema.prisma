@@ -347,7 +347,7 @@ enum StatusAbsensi {
   HADIR
   SAKIT
   IZIN
-  ALPHA
+  ALPA
 }
 
 enum JenisNilai {
