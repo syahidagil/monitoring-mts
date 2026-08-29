@@ -4,7 +4,7 @@ export const absensiSiswaSchema = z.object({
   siswaId:   z.number().positive(),
   jadwalId:  z.number().positive(),
   tanggal:   z.string().min(1, "Tanggal wajib diisi"),
-  status:    z.enum(["HADIR","SAKIT","IZIN","ALPHA"], {
+  status:    z.enum(["HADIR","SAKIT","IZIN","ALPA"], {
     error: () => "Status absensi tidak valid",
   }),
   keterangan: z.string().max(255).optional(),
@@ -15,7 +15,7 @@ export const absensiKelasSchema = z.object({
   tanggal:  z.string().min(1, "Tanggal wajib diisi"),
   siswaList: z.array(z.object({
     siswaId:    z.number().positive(),
-    status:     z.enum(["HADIR","SAKIT","IZIN","ALPHA"]),
+    status:     z.enum(["HADIR","SAKIT","IZIN","ALPA"]),
     keterangan: z.string().max(255).optional(),
   })).min(1, "Minimal 1 siswa"),
 });

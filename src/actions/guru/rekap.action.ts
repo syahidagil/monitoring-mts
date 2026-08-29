@@ -43,7 +43,7 @@ export async function getRekapAbsensiGuru(params?: {
       map.set(a.siswaId, {
         siswa: a.siswa,
         kelas: a.jadwal.kelas.nama,
-        HADIR: 0, SAKIT: 0, IZIN: 0, ALPHA: 0, total: 0,
+        HADIR: 0, SAKIT: 0, IZIN: 0, ALPA: 0, total: 0,
       });
     }
     const row = map.get(a.siswaId);
