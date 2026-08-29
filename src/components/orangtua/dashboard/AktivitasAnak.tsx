@@ -2,7 +2,7 @@
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR:"bg-green-100 text-green-700", SAKIT:"bg-blue-100 text-blue-700",
-  IZIN:"bg-yellow-100 text-yellow-700", ALPHA:"bg-red-100 text-red-700",
+  IZIN:"bg-yellow-100 text-yellow-700", ALPA:"bg-red-100 text-red-700",
 };
 
 type AbsensiMap = Record<number, Record<string, number>>;
@@ -22,7 +22,7 @@ export default function AktivitasAnak({ anak, absensiMap, nilaiTerbaru }: {
           <h3 className="text-sm font-bold text-gray-800">Absensi Bulan Ini</h3>
         </div>
         {anak.map((a) => {
-          const ab = absensiMap[a.id] ?? { HADIR:0, SAKIT:0, IZIN:0, ALPHA:0 };
+          const ab = absensiMap[a.id] ?? { HADIR:0, SAKIT:0, IZIN:0, ALPA:0 };
           return (
             <div key={a.id} className="mb-4 last:mb-0">
               <p className="text-xs font-semibold text-gray-700 mb-2">{a.nama} — Kelas {a.kelas.nama}</p>

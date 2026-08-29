@@ -2,14 +2,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-function normalizeAbsensiStatus(value?: string | null) {
-  const normalized = value?.trim().toUpperCase();
-  if (normalized === "HADIR" || normalized === "SAKIT" || normalized === "IZIN" || normalized === "ALPA") {
-    return normalized;
-  }
-  return "HADIR";
-}
-
 async function getGuruId() {
   const session = await auth();
   if (!session || session.user.role !== "GURU") return null;
@@ -47,7 +39,6 @@ export async function getRekapAbsensiGuru(params?: {
   // Agregasi per siswa
   const map = new Map<number, any>();
   absensi.forEach((a) => {
-    const status = normalizeAbsensiStatus(a.status);
     if (!map.has(a.siswaId)) {
       map.set(a.siswaId, {
         siswa: a.siswa,
@@ -56,7 +47,7 @@ export async function getRekapAbsensiGuru(params?: {
       });
     }
     const row = map.get(a.siswaId);
-    if (status in row) row[status]++;
+    row[a.status]++;
     row.total++;
   });
 

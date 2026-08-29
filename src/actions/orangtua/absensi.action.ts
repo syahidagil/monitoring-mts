@@ -4,14 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { resolveAnak } from "./dashboard.action";
 import type { Semester } from "@prisma/client";
 
-function normalizeAbsensiStatus(value?: string | null) {
-  const normalized = value?.trim().toUpperCase();
-  if (normalized === "HADIR" || normalized === "SAKIT" || normalized === "IZIN" || normalized === "ALPA") {
-    return normalized;
-  }
-  return "HADIR";
-}
-
 /** Monitoring absensi anak. Filter bulan+tahun pelajaran (Absensi terikat Jadwal). */
 export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; tahunAjar?: string; semester?: Semester }) {
   const anak = await resolveAnak(opts.siswaId);
@@ -64,10 +56,7 @@ export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; t
   });
 
   const rekap = { HADIR: 0, SAKIT: 0, IZIN: 0, ALPA: 0 };
-  for (const r of rowsFilteredBulan) {
-    const status = normalizeAbsensiStatus(r.status);
-    if (status in rekap) rekap[status]++;
-  }
+  for (const r of rowsFilteredBulan) rekap[r.status]++;
   const total = rowsFilteredBulan.length;
 
   return {
@@ -82,7 +71,7 @@ export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; t
     rows: rowsFilteredBulan.map((r) => ({
       id: r.id,
       tanggal: r.tanggal,
-      status: normalizeAbsensiStatus(r.status),
+      status: r.status,
       mapel: r.jadwal.mataPelajaran.namaMapel,
       keterangan: r.keterangan ?? "",
     })),

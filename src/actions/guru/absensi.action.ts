@@ -3,14 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-function normalizeAbsensiStatus(value?: string | null) {
-  const normalized = value?.trim().toUpperCase();
-  if (normalized === "HADIR" || normalized === "SAKIT" || normalized === "IZIN" || normalized === "ALPA") {
-    return normalized;
-  }
-  return "HADIR";
-}
-
 // Helper: ambil guruId dari session
 async function getGuruId() {
   const session = await auth();
@@ -43,9 +35,8 @@ export async function saveAbsensiKelas(formData: FormData) {
 
   // Upsert semua absensi
   await Promise.all(
-    entries.map((e) => {
-      const status = normalizeAbsensiStatus(e.status);
-      return prisma.absensi.upsert({
+    entries.map((e) =>
+      prisma.absensi.upsert({
         where: {
           siswaId_jadwalId_tanggal: {
             siswaId: e.siswaId,
@@ -53,17 +44,17 @@ export async function saveAbsensiKelas(formData: FormData) {
             tanggal: new Date(tanggal),
           },
         },
-        update: { status: status as any, keterangan: e.keterangan },
+        update: { status: e.status as any, keterangan: e.keterangan },
         create: {
           siswaId: e.siswaId,
           jadwalId,
           guruId,
           tanggal: new Date(tanggal),
-          status: status as any,
+          status: e.status as any,
           keterangan: e.keterangan,
         },
-      });
-    })
+      })
+    )
   );
 
   // Simpan/hapus catatan umum untuk sesi jadwal + tanggal ini
