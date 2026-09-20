@@ -348,3 +348,38 @@ export async function getGuruByMapel(kodeMapel: string) {
     },
   });
 }
+
+// ─── GET SEMUA JADWAL UNTUK CETAK PDF (tanpa paginasi) ─────────────────────────
+// Dipakai khusus oleh tombol "Download PDF" di halaman Jadwal Admin, supaya
+// PDF berisi SEMUA jadwal sesuai filter yang aktif, bukan cuma 1 halaman
+// tabel (getAllJadwal dipaginasi untuk tampilan layar).
+export async function getJadwalUntukCetak(params?: {
+  kelasId?: number;
+  guruId?: string;
+  hari?: string;
+  tahunAjaranId?: number;
+}) {
+  let tahunAjaranId = params?.tahunAjaranId;
+  if (!tahunAjaranId) {
+    const aktif = await prisma.tahunAjaran.findFirst({ where: { aktif: true } });
+    tahunAjaranId = aktif?.id;
+  }
+
+  const where: any = {
+    ...(params?.kelasId && { kelasId: params.kelasId }),
+    ...(params?.guruId && { guruId: params.guruId }),
+    ...(params?.hari && { hari: params.hari as any }),
+    ...(tahunAjaranId && { tahunAjaranId }),
+  };
+
+  return prisma.jadwal.findMany({
+    where,
+    include: {
+      kelas:         { select: { nama: true, tingkat: true } },
+      guru:          { include: { user: { select: { name: true } } } },
+      mataPelajaran: { select: { namaMapel: true } },
+      tahunAjaran:   { select: { nama: true, semester: true } },
+    },
+    orderBy: [{ hari: "asc" }, { jamMulai: "asc" }],
+  });
+}

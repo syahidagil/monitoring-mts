@@ -1,6 +1,8 @@
 ﻿import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { getJadwalByGuru } from "@/actions/jadwal.action";
+import DownloadJadwalGuruPDF from "@/components/guru/jadwal/DownloadJadwalGuruPDF";
 import Link from "next/link";
 
 const HARI_COLOR: Record<string, string> = {
@@ -13,14 +15,24 @@ export default async function GuruJadwalPage() {
   const session = await auth();
   if (!session || session.user.role !== "GURU") redirect("/login");
 
-  const jadwal = await getJadwalByGuru(session.user.id);
+  const [jadwal, guru] = await Promise.all([
+    getJadwalByGuru(session.user.id),
+    prisma.guru.findUnique({ where: { id: session.user.id }, select: { nip: true } }),
+  ]);
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto space-y-5">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Jadwal Mengajar</h1>
-          <p className="text-sm text-gray-500 mt-1">{jadwal.length} jadwal aktif</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Jadwal Mengajar</h1>
+            <p className="text-sm text-gray-500 mt-1">{jadwal.length} jadwal aktif</p>
+          </div>
+          <DownloadJadwalGuruPDF
+            jadwal={jadwal}
+            guruNama={session.user.name ?? "-"}
+            nip={guru?.nip}
+          />
         </div>
         {jadwal.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400 text-sm">

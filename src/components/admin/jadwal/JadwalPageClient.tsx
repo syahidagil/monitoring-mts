@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -6,6 +6,7 @@ import JadwalTable from "./JadwalTable";
 import JadwalForm from "./JadwalForm";
 import FormModal from "../shared/FormModal";
 import AutoSubmitForm from "@/components/shared/AutoSubmitForm";
+import DownloadJadwalPDF from "./DownloadJadwalPDF";
 
 type ModalState = { mode: "create" } | { mode: "edit"; item: any } | null;
 
@@ -33,6 +34,8 @@ export default function JadwalPageClient({
     setModalState(null);
   };
 
+  const tahunAjaranAktif = tahunAjaranList.find((t: any) => t.aktif) ?? tahunAjaranList[0];
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -40,12 +43,20 @@ export default function JadwalPageClient({
           <h1 className="text-xl font-bold text-gray-900">Jadwal Pelajaran</h1>
           <p className="text-sm text-gray-500 mt-1">Total {jadwal.length} jadwal</p>
         </div>
-        <button
-          onClick={() => setModalState({ mode: "create" })}
-          className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Tambah Jadwal
-        </button>
+        <div className="flex items-center gap-3">
+          <DownloadJadwalPDF
+            filters={filters}
+            kelasList={kelasList}
+            guruList={guruList}
+            tahunAjaranAktif={tahunAjaranAktif}
+          />
+          <button
+            onClick={() => setModalState({ mode: "create" })}
+            className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Tambah Jadwal
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
