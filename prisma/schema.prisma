@@ -69,6 +69,7 @@ model Kelas {
 model Guru {
   id                       String               @id
   nip                      String?              @unique @db.VarChar(20)
+  kodeGuru                 String?              @unique @db.VarChar(10)
   mapel                    String               @db.VarChar(100)
   noHp                     String?              @db.VarChar(20)
   alamat                   String?              @db.Text

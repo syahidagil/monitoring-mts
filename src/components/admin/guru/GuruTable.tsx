@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useTransition } from "react";
 import { Edit, Trash2, KeyRound } from "lucide-react";
 import { deleteGuru, resetPasswordGuru } from "@/actions/guru.action";
@@ -46,6 +46,7 @@ export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase w-12">No</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Nama</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">NIP</th>
+              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Kode Guru</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">No. HP</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Username</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -72,6 +73,7 @@ export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]
                   </div>
                 </td>
                 <td className="px-4 py-3.5 text-sm font-mono text-gray-600">{guru.nip ?? "-"}</td>
+                <td className="px-4 py-3.5 text-sm font-mono text-gray-600">{guru.kodeGuru ?? "-"}</td>
                 <td className="px-4 py-3.5 text-sm text-gray-600">{guru.noHp ?? "-"}</td>
                 <td className="px-4 py-3.5 text-sm text-gray-500">{guru.user.username}</td>
                 <td className="px-4 py-3.5">

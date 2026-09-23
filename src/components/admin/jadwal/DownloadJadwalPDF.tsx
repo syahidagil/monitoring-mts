@@ -6,161 +6,245 @@ import { getJadwalUntukCetak } from "@/actions/jadwal.action";
 
 const HARI_ORDER = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
 const HARI_LABEL: Record<string, string> = {
-  SENIN: "Senin", SELASA: "Selasa", RABU: "Rabu", KAMIS: "Kamis", JUMAT: "Jumat", SABTU: "Sabtu",
+  SENIN: "SENIN", SELASA: "SELASA", RABU: "RABU", KAMIS: "KAMIS", JUMAT: "JUM'AT", SABTU: "SABTU",
 };
 
 type Props = {
-  filters: { kelasId?: string; guruId?: string; hari?: string };
-  kelasList: any[];
-  guruList: any[];
   tahunAjaranAktif?: { nama: string; semester: string };
 };
 
-export default function DownloadJadwalPDF({ filters, kelasList, guruList, tahunAjaranAktif }: Props) {
+function toMenit(jam: string) {
+  const [h, m] = jam.split(":").map(Number);
+  return h * 60 + (m || 0);
+}
+
+export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handleDownload() {
     setLoading(true);
     try {
-      const jadwal = await getJadwalUntukCetak({
-        kelasId: filters.kelasId ? Number(filters.kelasId) : undefined,
-        guruId: filters.guruId || undefined,
-        hari: filters.hari || undefined,
-      });
+      const jadwal = await getJadwalUntukCetak({});
 
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");
 
-      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
-      const margin = 15;
+      const margin = 10;
 
       // ── KOP SURAT ──────────────────────────────────────────────────────────
       await drawKopSurat(doc, pageW, margin);
 
       // ── JUDUL DOKUMEN ──────────────────────────────────────────────────────
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
+      doc.setFontSize(12);
       doc.setTextColor(27, 94, 32);
-      doc.text("JADWAL PELAJARAN", pageW / 2, 50, { align: "center" });
+      const judul = `JADWAL PELAJARAN SEMESTER ${tahunAjaranAktif?.semester === "GENAP" ? "GENAP" : "GANJIL"} TAHUN PELAJARAN ${tahunAjaranAktif?.nama ?? "-"}`;
+      doc.text(judul, pageW / 2, 50, { align: "center" });
 
-      doc.setLineWidth(0.4);
-      doc.setDrawColor(27, 94, 32);
-      doc.line(pageW / 2 - 35, 52, pageW / 2 + 35, 52);
-
-      // ── INFO ───────────────────────────────────────────────────────────────
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(50, 50, 50);
-
-      const infoY = 59;
-      const colL = margin;
-      const colR = pageW / 2 + 5;
-
-      const kelasNama = filters.kelasId
-        ? `Kelas ${kelasList.find((k) => String(k.id) === filters.kelasId)?.nama ?? "-"}`
-        : "Semua Kelas";
-      const guruNama = filters.guruId
-        ? guruList.find((g) => g.id === filters.guruId)?.user?.name ?? "-"
-        : "Semua Guru";
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Tahun Pelajaran", colL, infoY);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `: ${tahunAjaranAktif ? `${tahunAjaranAktif.nama} (${tahunAjaranAktif.semester === "GANJIL" ? "Ganjil" : "Genap"})` : "-"}`,
-        colL + 35, infoY
-      );
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Kelas", colL, infoY + 6);
-      doc.setFont("helvetica", "normal");
-      doc.text(`: ${kelasNama}`, colL + 35, infoY + 6);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Guru", colR, infoY);
-      doc.setFont("helvetica", "normal");
-      doc.text(`: ${guruNama}`, colR + 20, infoY);
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Tanggal Cetak", colR, infoY + 6);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
-        colR + 35, infoY + 6
-      );
-
-      // ── TABEL PER HARI ─────────────────────────────────────────────────────
-      let cursorY = infoY + 14;
-
-      const hariUrut = filters.hari ? [filters.hari] : HARI_ORDER;
-
-      for (const hari of hariUrut) {
-        const rows = jadwal.filter((j) => j.hari === hari);
-        if (rows.length === 0) continue;
-
-        if (cursorY > pageH - 40) {
-          doc.addPage();
-          cursorY = 20;
+      // ── SUSUN DAFTAR KELAS (kolom) ────────────────────────────────────────
+      // Urut berdasarkan tingkat lalu nama kelas, hanya kelas yang benar-benar
+      // punya jadwal yang dimasukkan sebagai kolom.
+      type KelasInfo = { kelasId: number; nama: string; tingkat: number };
+      const kelasMapAwal = new Map<number, KelasInfo>();
+      jadwal.forEach((j) => {
+        if (!kelasMapAwal.has(j.kelasId)) {
+          kelasMapAwal.set(j.kelasId, { kelasId: j.kelasId, nama: j.kelas.nama, tingkat: j.kelas.tingkat });
         }
+      });
+      const daftarKelas = Array.from(kelasMapAwal.values()).sort(
+        (a, b) => a.tingkat - b.tingkat || a.nama.localeCompare(b.nama)
+      );
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(27, 94, 32);
-        doc.text(`${HARI_LABEL[hari] ?? hari} (${rows.length} Jadwal)`, margin, cursorY);
-        cursorY += 3;
+      // ── SUSUN DATA PER HARI → PER SLOT WAKTU → PER KELAS ────────────────────
+      type Cell = { mapel: string; kodeGuru: string; guruNama: string } | null;
+      type SlotRow = { jamMulai: string; jamSelesai: string; cells: Record<number, Cell> };
 
-        autoTable(doc, {
-          startY: cursorY,
-          head: [["No", "Jam", "Mata Pelajaran", "Kelas", "Guru"]],
-          body: rows.map((j, i) => [
-            i + 1,
-            `${j.jamMulai}\u2013${j.jamSelesai}`,
-            j.mataPelajaran?.namaMapel ?? "-",
-            `Kelas ${j.kelas.nama}`,
-            j.guru?.user?.name ?? "-",
-          ]),
-          margin: { left: margin, right: margin },
-          styles: { fontSize: 8, cellPadding: { top: 2.5, right: 2, bottom: 2.5, left: 2 }, textColor: [40, 40, 40], valign: "middle", lineColor: [220, 220, 220], lineWidth: 0.1 },
-          headStyles: {
-            fillColor: [27, 94, 32],
-            textColor: 255,
-            fontStyle: "bold",
-            halign: "center",
-            valign: "middle",
-            fontSize: 8,
-          },
-          columnStyles: {
-            0: { halign: "center", cellWidth: 10 },
-            1: { halign: "center", cellWidth: 28 },
-            2: { cellWidth: 60 },
-            3: { halign: "center", cellWidth: 30 },
-            4: { cellWidth: 42 },
-          },
-          alternateRowStyles: { fillColor: [245, 250, 245] },
+      const hariAda = HARI_ORDER.filter((h) => jadwal.some((j) => j.hari === h));
+      const dataPerHari = new Map<string, SlotRow[]>();
+
+      hariAda.forEach((hari) => {
+        const jadwalHariIni = jadwal.filter((j) => j.hari === hari);
+        const slots: SlotRow[] = [];
+        jadwalHariIni.forEach((j) => {
+          let slot = slots.find((s) => s.jamMulai === j.jamMulai && s.jamSelesai === j.jamSelesai);
+          if (!slot) {
+            slot = { jamMulai: j.jamMulai, jamSelesai: j.jamSelesai, cells: {} };
+            slots.push(slot);
+          }
+          slot.cells[j.kelasId] = {
+            mapel: j.mataPelajaran?.namaMapel ?? j.kodeMapel ?? "-",
+            kodeGuru: j.guru?.kodeGuru ?? "-",
+            guruNama: j.guru?.user?.name ?? "-",
+          };
         });
+        slots.sort((a, b) => toMenit(a.jamMulai) - toMenit(b.jamMulai));
+        dataPerHari.set(hari, slots);
+      });
 
-        cursorY = (doc as any).lastAutoTable.finalY + 8;
+      // Kumpulkan legenda guru (kode -> nama), dari semua jadwal yang tampil.
+      const legendaGuru = new Map<string, string>();
+      jadwal.forEach((j) => {
+        const kode = j.guru?.kodeGuru;
+        if (kode) legendaGuru.set(kode, j.guru?.user?.name ?? "-");
+      });
+      const legendaList = Array.from(legendaGuru.entries()).sort((a, b) => {
+        const na = Number(a[0]), nb = Number(b[0]);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return a[0].localeCompare(b[0]);
+      });
+
+      // ── BANGUN HEAD (3 baris) ─────────────────────────────────────────────
+      const head = [
+        [
+          { content: "HARI", rowSpan: 3, styles: { valign: "middle", halign: "center" } },
+          { content: "JAM KE", rowSpan: 3, styles: { valign: "middle", halign: "center" } },
+          { content: "WAKTU", rowSpan: 3, styles: { valign: "middle", halign: "center" } },
+          { content: "KELAS", colSpan: daftarKelas.length * 2, styles: { halign: "center" } },
+        ],
+        daftarKelas.map((k) => ({
+          content: `Kelas ${k.nama}`,
+          colSpan: 2,
+          styles: { halign: "center", fillColor: [255, 235, 59], textColor: [40, 40, 40] },
+        })),
+        daftarKelas.flatMap(() => ([
+          { content: "MATA PELAJARAN", styles: { halign: "center", fontSize: 6.5 } },
+          { content: "KODE GURU", styles: { halign: "center", fontSize: 6.5 } },
+        ])),
+      ];
+
+      // ── BANGUN BODY ────────────────────────────────────────────────────────
+      const body: any[] = [];
+      let jamKeCounter = 0;
+
+      hariAda.forEach((hari) => {
+        const slots = dataPerHari.get(hari) ?? [];
+        jamKeCounter = 0;
+
+        slots.forEach((slot, idx) => {
+          // Cek apakah baris ini "seragam" di semua kelas (mapel + guru sama persis)
+          // untuk semua kelas yang punya entri di slot ini.
+          const entriKelas = daftarKelas.map((k) => slot.cells[k.kelasId]).filter(Boolean) as NonNullable<Cell>[];
+          const semuaKelasTerisi = entriKelas.length === daftarKelas.length;
+          const kunciUnik = new Set(entriKelas.map((e) => `${e.mapel}__${e.kodeGuru}`));
+          const isSeragam = semuaKelasTerisi && kunciUnik.size === 1;
+
+          const row: any[] = [];
+          if (idx === 0) {
+            row.push({
+              content: HARI_LABEL[hari],
+              rowSpan: slots.length,
+              styles: { valign: "middle", halign: "center", fontStyle: "bold", fillColor: [235, 235, 235] },
+            });
+          }
+
+          if (isSeragam) {
+            // Baris khusus (Upacara, Istirahat, dsb) — melebar tanpa Jam Ke & tanpa kode guru.
+            row.push({ content: "", styles: {} });
+            row.push({ content: `${slot.jamMulai}\u2013${slot.jamSelesai}`, styles: { halign: "center", fontSize: 7 } });
+            row.push({
+              content: entriKelas[0].mapel.toUpperCase(),
+              colSpan: daftarKelas.length * 2,
+              styles: { halign: "center", fontStyle: "bold", fillColor: [225, 225, 225] },
+            });
+          } else {
+            jamKeCounter += 1;
+            row.push({ content: String(jamKeCounter), styles: { halign: "center", fontSize: 7 } });
+            row.push({ content: `${slot.jamMulai}\u2013${slot.jamSelesai}`, styles: { halign: "center", fontSize: 7 } });
+            daftarKelas.forEach((k) => {
+              const cell = slot.cells[k.kelasId];
+              row.push({ content: cell?.mapel ?? "", styles: { halign: "center", fontSize: 7 } });
+              row.push({ content: cell?.kodeGuru ?? "", styles: { halign: "center", fontSize: 7 } });
+            });
+          }
+          body.push(row);
+        });
+      });
+
+      // ── TABEL JADWAL ───────────────────────────────────────────────────────
+      autoTable(doc, {
+        startY: 55,
+        head: head as any,
+        body,
+        margin: { left: margin, right: margin },
+        styles: {
+          fontSize: 7,
+          cellPadding: { top: 1.8, right: 1.5, bottom: 1.8, left: 1.5 },
+          textColor: [30, 30, 30],
+          valign: "middle",
+          halign: "center",
+          lineColor: [170, 170, 170],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [27, 94, 32],
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 7.5,
+        },
+        columnStyles: {
+          0: { cellWidth: 9 },
+          1: { cellWidth: 12 },
+          2: { cellWidth: 20 },
+        },
+        rowPageBreak: "avoid",
+      });
+
+      // ── LEGENDA NAMA GURU ──────────────────────────────────────────────────
+      const finalY = (doc as any).lastAutoTable.finalY + 8;
+      let legendaStartY = finalY;
+      if (legendaStartY > pageH - 40) {
+        doc.addPage();
+        legendaStartY = 20;
       }
 
-      if (jadwal.length === 0) {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(9);
-        doc.setTextColor(150);
-        doc.text("Tidak ada jadwal untuk filter yang dipilih.", margin, cursorY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(27, 94, 32);
+      doc.text("KETERANGAN KODE GURU", margin, legendaStartY);
+
+      const tengah = Math.ceil(legendaList.length / 2);
+      const kolomKiri = legendaList.slice(0, tengah);
+      const kolomKanan = legendaList.slice(tengah);
+      const maxBaris = Math.max(kolomKiri.length, kolomKanan.length);
+      const legendaBody: any[] = [];
+      for (let i = 0; i < maxBaris; i++) {
+        legendaBody.push([
+          kolomKiri[i] ? kolomKiri[i][0] : "",
+          kolomKiri[i] ? kolomKiri[i][1] : "",
+          kolomKanan[i] ? kolomKanan[i][0] : "",
+          kolomKanan[i] ? kolomKanan[i][1] : "",
+        ]);
       }
 
-      // ── FOOTER ─────────────────────────────────────────────────────────────
+      autoTable(doc, {
+        startY: legendaStartY + 3,
+        head: [["Kode", "Nama Guru", "Kode", "Nama Guru"]],
+        body: legendaBody,
+        margin: { left: margin, right: margin },
+        tableWidth: pageW - margin * 2,
+        styles: { fontSize: 8, cellPadding: 2, textColor: [40, 40, 40] },
+        headStyles: { fillColor: [27, 94, 32], textColor: 255, fontStyle: "bold", fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 15, halign: "center" },
+          1: { cellWidth: (pageW - margin * 2) / 2 - 15 },
+          2: { cellWidth: 15, halign: "center" },
+          3: { cellWidth: (pageW - margin * 2) / 2 - 15 },
+        },
+      });
+
+      // ── FOOTER (semua halaman) ────────────────────────────────────────────
       const pageCount = doc.getNumberOfPages();
       for (let p = 1; p <= pageCount; p++) {
         doc.setPage(p);
         doc.setDrawColor(200);
         doc.setLineWidth(0.3);
-        doc.line(margin, pageH - 12, pageW - margin, pageH - 12);
+        doc.line(margin, pageH - 10, pageW - margin, pageH - 10);
         doc.setFontSize(7);
         doc.setTextColor(160);
-        doc.text("Dicetak oleh Sistem Monitoring MTS Al-Amin Bintaro", pageW / 2, pageH - 8, { align: "center" });
+        doc.text("Dicetak oleh Sistem Monitoring MTS Al-Amin Bintaro", pageW / 2, pageH - 6, { align: "center" });
       }
 
       // ── SIMPAN ─────────────────────────────────────────────────────────────

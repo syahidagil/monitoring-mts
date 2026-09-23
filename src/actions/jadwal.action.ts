@@ -153,7 +153,7 @@ export async function getJadwalByKelas(kelasId: number, tahunAjaranId?: number) 
   return prisma.jadwal.findMany({
     where: { kelasId, ...(taId && { tahunAjaranId: taId }) },
     include: {
-      guru:          { include: { user: { select: { name: true } } } },
+      guru:          { select: { kodeGuru: true, user: { select: { name: true } } } },
       mataPelajaran: { select: { namaMapel: true } },
       tahunAjaran:   { select: { nama: true, semester: true } },
     },
@@ -330,7 +330,7 @@ export async function getJadwalById(id: number) {
     where: { id },
     include: {
       kelas:         { select: { nama: true, tingkat: true } },
-      guru:          { include: { user: { select: { name: true } } } },
+      guru:          { select: { kodeGuru: true, user: { select: { name: true } } } },
       mataPelajaran: { select: { namaMapel: true } },
       tahunAjaran:   { select: { nama: true, semester: true } },
       _count:        { select: { absensi: true } },
@@ -376,7 +376,7 @@ export async function getJadwalUntukCetak(params?: {
     where,
     include: {
       kelas:         { select: { nama: true, tingkat: true } },
-      guru:          { include: { user: { select: { name: true } } } },
+      guru:          { select: { kodeGuru: true, user: { select: { name: true } } } },
       mataPelajaran: { select: { namaMapel: true } },
       tahunAjaran:   { select: { nama: true, semester: true } },
     },

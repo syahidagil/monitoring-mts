@@ -44,12 +44,7 @@ export default function JadwalPageClient({
           <p className="text-sm text-gray-500 mt-1">Total {jadwal.length} jadwal</p>
         </div>
         <div className="flex items-center gap-3">
-          <DownloadJadwalPDF
-            filters={filters}
-            kelasList={kelasList}
-            guruList={guruList}
-            tahunAjaranAktif={tahunAjaranAktif}
-          />
+          <DownloadJadwalPDF tahunAjaranAktif={tahunAjaranAktif} />
           <button
             onClick={() => setModalState({ mode: "create" })}
             className="flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"

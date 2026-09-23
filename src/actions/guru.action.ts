@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -13,6 +13,7 @@ export async function createGuru(formData: FormData) {
   const password = formData.get("password") as string;
   const nama = (formData.get("nama") as string)?.trim();
   const nip = (formData.get("nip") as string)?.trim() || null;
+  const kodeGuru = (formData.get("kodeGuru") as string)?.trim() || null;
   const noHp = (formData.get("noHp") as string)?.trim() || null;
   const alamat = (formData.get("alamat") as string)?.trim() || null;
   const pendidikan = (formData.get("pendidikan") as string)?.trim() || null;
@@ -35,6 +36,11 @@ export async function createGuru(formData: FormData) {
     if (nipExists) return { success: false, message: "NIP sudah terdaftar" };
   }
 
+  if (kodeGuru) {
+    const kodeExists = await prisma.guru.findUnique({ where: { kodeGuru } });
+    if (kodeExists) return { success: false, message: "Kode Guru sudah dipakai guru lain" };
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
 
   await prisma.$transaction(async (tx) => {
@@ -42,7 +48,7 @@ export async function createGuru(formData: FormData) {
       data: { username, password: hashedPassword, name: nama, role: "GURU", status },
     });
     await tx.guru.create({
-      data: { id: user.id, nip, mapel, noHp, alamat, pendidikan },
+      data: { id: user.id, nip, kodeGuru, mapel, noHp, alamat, pendidikan },
     });
     // Assign semua mapel yang dipilih
     if (kodeMapelList.length > 0) {
@@ -90,6 +96,7 @@ export async function updateGuru(id: string, formData: FormData) {
   const username = (formData.get("username") as string)?.trim();
   const password = formData.get("password") as string;
   const nip = (formData.get("nip") as string)?.trim() || null;
+  const kodeGuru = (formData.get("kodeGuru") as string)?.trim() || null;
   const mapel = (formData.get("mapel") as string)?.trim();
   const noHp = (formData.get("noHp") as string)?.trim() || null;
   const alamat = (formData.get("alamat") as string)?.trim() || null;
@@ -112,6 +119,11 @@ export async function updateGuru(id: string, formData: FormData) {
     if (nipExists) return { success: false, message: "NIP sudah terdaftar guru lain" };
   }
 
+  if (kodeGuru) {
+    const kodeExists = await prisma.guru.findFirst({ where: { kodeGuru, NOT: { id } } });
+    if (kodeExists) return { success: false, message: "Kode Guru sudah dipakai guru lain" };
+  }
+
   await prisma.$transaction(async (tx) => {
     const userUpdate: any = { name: nama, status };
     if (username) userUpdate.username = username;
@@ -119,7 +131,7 @@ export async function updateGuru(id: string, formData: FormData) {
       userUpdate.password = await bcrypt.hash(password, 12);
     }
     await tx.user.update({ where: { id }, data: userUpdate });
-    await tx.guru.update({ where: { id }, data: { nip, mapel, noHp, alamat, pendidikan } });
+    await tx.guru.update({ where: { id }, data: { nip, kodeGuru, mapel, noHp, alamat, pendidikan } });
   });
 
   revalidatePath("/admin/data-guru");

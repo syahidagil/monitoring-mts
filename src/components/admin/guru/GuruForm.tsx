@@ -25,6 +25,7 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
 
   // ── Controlled state untuk semua field ──
   const [nip, setNip] = useState(defaultValues?.nip ?? "");
+  const [kodeGuru, setKodeGuru] = useState(defaultValues?.kodeGuru ?? "");
   const [nama, setNama] = useState(defaultValues?.name ?? "");
   const [noHp, setNoHp] = useState(defaultValues?.noHp?.replace(/^(\+62|0)/, "") ?? "");
   const [statusAktif, setStatusAktif] = useState(defaultValues?.status ?? true);
@@ -50,6 +51,7 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
 
   function resetForm() {
     setNip("");
+    setKodeGuru("");
     setNama("");
     setNoHp("");
     setStatusAktif(true);
@@ -69,6 +71,7 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
     // Bangun FormData manual dari state
     const fd = new FormData();
     fd.set("nip", nip);
+    fd.set("kodeGuru", kodeGuru);
     fd.set("nama", nama);
     fd.set("noHp", noHp);
     fd.set("status", statusAktif ? "true" : "false");
@@ -158,6 +161,20 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
                 className={inputClass}
                 placeholder="Contoh: 198001012010121001"
               />
+            </div>
+
+            {/* Kode Guru */}
+            <div>
+              <label className={labelClass}>Kode Guru</label>
+              <input
+                name="kodeGuru"
+                maxLength={10}
+                value={kodeGuru}
+                onChange={(e) => setKodeGuru(e.target.value)}
+                className={inputClass}
+                placeholder="Contoh: 1, 2, 3, A1"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Kode singkat guru ini, dipakai di cetak jadwal pelajaran (bukan NIP)</p>
             </div>
 
             {/* Nama */}
@@ -277,17 +294,14 @@ export default function GuruForm({ defaultValues, isEdit, guruId, allMapel = [],
               <label className={labelClass}>Username <span className="text-red-500 normal-case">*</span></label>
               <input
                 name="username"
-                required
+                required={!isEdit}
+                disabled={isEdit}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={inputClass}
+                className={`${inputClass} ${isEdit ? "bg-gray-100 text-gray-500" : ""}`}
                 placeholder="buat_username"
               />
-              <p className="text-xs text-gray-400 mt-1.5">
-                {isEdit
-                  ? "Ubah dengan hati-hati — username ini dipakai guru untuk login ke sistem."
-                  : "Akan digunakan guru untuk login ke sistem"}
-              </p>
+              <p className="text-xs text-gray-400 mt-1.5">Akan digunakan guru untuk login ke sistem</p>
             </div>
 
             <div>
