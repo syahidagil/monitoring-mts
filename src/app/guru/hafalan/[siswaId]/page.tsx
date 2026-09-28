@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getHafalanBySiswa } from "@/actions/guru/hafalan.action";
 import HafalanForm from "@/components/guru/hafalan/HafalanForm";
+import HafalanProgressChart from "@/components/guru/hafalan/HafalanProgressChart";
+import { hitungProgresHafalan } from "@/lib/hafalan/progress";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -35,6 +37,15 @@ export default async function HafalanSiswaPage({
     juz:       new Set(hafalan.map((h) => h.juz)).size,
   };
 
+  const progres = hitungProgresHafalan(
+    hafalan.map((h) => ({
+      nomorSurat:  h.nomorSurat,
+      ayatMulai:   h.ayatMulai,
+      ayatSelesai: h.ayatSelesai,
+      nilai:       h.nilai,
+    }))
+  );
+
   return (
     <main className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto space-y-5">
@@ -47,7 +58,7 @@ export default async function HafalanSiswaPage({
           </Link>
           <h1 className="text-xl font-bold text-gray-900">{siswa.nama}</h1>
           <p className="text-sm text-gray-500">
-            {siswa.nis} • Kelas {siswa.kelas.nama}
+            {siswa.nis} &bull; Kelas {siswa.kelas.nama}
           </p>
         </div>
 
@@ -64,6 +75,8 @@ export default async function HafalanSiswaPage({
             </div>
           ))}
         </div>
+
+        <HafalanProgressChart progres={progres} />
 
         <div className="grid lg:grid-cols-2 gap-6">
           <HafalanForm siswaId={siswa.id} siswaName={siswa.nama} />
@@ -86,7 +99,7 @@ export default async function HafalanSiswaPage({
                   <div key={h.id} className="px-5 py-3.5 hover:bg-gray-50">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-gray-800">
-                        {h.surat} — hal. {h.halaman}
+                        {h.surat} &mdash; hal. {h.halaman}
                       </p>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${n.kelas}`}>
                         {n.teks}

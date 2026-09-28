@@ -25,13 +25,15 @@ export async function createHafalan(formData: FormData) {
   if (!guruId) return { success: false, message: "Tidak diizinkan" };
 
   const raw = {
-    siswaId:    Number(formData.get("siswaId")),
-    nomorSurat: Number(formData.get("nomorSurat")),
-    surat:      (formData.get("surat") as string)?.trim(),
-    juz:        Number(formData.get("juz")),
-    halaman:    Number(formData.get("halaman")),
-    nilai:      formData.get("nilai") as string,
-    keterangan: (formData.get("keterangan") as string)?.trim() || "",
+    siswaId:     Number(formData.get("siswaId")),
+    nomorSurat:  Number(formData.get("nomorSurat")),
+    surat:       (formData.get("surat") as string)?.trim(),
+    juz:         Number(formData.get("juz")),
+    ayatMulai:   Number(formData.get("ayatMulai")),
+    ayatSelesai: Number(formData.get("ayatSelesai")),
+    halaman:     Number(formData.get("halaman")),
+    nilai:       formData.get("nilai") as string,
+    keterangan:  (formData.get("keterangan") as string)?.trim() || "",
   };
 
   const parsed = hafalanSchema.safeParse(raw);
@@ -42,15 +44,18 @@ export async function createHafalan(formData: FormData) {
   const tanggal = new Date();
   await prisma.hafalan.create({
     data: {
-      siswaId:    parsed.data.siswaId,
+      siswaId:     parsed.data.siswaId,
       guruId,
-      hari:       hariDari(tanggal),
+      hari:        hariDari(tanggal),
       tanggal,
-      juz:        parsed.data.juz,
-      surat:      parsed.data.surat,
-      halaman:    parsed.data.halaman,
-      nilai:      parsed.data.nilai,
-      keterangan: parsed.data.keterangan || null,
+      juz:         parsed.data.juz,
+      surat:       parsed.data.surat,
+      nomorSurat:  parsed.data.nomorSurat,
+      ayatMulai:   parsed.data.ayatMulai,
+      ayatSelesai: parsed.data.ayatSelesai,
+      halaman:     parsed.data.halaman,
+      nilai:       parsed.data.nilai,
+      keterangan:  parsed.data.keterangan || null,
     },
   });
 

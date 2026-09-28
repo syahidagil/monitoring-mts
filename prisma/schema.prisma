@@ -226,16 +226,19 @@ model Sikap {
 }
 
 model Hafalan {
-  id         Int          @id @default(autoincrement())
-  siswaId    Int
-  juz        Int          @db.TinyInt
-  nilai      NilaiHafalan
-  tanggal    DateTime     @db.Date
-  guruId     String
-  hari       Hari
-  surat      String       @db.VarChar(50)
-  halaman    Int
-  keterangan String?      @db.Text
+  id          Int          @id @default(autoincrement())
+  siswaId     Int
+  juz         Int          @db.TinyInt
+  nilai       NilaiHafalan
+  tanggal     DateTime     @db.Date
+  guruId      String
+  hari        Hari
+  surat       String       @db.VarChar(50)
+  nomorSurat  Int?         @db.TinyInt // 1-114, dipakai untuk kalkulasi progres hafalan
+  ayatMulai   Int?         // ayat pertama dalam rentang setoran ini
+  ayatSelesai Int?         // ayat terakhir dalam rentang setoran ini
+  halaman     Int
+  keterangan  String?      @db.Text
   createdAt  DateTime     @default(now())
   guru       Guru         @relation("GuruHafalan", fields: [guruId], references: [id], onDelete: NoAction)
   siswa      Siswa        @relation(fields: [siswaId], references: [id], onDelete: NoAction)
@@ -246,18 +249,21 @@ model Hafalan {
 }
 
 model Tahsin {
-  id         Int          @id @default(autoincrement())
-  siswaId    Int
-  tanggal    DateTime     @db.Date
-  guruId     String
-  hari       Hari
-  juz        Int          @db.TinyInt
-  surat      String       @db.VarChar(50)
-  halaman    Int
-  tajwid     NilaiHafalan
-  makhraj    NilaiHafalan
-  sifatul    NilaiHafalan
-  keterangan String?      @db.Text
+  id          Int          @id @default(autoincrement())
+  siswaId     Int
+  tanggal     DateTime     @db.Date
+  guruId      String
+  hari        Hari
+  juz         Int          @db.TinyInt
+  surat       String       @db.VarChar(50)
+  nomorSurat  Int?         @db.TinyInt
+  ayatMulai   Int?
+  ayatSelesai Int?
+  halaman     Int
+  tajwid      NilaiHafalan
+  makhraj     NilaiHafalan
+  sifatul     NilaiHafalan
+  keterangan  String?      @db.Text
   createdAt  DateTime     @default(now())
   guru       Guru         @relation("GuruTahsin", fields: [guruId], references: [id], onDelete: NoAction)
   siswa      Siswa        @relation(fields: [siswaId], references: [id], onDelete: NoAction)

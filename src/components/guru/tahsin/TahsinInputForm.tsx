@@ -68,6 +68,8 @@ export default function TahsinInputForm({
     fd.set("siswaId", String(siswaId));
     fd.set("surat", namaSuratLengkap);
     fd.set("juz", String(juzOtomatis));
+    fd.set("ayatMulai", String(ayatMulai));
+    fd.set("ayatSelesai", String(ayatSelesai));
     fd.set("tajwid", aspekVal.tajwid);
     fd.set("makhraj", aspekVal.makhraj);
     fd.set("sifatul", aspekVal.sifatul);
@@ -126,7 +128,7 @@ export default function TahsinInputForm({
 
       <form onSubmit={handleSubmit} className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* ── Kolom kiri ── */}
+          {/* -- Kolom kiri -- */}
           <div className="space-y-4">
             {/* Siswa */}
             <div>
@@ -236,7 +238,7 @@ export default function TahsinInputForm({
             </div>
           </div>
 
-          {/* ── Kolom kanan ── */}
+          {/* -- Kolom kanan -- */}
           <div className="space-y-4">
             {/* 3 aspek penilaian, tombol L / L- */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

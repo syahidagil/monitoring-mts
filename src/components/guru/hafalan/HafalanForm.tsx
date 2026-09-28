@@ -6,8 +6,8 @@ import { DAFTAR_SURAT, SURAT_BY_NOMOR, hitungJuz } from "@/lib/quran/surat";
 import { Save, CheckCircle, AlertCircle } from "lucide-react";
 
 const NILAI_OPTIONS = [
-  { value: "L",     label: "L — Lancar",            color: "bg-green-100 text-green-700" },
-  { value: "L_MIN", label: "L- — Lancar (catatan)", color: "bg-amber-100 text-amber-700" },
+  { value: "L",     label: "L \u2014 Lancar",            color: "bg-green-100 text-green-700" },
+  { value: "L_MIN", label: "L- \u2014 Lancar (catatan)", color: "bg-amber-100 text-amber-700" },
 ];
 
 export default function HafalanForm({
@@ -58,6 +58,8 @@ export default function HafalanForm({
     fd.set("siswaId", String(siswaId));
     fd.set("surat", namaSuratLengkap);
     fd.set("juz", String(juzOtomatis));
+    fd.set("ayatMulai", String(ayatMulai));
+    fd.set("ayatSelesai", String(ayatSelesai));
 
     startTransition(async () => {
       const result = await createHafalan(fd);
@@ -86,7 +88,7 @@ export default function HafalanForm({
       className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4"
     >
       <h3 className="font-bold text-gray-800 text-sm pb-3 border-b border-gray-100">
-        Input Hafalan — {siswaName}
+        Input Hafalan &mdash; {siswaName}
       </h3>
 
       {success && (

@@ -25,16 +25,18 @@ export async function createTahsin(formData: FormData) {
   if (!guruId) return { success: false, message: "Tidak diizinkan" };
 
   const raw = {
-    siswaId:    Number(formData.get("siswaId")),
-    nomorSurat: Number(formData.get("nomorSurat")),
-    surat:      (formData.get("surat") as string)?.trim(),
-    juz:        Number(formData.get("juz")),
-    halaman:    Number(formData.get("halaman")),
-    tajwid:     formData.get("tajwid") as string,
-    makhraj:    formData.get("makhraj") as string,
-    sifatul:    formData.get("sifatul") as string,
-    tanggal:    formData.get("tanggal") as string,
-    keterangan: (formData.get("keterangan") as string)?.trim() || "",
+    siswaId:     Number(formData.get("siswaId")),
+    nomorSurat:  Number(formData.get("nomorSurat")),
+    surat:       (formData.get("surat") as string)?.trim(),
+    juz:         Number(formData.get("juz")),
+    ayatMulai:   Number(formData.get("ayatMulai")),
+    ayatSelesai: Number(formData.get("ayatSelesai")),
+    halaman:     Number(formData.get("halaman")),
+    tajwid:      formData.get("tajwid") as string,
+    makhraj:     formData.get("makhraj") as string,
+    sifatul:     formData.get("sifatul") as string,
+    tanggal:     formData.get("tanggal") as string,
+    keterangan:  (formData.get("keterangan") as string)?.trim() || "",
   };
 
   const parsed = tahsinSchema.safeParse(raw);
@@ -45,17 +47,20 @@ export async function createTahsin(formData: FormData) {
   // Guru penguji = guru yang login (dari session), bukan dari input.
   await prisma.tahsin.create({
     data: {
-      siswaId:    parsed.data.siswaId,
+      siswaId:     parsed.data.siswaId,
       guruId,
-      hari:       hariDari(parsed.data.tanggal),
-      tanggal:    parsed.data.tanggal,
-      juz:        parsed.data.juz,
-      surat:      parsed.data.surat,
-      halaman:    parsed.data.halaman,
-      tajwid:     parsed.data.tajwid,
-      makhraj:    parsed.data.makhraj,
-      sifatul:    parsed.data.sifatul,
-      keterangan: parsed.data.keterangan || null,
+      hari:        hariDari(parsed.data.tanggal),
+      tanggal:     parsed.data.tanggal,
+      juz:         parsed.data.juz,
+      surat:       parsed.data.surat,
+      nomorSurat:  parsed.data.nomorSurat,
+      ayatMulai:   parsed.data.ayatMulai,
+      ayatSelesai: parsed.data.ayatSelesai,
+      halaman:     parsed.data.halaman,
+      tajwid:      parsed.data.tajwid,
+      makhraj:     parsed.data.makhraj,
+      sifatul:     parsed.data.sifatul,
+      keterangan:  parsed.data.keterangan || null,
     },
   });
 
