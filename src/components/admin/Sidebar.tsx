@@ -50,7 +50,7 @@ const MENUS: MenuItem[] = [
   },
   { label: "Pengumuman PMBM",    href: "/admin/pmbm",      icon: FileUp },
   { label: "Manajemen Pengguna", href: "/admin/pengguna",  icon: Users },
-  { label: "Pengaturan",         href: "/admin/pengaturan", icon: Settings },
+  // { label: "Pengaturan",         href: "/admin/pengaturan", icon: Settings },
 ];
 
 export default function Sidebar() {
