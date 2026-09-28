@@ -19,7 +19,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {["fb", "ig", "yt"].map((s) => (
-                <a key={s} href="#" className="w-8 h-8 bg-white/10 hover:bg-[#2E7D32] rounded-full flex items-center justify-center text-xs font-bold transition-colors uppercase">
+                <a key={s} href={`https://${s}.com/mtsa.laminbintaro`} className="w-8 h-8 bg-white/10 hover:bg-[#2E7D32] rounded-full flex items-center justify-center text-xs font-bold transition-colors uppercase">
                   {s}
                 </a>
               ))}
@@ -74,12 +74,12 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="text-gray-500 text-xs">2024 MTS Al-Amin Bintaro. Hak Cipta Dilindungi Undang-Undang.</p>
-          <div className="flex gap-4">
+          <p className="text-gray-500 text-xs"> MTS Al-Amin Bintaro. Hak Cipta Dilindungi Undang-Undang.</p>
+          {/* <div className="flex gap-4">
             {["Kebijakan Privasi","Syarat & Ketentuan","Sitemap"].map((item) => (
               <a key={item} href="#" className="text-gray-500 hover:text-white text-xs transition-colors">{item}</a>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
