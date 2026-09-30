@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
-import { Search, Download } from "lucide-react";
+import { Search, Download, BarChart3 } from "lucide-react";
+import ChartModal from "@/components/shared/ChartModal";
+import AbsensiChart from "./AbsensiChart";
 
 const STATUS_COLOR: Record<string, string> = {
   HADIR:"bg-green-100 text-green-700", SAKIT:"bg-blue-100 text-blue-700",
@@ -9,6 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function RekapAbsensiTable({ data }: { data: any[] }) {
   const [search, setSearch] = useState("");
+  const [chartSiswa, setChartSiswa] = useState<any | null>(null);
   const filtered = data.filter((r) =>
     r.siswa.nama.toLowerCase().includes(search.toLowerCase()) ||
     r.siswa.nis.includes(search)
@@ -45,11 +48,12 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
               <th className="text-center px-4 py-3 text-xs font-semibold text-red-600 uppercase">A</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">% Hadir</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grafik</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
-              <tr><td colSpan={9} className="text-center py-12 text-gray-400 text-sm">Tidak ada data</td></tr>
+              <tr><td colSpan={10} className="text-center py-12 text-gray-400 text-sm">Tidak ada data</td></tr>
             )}
             {filtered.map((r, i) => {
               const pct = r.total > 0 ? ((r.HADIR / r.total) * 100).toFixed(0) : "0";
@@ -71,15 +75,40 @@ export default function RekapAbsensiTable({ data }: { data: any[] }) {
                       {pct}%
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => setChartSiswa(r)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-800 border border-green-200 hover:bg-green-50 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" /> Lihat Grafik
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
         <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
-          {filtered.length} siswa • H=Hadir, S=Sakit, I=Izin, A=Alpa
+          {filtered.length} siswa - H=Hadir, S=Sakit, I=Izin, A=Alpa
         </div>
       </div>
+
+      <ChartModal
+        isOpen={chartSiswa !== null}
+        onClose={() => setChartSiswa(null)}
+        title={chartSiswa ? `Grafik Absensi - ${chartSiswa.siswa.nama}` : ""}
+        description={chartSiswa ? `${chartSiswa.siswa.nis} - Kelas ${chartSiswa.kelas}` : undefined}
+        maxWidth="max-w-lg"
+      >
+        {chartSiswa && (
+          <AbsensiChart
+            hadir={chartSiswa.HADIR}
+            sakit={chartSiswa.SAKIT}
+            izin={chartSiswa.IZIN}
+            alpa={chartSiswa.ALPA}
+          />
+        )}
+      </ChartModal>
     </div>
   );
 }

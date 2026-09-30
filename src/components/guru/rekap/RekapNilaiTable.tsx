@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, BarChart3 } from "lucide-react";
+import ChartModal from "@/components/shared/ChartModal";
+import NilaiChart from "./NilaiChart";
 
 const JENIS_COLOR: Record<string, string> = {
   HARIAN:"bg-blue-50 text-blue-700", UTS:"bg-purple-50 text-purple-700",
@@ -10,6 +12,7 @@ const JENIS_COLOR: Record<string, string> = {
 
 export default function RekapNilaiTable({ data }: { data: any[] }) {
   const [search, setSearch] = useState("");
+  const [chartSiswa, setChartSiswa] = useState<any | null>(null);
   const filtered = data.filter((r) =>
     r.siswa.nama.toLowerCase().includes(search.toLowerCase()) ||
     r.siswa.nis.includes(search)
@@ -33,11 +36,12 @@ export default function RekapNilaiTable({ data }: { data: any[] }) {
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Kelas</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rincian Nilai</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rata-rata</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grafik</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filtered.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-12 text-gray-400 text-sm">Tidak ada data nilai</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 text-gray-400 text-sm">Tidak ada data nilai</td></tr>
             )}
             {filtered.map((r, i) => (
               <tr key={r.siswa.id} className="hover:bg-gray-50 transition-colors">
@@ -61,11 +65,29 @@ export default function RekapNilaiTable({ data }: { data: any[] }) {
                     {r.rata}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-center">
+                  <button
+                    onClick={() => setChartSiswa(r)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-800 border border-green-200 hover:bg-green-50 px-2.5 py-1.5 rounded-lg transition-colors"
+                  >
+                    <BarChart3 className="w-3.5 h-3.5" /> Lihat Grafik
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ChartModal
+        isOpen={chartSiswa !== null}
+        onClose={() => setChartSiswa(null)}
+        title={chartSiswa ? `Grafik Nilai - ${chartSiswa.siswa.nama}` : ""}
+        description={chartSiswa ? `${chartSiswa.siswa.nis} - Kelas ${chartSiswa.kelas}` : undefined}
+        maxWidth="max-w-lg"
+      >
+        {chartSiswa && <NilaiChart nilaiList={chartSiswa.nilaiList} />}
+      </ChartModal>
     </div>
   );
 }
