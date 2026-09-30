@@ -84,10 +84,10 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 }
 
 const STATS = [
-  { key: "siswa",    label: "SISWA",    suffix: "+", image: "/images/siswa.jpeg" },
-  { key: "guru",     label: "GURU",     suffix: "+", image: "/images/guru.jpeg" },
-  { key: "prestasi", label: "PRESTASI", suffix: "+", image: "/images/prestasi.jpeg" },
-  { key: "eskul",    label: "ESKUL",    suffix: "",  image: "/images/ekskul.jpeg" },
+  { key: "siswa",    label: "SISWA",    suffix: "+", image: "/images/siswa.jpg" },
+  { key: "guru",     label: "GURU",     suffix: "+", image: "/images/guru.jpg" },
+  { key: "prestasi", label: "PRESTASI", suffix: "+", image: "/images/prestasi.jpg" },
+  { key: "eskul",    label: "ESKUL",    suffix: "",  image: "/images/ekskul.jpg" },
 ] as const;
 
 type Counts = { siswa: number; guru: number; prestasi: number; eskul: number };
