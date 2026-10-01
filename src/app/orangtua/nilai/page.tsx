@@ -31,7 +31,7 @@ export default async function NilaiPage({ searchParams }: Props) {
     <div className="p-6 max-w-5xl mx-auto">
       <MonitorHeader
         judul="Monitoring Nilai Akademik"
-        subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        subjudul={`${data.anak.nama} - Kelas ${data.anak.kelas.nama}`}
         anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
         aktifId={siswaId}
       />
@@ -84,7 +84,7 @@ export default async function NilaiPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-800">Rincian Nilai Siswa</h2>
           <div className="flex items-center gap-3 text-[10px]">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Tinggi (≥ 80)</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Tinggi (&ge; 80)</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Cukup (70-79)</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> Rendah (&lt; 70)</span>
           </div>
@@ -110,12 +110,15 @@ export default async function NilaiPage({ searchParams }: Props) {
                     const v = m.perJenis[j.key];
                     return (
                       <td key={j.key} className={"text-center px-3 py-3 " + (v === null ? "text-gray-300" : "text-gray-700")}>
-                        {v ?? "–"}
+                        {v ?? "-"}
                       </td>
                     );
                   })}
                   <td className={`text-center px-5 py-3 font-bold ${warnaNilai(m.rataRata)}`}>
                     {m.rataRata.toFixed(1)}
+                    {!m.lengkap && (
+                      <span className="block text-[9px] font-normal text-amber-500">sementara</span>
+                    )}
                   </td>
                 </tr>
               ))}

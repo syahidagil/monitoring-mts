@@ -1,5 +1,7 @@
 "use client";
 
+import { hitungNilaiRapor } from "@/lib/nilai/rapor";
+
 type NilaiEntry = { jenis: string; nilai: number };
 
 const JENIS_COLOR: Record<string, string> = {
@@ -37,29 +39,36 @@ export default function NilaiChart({ nilaiList }: { nilaiList: NilaiEntry[] }) {
     jumlah: vals.length,
   }));
 
-  const rataKeseluruhan =
-    nilaiList.reduce((a, n) => a + n.nilai, 0) / nilaiList.length;
+  const rapor = hitungNilaiRapor(nilaiList);
 
   const chartH = 180;
   const barMax = 100; // skala nilai tetap 0-100 supaya perbandingan antar siswa konsisten
+  const garisAcuan = rapor.nilaiAkhir ?? 0;
 
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold text-gray-900">{rataKeseluruhan.toFixed(1)}</p>
-          <p className="text-xs text-gray-400">Rata-rata keseluruhan ({nilaiList.length} nilai)</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {rapor.nilaiAkhir ?? "-"}
+          </p>
+          <p className="text-xs text-gray-400">
+            Nilai Akhir {!rapor.lengkap && <span className="text-amber-500">(sementara, PAT belum diisi)</span>}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            PH: {rapor.rataPH ?? "-"} &times; 67% + PAT: {rapor.nilaiPAT ?? "-"} &times; 33%
+          </p>
         </div>
       </div>
 
       <div className="relative" style={{ height: chartH + 30 }}>
-        {/* Garis rata-rata keseluruhan */}
+        {/* Garis nilai akhir */}
         <div
           className="absolute left-0 right-0 border-t-2 border-dashed border-gray-300"
-          style={{ bottom: (rataKeseluruhan / barMax) * chartH + 30 }}
+          style={{ bottom: (garisAcuan / barMax) * chartH + 30 }}
         >
           <span className="absolute -top-4 right-0 text-[10px] text-gray-400">
-            rata-rata: {rataKeseluruhan.toFixed(1)}
+            nilai akhir: {rapor.nilaiAkhir ?? "-"}
           </span>
         </div>
 
@@ -78,7 +87,7 @@ export default function NilaiChart({ nilaiList }: { nilaiList: NilaiEntry[] }) {
                 {JENIS_LABEL[b.jenis] ?? b.jenis}
               </span>
               <span className="text-[10px] text-gray-400">
-                {b.jumlah}x
+                {b.jenis === "UAS" ? "PAT" : "PH"} &middot; {b.jumlah}x
               </span>
             </div>
           ))}
@@ -87,7 +96,7 @@ export default function NilaiChart({ nilaiList }: { nilaiList: NilaiEntry[] }) {
 
       <p className="text-xs text-gray-400 text-center leading-relaxed">
         Setiap batang adalah rata-rata nilai untuk satu jenis penilaian. Garis putus-putus
-        menunjukkan rata-rata keseluruhan siswa ini.
+        menunjukkan Nilai Akhir sesuai skema rapor (PH 67% + PAT 33%).
       </p>
     </div>
   );

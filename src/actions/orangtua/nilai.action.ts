@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { resolveAnak } from "./dashboard.action";
+import { hitungNilaiRapor } from "@/lib/nilai/rapor";
 import type { Semester } from "@prisma/client";
 
 const URUTAN = ["TUGAS", "PR", "HARIAN", "UTS", "UAS"] as const;
@@ -9,7 +10,7 @@ const LABEL: Record<string, string> = {
   TUGAS: "Tugas", PR: "PR", HARIAN: "UH", UTS: "UTS", UAS: "UAS",
 };
 
-/** Monitoring nilai anak — dikelompokkan per mapel, kolom per jenis (sesuai desain). */
+/** Monitoring nilai anak - dikelompokkan per mapel, kolom per jenis (sesuai desain). */
 export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
@@ -37,7 +38,7 @@ export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string;
 
   const map = new Map<string, {
     kodeMapel: string; namaMapel: string;
-    perJenis: Record<string, number | null>; nilaiList: number[];
+    perJenisList: Record<string, number[]>; nilaiList: { jenis: string; nilai: number }[];
   }>();
   for (const r of rows) {
     const kode = r.guruMapel.mataPelajaran.kodeMapel;
@@ -45,26 +46,38 @@ export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string;
       map.set(kode, {
         kodeMapel: kode,
         namaMapel: r.guruMapel.mataPelajaran.namaMapel,
-        perJenis: Object.fromEntries(URUTAN.map((j) => [j, null])),
+        perJenisList: Object.fromEntries(URUTAN.map((j) => [j, []])),
         nilaiList: [],
       });
     }
     const m = map.get(kode)!;
     const angka = Number(r.nilai);
-    m.perJenis[r.jenis] = angka;
-    m.nilaiList.push(angka);
+    // Satu jenis (mis. HARIAN) bisa punya beberapa nilai dari tanggal berbeda
+    // (lihat fitur "nilai berulang") -> ditampung semua, bukan ditimpa.
+    m.perJenisList[r.jenis]?.push(angka);
+    m.nilaiList.push({ jenis: r.jenis, nilai: angka });
   }
 
-  const perMapel = Array.from(map.values()).map((m) => ({
-    kodeMapel: m.kodeMapel,
-    namaMapel: m.namaMapel,
-    perJenis: m.perJenis,
-    rataRata: m.nilaiList.length > 0
-      ? Number((m.nilaiList.reduce((a, b) => a + b, 0) / m.nilaiList.length).toFixed(1))
-      : 0,
-  }));
+  const perMapel = Array.from(map.values()).map((m) => {
+    const rapor = hitungNilaiRapor(m.nilaiList);
+    // Untuk ditampilkan per kolom jenis: kalau lebih dari 1 nilai pada jenis
+    // yang sama, tampilkan rata-ratanya (bukan cuma nilai terakhir).
+    const perJenis: Record<string, number | null> = {};
+    for (const j of URUTAN) {
+      const vals = m.perJenisList[j];
+      perJenis[j] = vals.length > 0
+        ? Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
+        : null;
+    }
+    return {
+      kodeMapel: m.kodeMapel,
+      namaMapel: m.namaMapel,
+      perJenis,
+      rataRata: rapor.nilaiAkhir ?? 0,
+      lengkap: rapor.lengkap,
+    };
+  });
 
-  const semua = rows.map((r) => Number(r.nilai));
   return {
     anak,
     semester,
@@ -74,7 +87,12 @@ export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string;
     urutanJenis: URUTAN.map((j) => ({ key: j, label: LABEL[j] })),
     perMapel,
     ringkasan: {
-      rataKeseluruhan: semua.length > 0 ? Number((semua.reduce((a, b) => a + b, 0) / semua.length).toFixed(1)) : 0,
+      // Rata-rata dari Nilai Akhir tiap mapel (setiap mapel berbobot sama),
+      // BUKAN rata-rata seluruh nilai mentah -> mapel dengan banyak input
+      // (misal karena sering ulangan harian) tidak jadi lebih berpengaruh.
+      rataKeseluruhan: perMapel.length > 0
+        ? Number((perMapel.reduce((a, m) => a + m.rataRata, 0) / perMapel.length).toFixed(1))
+        : 0,
       jumlahMapel: perMapel.length,
     },
   };

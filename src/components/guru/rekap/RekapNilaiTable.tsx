@@ -35,7 +35,7 @@ export default function RekapNilaiTable({ data }: { data: any[] }) {
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Siswa</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Kelas</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rincian Nilai</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rata-rata</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Nilai Akhir<br/><span className="normal-case font-normal text-[10px] text-gray-400">(PH 67% + PAT 33%)</span></th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Grafik</th>
             </tr>
           </thead>
@@ -61,9 +61,18 @@ export default function RekapNilaiTable({ data }: { data: any[] }) {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${Number(r.rata) >= 75 ? "bg-green-100 text-green-700" : Number(r.rata) >= 60 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
-                    {r.rata}
-                  </span>
+                  {r.rata === "-" ? (
+                    <span className="text-sm font-medium text-gray-300">-</span>
+                  ) : (
+                    <div className="inline-flex flex-col items-center gap-0.5">
+                      <span className={`text-sm font-bold px-3 py-1 rounded-full ${Number(r.rata) >= 75 ? "bg-green-100 text-green-700" : Number(r.rata) >= 60 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                        {r.rata}
+                      </span>
+                      {!r.lengkap && (
+                        <span className="text-[10px] text-amber-500">sementara (PAT belum diisi)</span>
+                      )}
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button

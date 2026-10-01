@@ -1,5 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
+import { hitungNilaiRapor } from "@/lib/nilai/rapor";
 import { auth } from "@/lib/auth";
 
 async function getGuruId() {
@@ -8,7 +9,7 @@ async function getGuruId() {
   return session.user.id;
 }
 
-// ── REKAP ABSENSI ─────────────────────────────────────────────────────────────
+// === REKAP ABSENSI ===
 export async function getRekapAbsensiGuru(params?: {
   kelasId?: number;
   tanggalMulai?: string;
@@ -54,7 +55,7 @@ export async function getRekapAbsensiGuru(params?: {
   return Array.from(map.values()).sort((a, b) => a.siswa.nama.localeCompare(b.siswa.nama));
 }
 
-// ── REKAP NILAI ───────────────────────────────────────────────────────────────
+// === REKAP NILAI ===
 export async function getRekapNilaiGuru(params?: {
   kelasId?: number;
   mapel?: string;
@@ -98,14 +99,17 @@ export async function getRekapNilaiGuru(params?: {
   });
 
   map.forEach((row) => {
-    const vals = row.nilaiList.map((n: any) => n.nilai);
-    row.rata = vals.length ? (vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : 0;
+    const hasil = hitungNilaiRapor(row.nilaiList);
+    row.rataPH = hasil.rataPH;
+    row.nilaiPAT = hasil.nilaiPAT;
+    row.lengkap = hasil.lengkap;
+    row.rata = hasil.nilaiAkhir !== null ? hasil.nilaiAkhir.toFixed(1) : "-";
   });
 
   return Array.from(map.values()).sort((a, b) => a.siswa.nama.localeCompare(b.siswa.nama));
 }
 
-// ── REKAP SIKAP ───────────────────────────────────────────────────────────────
+// === REKAP SIKAP ===
 export async function getRekapSikapGuru(params?: {
   kelasId?: number;
   semester?: string;
@@ -139,7 +143,7 @@ export async function getRekapSikapGuru(params?: {
   });
 }
 
-// ── REKAP HAFALAN ─────────────────────────────────────────────────────────────
+// === REKAP HAFALAN ===
 export async function getRekapHafalanGuru(params?: { kelasId?: number; siswaId?: number }) {
   const guruId = await getGuruId();
   if (!guruId) return [];
@@ -171,7 +175,7 @@ export async function getRekapHafalanGuru(params?: { kelasId?: number; siswaId?:
   });
 }
 
-// ── REKAP TAHSIN ──────────────────────────────────────────────────────────────
+// === REKAP TAHSIN ===
 export async function getRekapTahsinGuru(params?: { kelasId?: number; siswaId?: number }) {
   const guruId = await getGuruId();
   if (!guruId) return [];
@@ -203,7 +207,7 @@ export async function getRekapTahsinGuru(params?: { kelasId?: number; siswaId?: 
   });
 }
 
-// ── DAFTAR SISWA GURU (TAHFIDZ & TAHSIN) ──────────────────────────────────────
+// === DAFTAR SISWA GURU (TAHFIDZ & TAHSIN) ===
 export async function getSiswaTahfidzGuru(kelasId?: number) {
   const guruId = await getGuruId();
   if (!guruId) return [];
@@ -246,7 +250,7 @@ export async function getSiswaTahsinGuru(kelasId?: number) {
   });
 }
 
-// ── DATA KELAS GURU ───────────────────────────────────────────────────────────
+// === DATA KELAS GURU ===
 export async function getKelasGuru() {
   const guruId = await getGuruId();
   if (!guruId) return [];
