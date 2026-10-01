@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import {
   nilaiBatchSchema,
   nilaiRowSchema,
+  isJenisSekaliSemester,
   type JenisNilaiInput,
 } from "@/lib/validations/guru/nilai.validation";
 import type { JenisNilai, Semester } from "@prisma/client";
@@ -42,13 +43,18 @@ async function resolveJadwal(jadwalId: number, guruId: string) {
 }
 
 /**
- * Data halaman input untuk satu jadwal + jenis tertentu.
- * Mengembalikan tiap siswa BESERTA nilai yang sudah ada (jika ada)
- * untuk jenis itu di semester berjalan -> memungkinkan "edit jika sudah ada".
+ * Data halaman input untuk satu jadwal + jenis + tanggal tertentu.
+ *
+ * - UTS/UAS (isJenisSekaliSemester): cuma boleh 1 nilai per siswa per semester,
+ *   jadi `tanggal` DIABAIKAN saat mencari data yang sudah ada -> selalu ambil
+ *   satu-satunya nilai yang ada (kalau ada), apa pun tanggalnya dulu diisi.
+ * - Jenis lain (TUGAS/HARIAN/PR): boleh berkali-kali, jadi data yang tampil
+ *   di-scope ke `tanggal` yang dipilih -> tanggal sama = edit, tanggal baru = kosong (entri baru).
  */
 export async function getNilaiInput(
   jadwalId: number,
-  jenis: JenisNilaiInput
+  jenis: JenisNilaiInput,
+  tanggal: string
 ) {
   const guruId = await getGuruId();
   if (!guruId) return null;
@@ -59,6 +65,7 @@ export async function getNilaiInput(
 
   const semester = jadwal.tahunAjaran?.semester ?? "GANJIL";
   const tahunAjar = jadwal.tahunAjaran?.nama ?? "";
+  const sekaliSemester = isJenisSekaliSemester(jenis);
 
   const existing = await prisma.nilai.findMany({
     where: {
@@ -67,6 +74,7 @@ export async function getNilaiInput(
       semester: semester as Semester,
       tahunAjar,
       siswa: { kelasId: jadwal.kelasId },
+      ...(sekaliSemester ? {} : { tanggal: new Date(tanggal) }),
     },
   });
   const byS = new Map(existing.map((n) => [n.siswaId, n]));
@@ -80,6 +88,7 @@ export async function getNilaiInput(
       semester,
     },
     guruMapelId,
+    sekaliSemester,
     siswa: jadwal.kelas.siswa.map((s) => {
       const n = byS.get(s.id);
       return {
@@ -97,9 +106,11 @@ export async function getNilaiInput(
 
 /**
  * Simpan massal. Untuk tiap siswa yang diisi:
- *   - jika sudah ada nilai (jenis+semester) -> UPDATE
- *   - jika belum -> CREATE
- * Memakai upsert lewat unique key (siswaId, guruMapelId, jenis, semester, tahunAjar).
+ *   - UTS/UAS (sekali per semester): cari baris yang SUDAH ADA untuk siswa+jenis+semester
+ *     ini TANPA memandang tanggal -> kalau ada, UPDATE baris itu (termasuk tanggalnya);
+ *     kalau belum ada, baru CREATE.
+ *   - Jenis lain (boleh berkali-kali): upsert berdasarkan (siswa, jenis, semester, tanggal)
+ *     -> tanggal yang sama menimpa baris yang sama, tanggal baru bikin baris baru.
  */
 export async function saveNilaiBatch(formData: FormData) {
   const guruId = await getGuruId();
@@ -122,7 +133,9 @@ export async function saveNilaiBatch(formData: FormData) {
   const semester = (jadwal.tahunAjaran?.semester ?? "GANJIL") as Semester;
   const tahunAjar = jadwal.tahunAjaran?.nama ?? "";
   const jenis = meta.data.jenis as JenisNilai;
+  const tanggal = meta.data.tanggal;
   const ketBatch = meta.data.keterangan || null;
+  const sekaliSemester = isJenisSekaliSemester(meta.data.jenis);
 
   // Kumpulkan input nilai_<siswaId>
   const rows: { siswaId: number; nilai: number }[] = [];
@@ -146,19 +159,64 @@ export async function saveNilaiBatch(formData: FormData) {
 
   // Pastikan semua siswa memang di kelas ini
   const validIds = new Set(jadwal.kelas.siswa.map((s) => s.id));
+  const validRows = rows.filter((r) => validIds.has(r.siswaId));
+
+  if (sekaliSemester) {
+    // Cari baris yang sudah ada (tanpa memandang tanggal) untuk siswa-siswa ini.
+    const existing = await prisma.nilai.findMany({
+      where: {
+        guruMapelId,
+        jenis,
+        semester,
+        tahunAjar,
+        siswaId: { in: validRows.map((r) => r.siswaId) },
+      },
+      select: { id: true, siswaId: true },
+    });
+    const existingBySiswa = new Map(existing.map((e) => [e.siswaId, e.id]));
+
+    await prisma.$transaction(
+      validRows.map((r) => {
+        const existingId = existingBySiswa.get(r.siswaId);
+        return existingId
+          ? prisma.nilai.update({
+              where: { id: existingId },
+              data: { nilai: r.nilai, tanggal, keterangan: ketBatch },
+            })
+          : prisma.nilai.create({
+              data: {
+                siswaId: r.siswaId,
+                guruId,
+                guruMapelId,
+                jenis,
+                nilai: r.nilai,
+                tanggal,
+                semester,
+                tahunAjar,
+                keterangan: ketBatch,
+              },
+            });
+      })
+    );
+
+    revalidatePath(`/guru/nilai/${meta.data.jadwalId}`);
+    return {
+      success: true,
+      message: `${validRows.length} nilai ${jenis} berhasil disimpan (menimpa nilai lama jika ada)`,
+    };
+  }
 
   await prisma.$transaction(
-    rows
-      .filter((r) => validIds.has(r.siswaId))
-      .map((r) =>
+    validRows.map((r) =>
         prisma.nilai.upsert({
           where: {
-            siswaId_guruMapelId_jenis_semester_tahunAjar: {
+            siswaId_guruMapelId_jenis_semester_tahunAjar_tanggal: {
               siswaId: r.siswaId,
               guruMapelId,
               jenis,
               semester,
               tahunAjar,
+              tanggal,
             },
           },
           create: {
@@ -167,14 +225,13 @@ export async function saveNilaiBatch(formData: FormData) {
             guruMapelId,
             jenis,
             nilai: r.nilai,
-            tanggal: meta.data.tanggal,
+            tanggal,
             semester,
             tahunAjar,
             keterangan: ketBatch,
           },
           update: {
             nilai: r.nilai,
-            tanggal: meta.data.tanggal,
             keterangan: ketBatch,
           },
         })
@@ -184,7 +241,7 @@ export async function saveNilaiBatch(formData: FormData) {
   revalidatePath(`/guru/nilai/${meta.data.jadwalId}`);
   return {
     success: true,
-    message: `${rows.length} nilai berhasil disimpan`,
+    message: `${validRows.length} nilai ${jenis} berhasil disimpan untuk tanggal ini`,
   };
 }
 

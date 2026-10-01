@@ -12,6 +12,14 @@ export const JENIS_LABEL: Record<JenisNilaiInput, string> = {
   UAS: "UAS",
 };
 
+// UTS & UAS: cuma boleh 1 nilai per siswa per semester (menimpa nilai lama kalau diisi ulang).
+// TUGAS, HARIAN, PR: boleh diisi berkali-kali, satu baris baru untuk tiap tanggal berbeda.
+export const JENIS_SEKALI_SEMESTER: readonly JenisNilaiInput[] = ["UTS", "UAS"];
+
+export function isJenisSekaliSemester(jenis: JenisNilaiInput): boolean {
+  return (JENIS_SEKALI_SEMESTER as string[]).includes(jenis);
+}
+
 // Satu baris nilai (dipakai saat edit tunggal)
 export const nilaiRowSchema = z.object({
   nilai: z.coerce

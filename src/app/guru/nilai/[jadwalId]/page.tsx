@@ -12,7 +12,7 @@ export default async function InputNilaiPage({
   searchParams,
 }: {
   params: Promise<{ jadwalId: string }>;
-  searchParams: Promise<{ jenis?: string }>;
+  searchParams: Promise<{ jenis?: string; tanggal?: string }>;
 }) {
   const session = await auth();
   if (!session || session.user.role !== "GURU") redirect("/login");
@@ -22,8 +22,11 @@ export default async function InputNilaiPage({
   const jenis: JenisNilaiInput = (JENIS_NILAI as readonly string[]).includes(sp.jenis ?? "")
     ? (sp.jenis as JenisNilaiInput)
     : "TUGAS";
+  const tanggal = sp.tanggal && /^\d{4}-\d{2}-\d{2}$/.test(sp.tanggal)
+    ? sp.tanggal
+    : new Date().toISOString().slice(0, 10);
 
-  const data = await getNilaiInput(Number(jadwalId), jenis);
+  const data = await getNilaiInput(Number(jadwalId), jenis, tanggal);
   if (!data) notFound();
 
   const riwayat = await getRiwayatNilai(Number(jadwalId));
@@ -49,6 +52,8 @@ export default async function InputNilaiPage({
         <NilaiInputGrid
           jadwalId={data.jadwal.id}
           jenisAktif={jenis}
+          tanggalAktif={tanggal}
+          sekaliSemester={data.sekaliSemester}
           siswa={data.siswa}
         />
 

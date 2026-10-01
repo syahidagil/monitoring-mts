@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { saveNilaiBatch } from "@/actions/guru/nilai.action";
-import { JENIS_NILAI, JENIS_LABEL, type JenisNilaiInput } from "@/lib/validations/guru/nilai.validation";
+import { JENIS_NILAI, JENIS_LABEL, isJenisSekaliSemester, type JenisNilaiInput } from "@/lib/validations/guru/nilai.validation";
 import { Save, CheckCircle, AlertCircle } from "lucide-react";
 
 type Siswa = {
@@ -25,10 +25,14 @@ function hariIniISO() {
 export default function NilaiInputGrid({
   jadwalId,
   jenisAktif,
+  tanggalAktif,
+  sekaliSemester,
   siswa,
 }: {
   jadwalId: number;
   jenisAktif: JenisNilaiInput;
+  tanggalAktif: string;
+  sekaliSemester: boolean;
   siswa: Siswa[];
 }) {
   const router = useRouter();
@@ -36,12 +40,31 @@ export default function NilaiInputGrid({
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [tanggal, setTanggal] = useState(tanggalAktif);
+
+  // Sinkron ulang kalau URL berubah dari luar komponen ini (back/forward browser, dsb).
+  useEffect(() => {
+    setTanggal(tanggalAktif);
+  }, [tanggalAktif]);
 
   const sudahTerisi = siswa.filter((s) => s.nilai !== null).length;
 
-  // Ganti jenis -> reload via query param (server ambil nilai existing)
+  function navigasi(jenis: string, tgl: string) {
+    router.push(`${pathname}?jenis=${jenis}&tanggal=${tgl}`);
+  }
+
+  // Ganti jenis -> reload via query param (server ambil nilai existing untuk jenis+tanggal ini)
   function gantiJenis(j: string) {
-    router.push(`${pathname}?jenis=${j}`);
+    navigasi(j, tanggal);
+  }
+
+  // Ganti tanggal (hanya relevan untuk jenis yang boleh berkali-kali;
+  // untuk UTS/UAS tanggal cuma dicatat, tidak memengaruhi data yang tampil).
+  function gantiTanggal(tgl: string) {
+    setTanggal(tgl);
+    if (!isJenisSekaliSemester(jenisAktif)) {
+      navigasi(jenisAktif, tgl);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -96,10 +119,22 @@ export default function NilaiInputGrid({
               type="date"
               name="tanggal"
               required
-              defaultValue={hariIniISO()}
+              value={tanggal}
+              onChange={(e) => gantiTanggal(e.target.value)}
               max={hariIniISO()}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            {sekaliSemester ? (
+              <p className="text-[11px] text-amber-600 mt-1.5">
+                {JENIS_LABEL[jenisAktif]} cuma bisa diisi 1x per semester. Mengisi ulang akan
+                menimpa nilai yang sudah ada (termasuk tanggalnya).
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Pilih tanggal yang sama untuk mengedit nilai hari itu, atau tanggal lain untuk
+                menambah nilai baru.
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
@@ -137,7 +172,9 @@ export default function NilaiInputGrid({
             <span className="text-emerald-600 font-medium">{sudahTerisi} sudah dinilai</span>
           </p>
           <p className="text-xs text-gray-400">
-            Kolom terisi berarti nilai sudah ada — mengubahnya akan memperbarui data.
+            {sekaliSemester
+              ? "Kolom terisi berarti nilai sudah ada - mengubahnya akan menimpa nilai lama."
+              : "Kolom terisi berarti sudah ada nilai untuk tanggal ini - mengubahnya akan memperbarui data tanggal ini saja."}
           </p>
         </div>
 
