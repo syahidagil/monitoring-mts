@@ -1,4 +1,4 @@
-﻿import {
+import {
   PrismaClient, Role, Semester, JenisKelamin,
   StatusAbsensi, Hari, KategoriInfo,
   JenisNilai, JenisSikap, NilaiHafalan,
@@ -11,7 +11,7 @@ async function main() {
   console.log("Mulai seeding...");
   const hashPw = (pw: string) => bcrypt.hash(pw, 12);
 
-  // ── ADMIN ──────────────────────────────────────────────────
+  // -- ADMIN --------------------------------------------------
   const adminUser = await prisma.user.upsert({
     where: { username: "admin" },
     update: {},
@@ -24,7 +24,7 @@ async function main() {
     },
   });
 
-  // ── TAHUN AJARAN ───────────────────────────────────────────
+  // -- TAHUN AJARAN -------------------------------------------
   const tahunAjaranData = [
     { nama: "2021/2022", semester: Semester.GENAP,  aktif: false },
     { nama: "2022/2023", semester: Semester.GENAP,  aktif: false },
@@ -45,7 +45,7 @@ async function main() {
   const tahunAktif = tahunAjaranList.find((t) => t.aktif)!;
   console.log("Tahun ajaran selesai");
 
-  // ── MATA PELAJARAN ─────────────────────────────────────────
+  // -- MATA PELAJARAN -----------------------------------------
   const mapelData = [
     { kodeMapel: "MTK",  namaMapel: "Matematika" },
     { kodeMapel: "IPA",  namaMapel: "Ilmu Pengetahuan Alam" },
@@ -63,7 +63,7 @@ async function main() {
   }
   console.log("Mata pelajaran selesai");
 
-  // ── GURU (User + profil Guru) ──────────────────────────────
+  // -- GURU (User + profil Guru) ------------------------------
   const guruData = [
     {
       username: "guru_ahmad",
@@ -137,7 +137,7 @@ async function main() {
   }
   console.log("Guru selesai");
 
-  // ── KELAS ──────────────────────────────────────────────────
+  // -- KELAS --------------------------------------------------
   const kelasData = [
     { nama: "7A", tingkat: 7, waliKelasIdx: 0 },
     { nama: "7B", tingkat: 7, waliKelasIdx: 1 },
@@ -168,7 +168,7 @@ async function main() {
   }
   console.log("Kelas selesai");
 
-  // ── ORANG TUA (User + profil OrangTua) ────────────────────
+  // -- ORANG TUA (User + profil OrangTua) --------------------
   const ortuData = [
     {
       username: "ortu_budi",
@@ -225,7 +225,7 @@ async function main() {
   }
   console.log("Orang tua selesai");
 
-  // ── SISWA ──────────────────────────────────────────────────
+  // -- SISWA --------------------------------------------------
   const siswaData = [
     {
       nis: "2025001",
@@ -318,7 +318,7 @@ async function main() {
   }
   console.log("Siswa selesai");
 
-  // ── JADWAL ─────────────────────────────────────────────────
+  // -- JADWAL -------------------------------------------------
   const jadwalList = [];
   const jadwalData = [
     { kelasIdx: 0, guruIdx: 0, kodeMapel: "MTK", hari: Hari.SENIN,   jamMulai: "07:00", jamSelesai: "08:30" },
@@ -352,7 +352,7 @@ async function main() {
   }
   console.log("Jadwal selesai");
 
-  // ── ABSENSI (sample) ───────────────────────────────────────
+  // -- ABSENSI (sample) ---------------------------------------
   if (jadwalList.length > 0) {
     const today = new Date();
     for (let i = 0; i < 3; i++) {
@@ -379,7 +379,7 @@ async function main() {
   }
   console.log("Absensi selesai");
 
-  // ── NILAI (sample) ─────────────────────────────────────────
+  // -- NILAI (sample) -----------------------------------------
   const guruMapelRecords = await prisma.guruMapel.findMany();
   const getGuruMapelId = (guruId: string, namaMapel: string) => {
     const kodeMapel = mapelData.find((m) => m.namaMapel === namaMapel)?.kodeMapel;
@@ -392,12 +392,13 @@ async function main() {
     { siswaId: siswaList[1].id, guruId: guruUsers[1].user.id, mapel: "Bahasa Indonesia", jenis: JenisNilai.HARIAN, nilai: 90 },
     { siswaId: siswaList[2].id, guruId: guruUsers[2].user.id, mapel: "Fiqih", jenis: JenisNilai.UAS, nilai: 88 },
   ];
+  const tanggalNilai = new Date("2025-08-01T00:00:00.000Z");
 
   for (const n of nilaiSeed) {
     const guruMapelId = getGuruMapelId(n.guruId, n.mapel);
     if (!guruMapelId) continue;
     await prisma.nilai.upsert({
-      where: { siswaId_guruMapelId_jenis_semester_tahunAjar: { siswaId: n.siswaId, guruMapelId, jenis: n.jenis, semester: Semester.GANJIL, tahunAjar: "2025/2026" } },
+      where: { siswaId_guruMapelId_jenis_semester_tahunAjar_tanggal: { siswaId: n.siswaId, guruMapelId, jenis: n.jenis, semester: Semester.GANJIL, tahunAjar: "2025/2026", tanggal: tanggalNilai } },
       update: {},
       create: {
         siswaId: n.siswaId,
@@ -405,7 +406,7 @@ async function main() {
         guruMapelId,
         jenis: n.jenis,
         nilai: n.nilai,
-        tanggal: new Date(),
+        tanggal: tanggalNilai,
         semester: Semester.GANJIL,
         tahunAjar: "2025/2026",
       },
@@ -413,7 +414,7 @@ async function main() {
   }
   console.log("Nilai selesai");
 
-  // ── SIKAP (sample) ─────────────────────────────────────────
+  // -- SIKAP (sample) -----------------------------------------
   const sikapSeed = [
     { siswaId: siswaList[0].id, guruId: guruUsers[0].user.id, jenisSikap: JenisSikap.POSITIF,    kategori: "Kedisiplinan", keterangan: "Selalu datang tepat waktu dan mengikuti tata tertib sekolah." },
     { siswaId: siswaList[0].id, guruId: guruUsers[1].user.id, jenisSikap: JenisSikap.POSITIF,    kategori: "Sopan Santun",  keterangan: "Bersikap sopan kepada guru dan teman." },
@@ -433,7 +434,7 @@ async function main() {
   }
   console.log("Sikap selesai");
 
-  // ── HAFALAN (sample) ───────────────────────────────────────
+  // -- HAFALAN (sample) ---------------------------------------
   const hafalanSeed = [
     { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.SENIN, juz: 1,  surat: "Al-Fatihah", halaman: 1,   nilai: NilaiHafalan.L },
     { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.RABU,  juz: 1,  surat: "Al-Baqarah", halaman: 2,   nilai: NilaiHafalan.L_MIN },
@@ -449,7 +450,7 @@ async function main() {
   }
   console.log("Hafalan selesai");
 
-  // ── TAHSIN (sample) ────────────────────────────────────────
+  // -- TAHSIN (sample) ----------------------------------------
   const tahsinSeed = [
     { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.SELASA, juz: 1, surat: "Makharijul Huruf", halaman: 1, tajwid: NilaiHafalan.L,     makhraj: NilaiHafalan.L,     sifatul: NilaiHafalan.L_MIN },
     { siswaId: siswaList[0].id, guruId: guruUsers[2].user.id, hari: Hari.KAMIS,  juz: 1, surat: "Hukum Nun Mati",   halaman: 3, tajwid: NilaiHafalan.L_MIN, makhraj: NilaiHafalan.L,     sifatul: NilaiHafalan.L },
@@ -465,7 +466,7 @@ async function main() {
   }
   console.log("Tahsin selesai");
 
-  // ── KONTEN PUBLIK ──────────────────────────────────────────
+  // -- KONTEN PUBLIK ------------------------------------------
   const kontenPublik = [
     { kategori: "sejarah" as KategoriInfo, judul: "Sejarah MTS Al-Amin Bintaro", isi: "MTS Al-Amin Bintaro didirikan pada tahun 1995 oleh Yayasan Al-Amin dengan visi membangun pendidikan Islam yang berkualitas di wilayah Bintaro dan sekitarnya." },
     { kategori: "visi" as KategoriInfo, judul: "Visi Sekolah", isi: "Terwujudnya peserta didik yang unggul dalam ilmu pengetahuan, Islami dalam akhlak, dan berwawasan global." },
