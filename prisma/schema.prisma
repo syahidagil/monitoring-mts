@@ -200,7 +200,7 @@ model Nilai {
   guruMapel   GuruMapel  @relation(fields: [guruMapelId], references: [idGuruMapel], onDelete: NoAction)
   siswa       Siswa      @relation(fields: [siswaId], references: [id], onDelete: NoAction)
 
-  @@unique([siswaId, guruMapelId, jenis, semester, tahunAjar])
+  @@unique([siswaId, guruMapelId, jenis, semester, tahunAjar, tanggal])
   @@index([guruId], map: "nilai_guruId_fkey")
   @@index([guruMapelId], map: "nilai_guruMapelId_fkey")
   @@map("nilai")
