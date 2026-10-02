@@ -1,13 +1,23 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 function detectTingkat(namaKelas: string): number {
-  const digit = namaKelas.match(/\d/);
-  if (!digit) return 7;
-  const t = parseInt(digit[0]);
-  return [7, 8, 9].includes(t) ? t : 7;
+  const upper = namaKelas.toUpperCase();
+
+  // Nama kelas di sekolah ini pakai angka Romawi (VII/VIII/IX), bukan angka Arab.
+  // \b (word boundary) penting di sini supaya "VII" di dalam "VIII" tidak
+  // ikut kecocok secara keliru.
+  if (/\bIX\b/.test(upper)) return 9;
+  if (/\bVIII\b/.test(upper)) return 8;
+  if (/\bVII\b/.test(upper)) return 7;
+
+  // Jaga-jaga kalau suatu saat ada yang input pakai angka Arab (mis. "9 B" atau "9B").
+  const digit = namaKelas.match(/[789]/);
+  if (digit) return parseInt(digit[0]);
+
+  return 7;
 }
 
 export async function createKelas(formData: FormData) {
