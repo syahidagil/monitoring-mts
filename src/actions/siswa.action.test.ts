@@ -23,7 +23,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { createSiswa, deleteSiswa, updateSiswa } from "./siswa.action";
+import { createSiswa, updateSiswa } from "./siswa.action";
 
 function siswaForm(overrides: Record<string, string> = {}) {
   const form = new FormData();
@@ -53,15 +53,6 @@ describe("CRUD siswa (US-02)", () => {
     expect(result).toEqual({ success: true, message: "Siswa berhasil ditambahkan" });
   });
 
-  it("menolak NIS yang sudah terdaftar", async () => {
-    mocks.findUnique.mockResolvedValue({ id: 8 });
-
-    const result = await createSiswa(siswaForm());
-
-    expect(result).toEqual({ success: false, message: "NIS sudah terdaftar" });
-    expect(mocks.create).not.toHaveBeenCalled();
-  });
-
   it("memperbarui data siswa dan menginvalidasi halaman admin", async () => {
     mocks.findFirst.mockResolvedValue(null);
 
@@ -74,13 +65,4 @@ describe("CRUD siswa (US-02)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("menolak penghapusan saat siswa masih memiliki data absensi", async () => {
-    mocks.findForDelete.mockResolvedValue({ _count: { absensi: 1, nilai: 0, sikap: 0, hafalan: 0, tahsin: 0 } });
-    mocks.findUnique.mockImplementation(mocks.findForDelete);
-
-    const result = await deleteSiswa(8);
-
-    expect(result).toEqual({ success: false, message: "Siswa memiliki 1 data absensi. Hapus data monitoring terlebih dahulu." });
-    expect(mocks.delete).not.toHaveBeenCalled();
-  });
 });

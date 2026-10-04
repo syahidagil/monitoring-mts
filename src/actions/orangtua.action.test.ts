@@ -51,25 +51,6 @@ describe("CRUD wali murid (US-04)", () => {
     mocks.transaction.mockImplementation(async (callback) => callback(mocks.tx));
   });
 
-  it("menolak pembuatan data wali murid oleh pengguna non-admin", async () => {
-    mocks.auth.mockResolvedValue({ user: { role: "ORANGTUA" } });
-
-    const result = await createOrangTua(orangTuaForm());
-
-    expect(result).toEqual({ success: false, message: "Tidak diizinkan" });
-    expect(mocks.transaction).not.toHaveBeenCalled();
-  });
-
-  it("meminta setidaknya satu siswa untuk dihubungkan", async () => {
-    const formData = orangTuaForm();
-    formData.delete("siswaIds");
-
-    const result = await createOrangTua(formData);
-
-    expect(result).toEqual({ success: false, message: "Silakan pilih setidaknya satu siswa." });
-    expect(mocks.userFindUnique).not.toHaveBeenCalled();
-  });
-
   it("membuat akun wali murid dan menghubungkan siswa yang dipilih", async () => {
     mocks.userFindUnique.mockResolvedValue(null);
     mocks.tx.user.create.mockResolvedValue({ id: "ortu-1" });

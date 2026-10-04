@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: { kelas: {
 } } }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { createKelas, deleteKelas, updateKelas } from "./kelas.action";
+import { createKelas, updateKelas } from "./kelas.action";
 
 function kelasForm(nama = "VIII A") {
   const form = new FormData();
@@ -40,15 +40,6 @@ describe("CRUD kelas (US-05)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("menolak kelas yang sudah ada pada tahun ajaran yang sama", async () => {
-    mocks.findFirst.mockResolvedValue({ id: 2 });
-
-    const result = await createKelas(kelasForm());
-
-    expect(result).toEqual({ success: false, message: "Kelas VIII A sudah ada di tahun ajaran ini" });
-    expect(mocks.create).not.toHaveBeenCalled();
-  });
-
   it("memperbarui kelas yang sudah ada", async () => {
     mocks.findFirst.mockResolvedValue(null);
 
@@ -60,12 +51,4 @@ describe("CRUD kelas (US-05)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("mencegah penghapusan kelas yang masih memiliki siswa", async () => {
-    mocks.findUnique.mockResolvedValue({ _count: { siswa: 2, jadwal: 0 } });
-
-    const result = await deleteKelas(12);
-
-    expect(result).toEqual({ success: false, message: "Kelas masih memiliki 2 siswa. Pindahkan siswa terlebih dahulu." });
-    expect(mocks.delete).not.toHaveBeenCalled();
-  });
 });

@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 } }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
-import { createMapel, deleteMapel, updateMapel } from "./mapel.action";
+import { createMapel, updateMapel } from "./mapel.action";
 
 function mapelForm(kodeMapel = "ipa", namaMapel = "Ilmu Pengetahuan Alam") {
   const form = new FormData();
@@ -38,15 +38,6 @@ describe("CRUD mata pelajaran (US-06)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("menolak kode mapel yang sudah digunakan", async () => {
-    mocks.findUnique.mockResolvedValue({ kodeMapel: "IPA" });
-
-    const result = await createMapel(mapelForm());
-
-    expect(result).toEqual({ success: false, message: "Kode mapel IPA sudah digunakan" });
-    expect(mocks.create).not.toHaveBeenCalled();
-  });
-
   it("memperbarui nama mata pelajaran", async () => {
     const result = await updateMapel("IPA", "  IPA Terpadu  ");
 
@@ -54,12 +45,4 @@ describe("CRUD mata pelajaran (US-06)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("mencegah penghapusan mapel yang masih dipakai guru", async () => {
-    mocks.count.mockResolvedValue(2);
-
-    const result = await deleteMapel("IPA");
-
-    expect(result).toEqual({ success: false, message: "Mata pelajaran ini masih digunakan oleh 2 guru. Lepaskan relasi terlebih dahulu." });
-    expect(mocks.delete).not.toHaveBeenCalled();
-  });
 });

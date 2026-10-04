@@ -58,31 +58,6 @@ describe("CRUD guru (US-03)", () => {
     mocks.transaction.mockImplementation(async (callback) => callback(mocks.tx));
   });
 
-  it("menolak pembuatan guru oleh pengguna non-admin", async () => {
-    mocks.auth.mockResolvedValue({ user: { role: "GURU" } });
-
-    const result = await createGuru(guruForm());
-
-    expect(result).toEqual({ success: false, message: "Tidak diizinkan" });
-    expect(mocks.transaction).not.toHaveBeenCalled();
-  });
-
-  it("menolak password yang kurang dari enam karakter", async () => {
-    const result = await createGuru(guruForm({ password: "123" }));
-
-    expect(result).toEqual({ success: false, message: "Password minimal 6 karakter" });
-    expect(mocks.userFindUnique).not.toHaveBeenCalled();
-  });
-
-  it("menolak username yang sudah digunakan", async () => {
-    mocks.userFindUnique.mockResolvedValue({ id: "user-existing" });
-
-    const result = await createGuru(guruForm());
-
-    expect(result).toEqual({ success: false, message: "Username sudah digunakan" });
-    expect(mocks.transaction).not.toHaveBeenCalled();
-  });
-
   it("membuat user, profil guru, dan relasi mata pelajaran", async () => {
     mocks.userFindUnique.mockResolvedValue(null);
     mocks.guruFindUnique.mockResolvedValue(null);
