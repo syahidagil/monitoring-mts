@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { drawKopSurat } from "@/lib/pdf/kopSurat";
@@ -34,17 +34,17 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
       const pageH = doc.internal.pageSize.getHeight();
       const margin = 10;
 
-      // ── KOP SURAT ──────────────────────────────────────────────────────────
+      // â”€â”€ KOP SURAT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       await drawKopSurat(doc, pageW, margin);
 
-      // ── JUDUL DOKUMEN ──────────────────────────────────────────────────────
+      // â”€â”€ JUDUL DOKUMEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(27, 94, 32);
       const judul = `JADWAL PELAJARAN SEMESTER ${tahunAjaranAktif?.semester === "GENAP" ? "GENAP" : "GANJIL"} TAHUN PELAJARAN ${tahunAjaranAktif?.nama ?? "-"}`;
       doc.text(judul, pageW / 2, 50, { align: "center" });
 
-      // ── SUSUN DAFTAR KELAS (kolom) ────────────────────────────────────────
+      // â”€â”€ SUSUN DAFTAR KELAS (kolom) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Urut berdasarkan tingkat lalu nama kelas, hanya kelas yang benar-benar
       // punya jadwal yang dimasukkan sebagai kolom.
       type KelasInfo = { kelasId: number; nama: string; tingkat: number };
@@ -58,7 +58,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         (a, b) => a.tingkat - b.tingkat || a.nama.localeCompare(b.nama)
       );
 
-      // ── SUSUN DATA PER HARI → PER SLOT WAKTU → PER KELAS ────────────────────
+      // â”€â”€ SUSUN DATA PER HARI â†’ PER SLOT WAKTU â†’ PER KELAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       type Cell = { mapel: string; kodeGuru: string; guruNama: string } | null;
       type SlotRow = { jamMulai: string; jamSelesai: string; cells: Record<number, Cell> };
 
@@ -84,6 +84,40 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         dataPerHari.set(hari, slots);
       });
 
+      // === SISIPKAN BARIS TETAP: UPACARA BENDERA (Senin) & TADARUS AL-QUR'AN (hari lain) ===
+      // Ini bukan dari database - jamnya selalu sama tiap minggu, jadi admin
+      // tidak perlu input manual per kelas. Hanya ditambahkan ke hari yang
+      // memang sudah punya jadwal lain (supaya tidak muncul di hari kosong),
+      // dan dilewati kalau ternyata SUDAH ada entri nyata di jam itu (supaya
+      // tidak dobel kalau suatu saat memang diinput manual juga).
+      const JAM_MULAI_TETAP = "07:00";
+      const JAM_SELESAI_TETAP = "07:30";
+      const LABEL_TETAP_07: Record<string, string> = {
+        SENIN: "UPACARA BENDERA",
+        SELASA: "TADARUS AL-QUR'AN",
+        RABU: "TADARUS AL-QUR'AN",
+        KAMIS: "TADARUS AL-QUR'AN",
+        JUMAT: "IMTAQ",
+        SABTU: "OLAHRAGA",
+      };
+      hariAda.forEach((hari) => {
+        const slots = dataPerHari.get(hari) ?? [];
+        const sudahAda = slots.some(
+          (s) => s.jamMulai === JAM_MULAI_TETAP && s.jamSelesai === JAM_SELESAI_TETAP
+        );
+        if (sudahAda) return;
+
+        const label = LABEL_TETAP_07[hari];
+        if (!label) return; // hari yang tidak dikenal (seharusnya tidak terjadi) -> dilewati, bukan dipaksa tampil kosong
+
+        const cells: Record<number, Cell> = {};
+        daftarKelas.forEach((k) => {
+          cells[k.kelasId] = { mapel: label, kodeGuru: "", guruNama: "" };
+        });
+        slots.unshift({ jamMulai: JAM_MULAI_TETAP, jamSelesai: JAM_SELESAI_TETAP, cells });
+        dataPerHari.set(hari, slots);
+      });
+
       // Kumpulkan legenda guru (kode -> nama), dari semua jadwal yang tampil.
       const legendaGuru = new Map<string, string>();
       jadwal.forEach((j) => {
@@ -96,7 +130,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         return a[0].localeCompare(b[0]);
       });
 
-      // ── BANGUN HEAD (3 baris) ─────────────────────────────────────────────
+      // â”€â”€ BANGUN HEAD (3 baris) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const head = [
         [
           { content: "HARI", rowSpan: 3, styles: { valign: "middle", halign: "center" } },
@@ -115,7 +149,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         ])),
       ];
 
-      // ── BANGUN BODY ────────────────────────────────────────────────────────
+      // â”€â”€ BANGUN BODY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const body: any[] = [];
       let jamKeCounter = 0;
 
@@ -141,7 +175,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
           }
 
           if (isSeragam) {
-            // Baris khusus (Upacara, Istirahat, dsb) — melebar tanpa Jam Ke & tanpa kode guru.
+            // Baris khusus (Upacara, Istirahat, dsb) â€” melebar tanpa Jam Ke & tanpa kode guru.
             row.push({ content: "", styles: {} });
             row.push({ content: `${slot.jamMulai}\u2013${slot.jamSelesai}`, styles: { halign: "center", fontSize: 7 } });
             row.push({
@@ -163,7 +197,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         });
       });
 
-      // ── TABEL JADWAL ───────────────────────────────────────────────────────
+      // â”€â”€ TABEL JADWAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       autoTable(doc, {
         startY: 55,
         head: head as any,
@@ -192,7 +226,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         rowPageBreak: "avoid",
       });
 
-      // ── LEGENDA NAMA GURU ──────────────────────────────────────────────────
+      // â”€â”€ LEGENDA NAMA GURU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const finalY = (doc as any).lastAutoTable.finalY + 8;
       let legendaStartY = finalY;
       if (legendaStartY > pageH - 40) {
@@ -235,7 +269,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         },
       });
 
-      // ── FOOTER (semua halaman) ────────────────────────────────────────────
+      // â”€â”€ FOOTER (semua halaman) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const pageCount = doc.getNumberOfPages();
       for (let p = 1; p <= pageCount; p++) {
         doc.setPage(p);
@@ -247,7 +281,7 @@ export default function DownloadJadwalPDF({ tahunAjaranAktif }: Props) {
         doc.text("Dicetak oleh Sistem Monitoring MTS Al-Amin Bintaro", pageW / 2, pageH - 6, { align: "center" });
       }
 
-      // ── SIMPAN ─────────────────────────────────────────────────────────────
+      // â”€â”€ SIMPAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const namaFile = `Jadwal_Pelajaran_${tahunAjaranAktif?.nama.replace(/\//g, "-") ?? "semester"}.pdf`;
       doc.save(namaFile);
     } finally {
