@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getTahsinAnak } from "@/actions/orangtua/tahsin.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import TahsinKelancaran from "@/components/shared/TahsinKelancaran";
 
 const NILAI: Record<string, { teks: string; kelas: string }> = {
   L: { teks: "L", kelas: "bg-green-100 text-green-700" },
@@ -26,10 +27,13 @@ export default async function TahsinPage({ searchParams }: Props) {
     <div className="p-6 max-w-5xl mx-auto">
       <MonitorHeader
         judul="Monitoring Tahsin Al-Qur'an"
-        subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        subjudul={`${data.anak.nama} - Kelas ${data.anak.kelas.nama}`}
         anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
         aktifId={siswaId}
       />
+
+      {/* Kelancaran terkini - komponen yang SAMA dengan halaman guru (tidak ikut filter di bawah) */}
+      <TahsinKelancaran rows={data.kelancaran} />
 
       <form method="get" className="flex flex-wrap items-end gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <input type="hidden" name="siswaId" value={siswaId} />
@@ -64,7 +68,7 @@ export default async function TahsinPage({ searchParams }: Props) {
               <div className={"h-full rounded-full " + (a.persen >= 70 ? "bg-emerald-500" : "bg-amber-400")}
                 style={{ width: `${a.persen}%` }} />
             </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">Kelancaran aspek ini</p>
+            <p className="text-[11px] text-gray-400 mt-1.5">% setoran yang lancar (L)</p>
           </div>
         ))}
       </div>

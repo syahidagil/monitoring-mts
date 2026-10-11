@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import TahsinInputForm from "@/components/guru/tahsin/TahsinInputForm";
 import TahsinRiwayatTabel from "@/components/guru/tahsin/TahsinRiwayatTabel";
+import TahsinKelancaran from "@/components/shared/TahsinKelancaran";
 
 export default async function InputTahsinPage({
   params,
@@ -16,7 +17,7 @@ export default async function InputTahsinPage({
 
   const { siswaId } = await params;
 
-  const [siswa, guru, tahunAktif] = await Promise.all([
+  const [siswa, guru, tahunAktif, riwayat] = await Promise.all([
     prisma.siswa.findUnique({
       where: { id: Number(siswaId) },
       include: { kelas: { select: { nama: true } } },
@@ -26,6 +27,13 @@ export default async function InputTahsinPage({
       include: { user: { select: { name: true } } },
     }),
     prisma.tahunAjaran.findFirst({ where: { aktif: true } }),
+    // Seluruh riwayat (semua guru) - dipakai komponen TahsinKelancaran yang
+    // SAMA dengan halaman orang tua.
+    prisma.tahsin.findMany({
+      where: { siswaId: Number(siswaId) },
+      orderBy: { tanggal: "desc" },
+      include: { guru: { include: { user: { select: { name: true } } } } },
+    }),
   ]);
 
   if (!siswa) notFound();
@@ -53,6 +61,19 @@ export default async function InputTahsinPage({
           kelasNama={siswa.kelas.nama}
           namaGuru={namaGuru}
           tahunAjaran={tahunAktif?.nama ?? null}
+        />
+
+        <TahsinKelancaran
+          rows={riwayat.map((r) => ({
+            id: r.id,
+            tanggal: r.tanggal,
+            surat: r.surat,
+            tajwid: r.tajwid,
+            makhraj: r.makhraj,
+            sifatul: r.sifatul,
+            keterangan: r.keterangan,
+            guruNama: r.guru.user.name,
+          }))}
         />
 
         <TahsinRiwayatTabel siswaId={siswa.id} namaGuru={namaGuru} />

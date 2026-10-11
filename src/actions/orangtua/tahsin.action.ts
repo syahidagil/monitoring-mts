@@ -48,6 +48,19 @@ export async function getTahsinAnak(opts: { siswaId?: number; tahunAjar?: string
       { nama: "Sifatul Huruf", persen: persen("sifatul") },
     ],
     ringkasan: { totalSetoran: total, juzTersentuh: new Set(rowsFiltered.map((r) => r.juz)).size },
+    // Untuk komponen TahsinKelancaran (sama dengan halaman guru): dari SELURUH
+    // riwayat, tidak ikut filter tahun pelajaran, supaya angkanya identik
+    // dengan yang dilihat guru.
+    kelancaran: rows.map((r) => ({
+      id: r.id,
+      tanggal: r.tanggal,
+      surat: r.surat,
+      tajwid: r.tajwid,
+      makhraj: r.makhraj,
+      sifatul: r.sifatul,
+      keterangan: r.keterangan,
+      guruNama: r.guru.user.name,
+    })),
     rows: rowsFiltered.map((r) => ({
       id: r.id, tanggal: r.tanggal, hari: r.hari, juz: r.juz, surat: r.surat,
       halaman: r.halaman, tajwid: r.tajwid, makhraj: r.makhraj, sifatul: r.sifatul,

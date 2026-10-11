@@ -92,9 +92,9 @@ export default async function HafalanPage({ searchParams }: Props) {
         </div> */}
       </div>
 
-      <div className="mb-5">
+      {/* <div className="mb-5">
         <HafalanProgressChart progres={data.progres} />
-      </div>
+      </div> */}
 
       {/* Chart per minggu */}
       {/* <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
