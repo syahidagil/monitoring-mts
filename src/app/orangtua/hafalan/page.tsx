@@ -80,7 +80,7 @@ export default async function HafalanPage({ searchParams }: Props) {
             <PlusCircle size={13} /> {r.totalSetoran} total setoran
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+        {/* <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
           <div className="flex items-baseline justify-between">
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Persentase Progres</p>
             <p className="text-2xl font-bold text-emerald-700">{r.persentaseProgres}%</p>
@@ -89,7 +89,7 @@ export default async function HafalanPage({ searchParams }: Props) {
             <div className="h-full bg-[#1B5E20] rounded-full" style={{ width: `${r.persentaseProgres}%` }} />
           </div>
           <p className="text-xs text-gray-400 mt-2">Kelancaran dari {r.totalSetoran} setoran</p>
-        </div>
+        </div> */}
       </div>
 
       <div className="mb-5">
@@ -97,13 +97,13 @@ export default async function HafalanPage({ searchParams }: Props) {
       </div>
 
       {/* Chart per minggu */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
+      {/* <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-bold text-gray-800">Hafalan Per Minggu</h2>
           <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1">4 Minggu Terakhir</span>
         </div>
         <LineChartMini data={data.perMinggu} />
-      </div>
+      </div> */}
 
       {/* Riwayat */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
