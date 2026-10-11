@@ -3,6 +3,7 @@ import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getHafalanAnak } from "@/actions/orangtua/hafalan.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
 import LineChartMini from "@/components/orangtua/LineChartMini";
+import HafalanProgressChart from "@/components/guru/hafalan/HafalanProgressChart";
 import { TrendingUp, PlusCircle } from "lucide-react";
 
 const NILAI: Record<string, { teks: string; kelas: string }> = {
@@ -89,6 +90,10 @@ export default async function HafalanPage({ searchParams }: Props) {
           </div>
           <p className="text-xs text-gray-400 mt-2">Kelancaran dari {r.totalSetoran} setoran</p>
         </div>
+      </div>
+
+      <div className="mb-5">
+        <HafalanProgressChart progres={data.progres} />
       </div>
 
       {/* Chart per minggu */}

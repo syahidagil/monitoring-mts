@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getNilaiAnak } from "@/actions/orangtua/nilai.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import NilaiChart from "@/components/guru/rekap/NilaiChart";
 import type { Semester } from "@prisma/client";
 
 function warnaNilai(n: number) {
@@ -10,7 +11,7 @@ function warnaNilai(n: number) {
   return "text-rose-600";
 }
 
-type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; tahunAjar?: string; semester?: string; guruMapelId?: string }> };
 
 export default async function NilaiPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -22,10 +23,9 @@ export default async function NilaiPage({ searchParams }: Props) {
     siswaId,
     tahunAjar: sp.tahunAjar,
     semester: sp.semester as Semester | undefined,
+    guruMapelId: sp.guruMapelId ? Number(sp.guruMapelId) : undefined,
   });
   if (!data) redirect("/orangtua/dashboard");
-
-  const maks = 100;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -40,6 +40,13 @@ export default async function NilaiPage({ searchParams }: Props) {
       <form method="get" className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <span className="text-sm text-gray-500 font-medium">Filter:</span>
         <input type="hidden" name="siswaId" value={siswaId} />
+        <select name="guruMapelId" defaultValue={data.guruMapelId?.toString() ?? ""}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <option value="">Semua Guru dan Mata Pelajaran</option>
+          {data.guruMapelList.map((item) => (
+            <option key={item.id} value={item.id}>{item.guruNama} - {item.namaMapel}</option>
+          ))}
+        </select>
         <select name="tahunAjar" defaultValue={data.tahunAjar}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
           {data.tahunAjarList.map((t) => (
@@ -55,28 +62,12 @@ export default async function NilaiPage({ searchParams }: Props) {
         <button className="ml-auto bg-[#1B5E20] text-white text-sm px-5 py-2 rounded-lg hover:bg-[#2E7D32]">Terapkan</button>
       </form>
 
-      {/* Tren rata-rata per mapel (bar CSS) */}
+      {/* Grafik yang sama dengan rekap nilai guru */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-gray-800">Tren Rata-rata Nilai per Mata Pelajaran</h2>
-          <span className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-2 h-2 rounded-full bg-[#1B5E20]" /> Nilai Akhir
-          </span>
+          <h2 className="text-sm font-bold text-gray-800">Grafik Nilai</h2>
         </div>
-        {data.perMapel.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">Belum ada nilai pada semester ini.</p>
-        ) : (
-          <div className="flex items-end justify-around gap-3 h-48 pt-4">
-            {data.perMapel.map((m) => (
-              <div key={m.kodeMapel} className="flex-1 flex flex-col items-center justify-end gap-2 h-full">
-                <span className={`text-sm font-bold ${warnaNilai(m.rataRata)}`}>{m.rataRata}</span>
-                <div className="w-full max-w-[38px] rounded-t-md bg-[#1B5E20]"
-                  style={{ height: `${(m.rataRata / maks) * 100}%` }} />
-                <span className="text-[10px] text-gray-400 text-center leading-tight">{m.namaMapel}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <NilaiChart nilaiList={data.nilaiList} />
       </div>
 
       {/* Rincian */}

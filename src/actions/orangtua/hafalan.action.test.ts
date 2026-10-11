@@ -15,8 +15,8 @@ describe("monitoring hafalan anak (US-16)", () => {
     vi.clearAllMocks();
     mocks.resolveAnak.mockResolvedValue({ id: 10, nama: "Alya" });
     mocks.findMany.mockResolvedValue([
-      { id: 1, tanggal: new Date(2025, 7, 10), hari: "MINGGU", juz: 1, surat: "Al-Fatihah", halaman: 1, nilai: "L", keterangan: null, guru: { user: { name: "Pak Guru" } } },
-      { id: 2, tanggal: new Date(2025, 7, 8), hari: "JUMAT", juz: 1, surat: "Al-Baqarah", halaman: 2, nilai: "L_MIN", keterangan: "Ulangi", guru: { user: { name: "Pak Guru" } } },
+      { id: 1, tanggal: new Date(2025, 7, 10), hari: "MINGGU", juz: 1, surat: "Al-Fatihah", nomorSurat: 1, ayatMulai: 1, ayatSelesai: 2, halaman: 1, nilai: "L", keterangan: null, guru: { user: { name: "Pak Guru" } } },
+      { id: 2, tanggal: new Date(2025, 7, 8), hari: "JUMAT", juz: 1, surat: "Al-Baqarah", nomorSurat: 2, ayatMulai: 1, ayatSelesai: 2, halaman: 2, nilai: "L_MIN", keterangan: "Ulangi", guru: { user: { name: "Pak Guru" } } },
       { id: 3, tanggal: new Date(2025, 5, 10), hari: "SELASA", juz: 2, surat: "An-Nas", halaman: 3, nilai: "L", keterangan: null, guru: { user: { name: "Bu Guru" } } },
     ]);
   });
@@ -39,5 +39,10 @@ describe("monitoring hafalan anak (US-16)", () => {
     });
     expect(result?.rows).toHaveLength(2);
     expect(result?.rows[1].keterangan).toBe("Ulangi");
+    expect(result?.progres).toEqual(expect.objectContaining({
+      totalAyatBerhasil: 2,
+      jumlahRentangBerhasil: 1,
+      jumlahRentangBelumTuntas: 1,
+    }));
   });
 });

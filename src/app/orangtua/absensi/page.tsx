@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAnakList } from "@/actions/orangtua/dashboard.action";
 import { getAbsensiAnak } from "@/actions/orangtua/absensi.action";
 import MonitorHeader from "@/components/orangtua/MonitorHeader";
+import AbsensiChart from "@/components/guru/rekap/AbsensiChart";
 import type { Semester } from "@prisma/client";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -10,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahunAjar?: string; semester?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahunAjar?: string; semester?: string; guruId?: string }> };
 
 export default async function AbsensiPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -21,7 +22,7 @@ export default async function AbsensiPage({ searchParams }: Props) {
   const bulan = sp.bulan ? Number(sp.bulan) : new Date().getMonth() + 1;
   const semester = sp.semester as Semester | undefined;
 
-  const data = await getAbsensiAnak({ siswaId, bulan, tahunAjar: sp.tahunAjar, semester });
+  const data = await getAbsensiAnak({ siswaId, bulan, tahunAjar: sp.tahunAjar, semester, guruId: sp.guruId });
   if (!data) redirect("/orangtua/dashboard");
 
   const kartu = [
@@ -42,6 +43,13 @@ export default async function AbsensiPage({ searchParams }: Props) {
 
       <form method="get" className="flex flex-wrap gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <input type="hidden" name="siswaId" value={siswaId} />
+        <select name="guruId" defaultValue={data.guruId ?? ""}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <option value="">Semua Guru</option>
+          {data.guruList.map((guru) => (
+            <option key={guru.id} value={guru.id}>{guru.nama}</option>
+          ))}
+        </select>
         <select name="bulan" defaultValue={String(bulan)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
           {BULAN.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
@@ -75,6 +83,16 @@ export default async function AbsensiPage({ searchParams }: Props) {
             <p className="text-xs mt-0.5">{s.label}</p>
           </div>
         ))}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
+        <h2 className="text-sm font-bold text-gray-800 mb-4">Grafik Kehadiran</h2>
+        <AbsensiChart
+          hadir={data.rekap.HADIR}
+          sakit={data.rekap.SAKIT}
+          izin={data.rekap.IZIN}
+          alpa={data.rekap.ALPA}
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">

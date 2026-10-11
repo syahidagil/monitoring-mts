@@ -11,7 +11,7 @@ const LABEL: Record<string, string> = {
 };
 
 /** Monitoring nilai anak - dikelompokkan per mapel, kolom per jenis (sesuai desain). */
-export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester }) {
+export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string; semester?: Semester; guruMapelId?: number }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
 
@@ -32,15 +32,36 @@ export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string;
 
   const rows = await prisma.nilai.findMany({
     where: { siswaId: anak.id, semester, tahunAjar },
-    include: { guruMapel: { include: { mataPelajaran: true } } },
+    include: {
+      guruMapel: {
+        include: {
+          mataPelajaran: true,
+          guru: { include: { user: { select: { name: true } } } },
+        },
+      },
+    },
     orderBy: { tanggal: "asc" },
   });
+
+  const guruMapelList = Array.from(new Map(rows.map((row) => [row.guruMapelId, {
+    id: row.guruMapelId,
+    guruId: row.guruMapel.idGuru,
+    guruNama: row.guruMapel.guru.user.name,
+    kodeMapel: row.guruMapel.mataPelajaran.kodeMapel,
+    namaMapel: row.guruMapel.mataPelajaran.namaMapel,
+  }])).values());
+  const guruMapelId = guruMapelList.some((item) => item.id === opts.guruMapelId)
+    ? opts.guruMapelId
+    : undefined;
+  const rowsTerpilih = guruMapelId
+    ? rows.filter((row) => row.guruMapelId === guruMapelId)
+    : rows;
 
   const map = new Map<string, {
     kodeMapel: string; namaMapel: string;
     perJenisList: Record<string, number[]>; nilaiList: { jenis: string; nilai: number }[];
   }>();
-  for (const r of rows) {
+  for (const r of rowsTerpilih) {
     const kode = r.guruMapel.mataPelajaran.kodeMapel;
     if (!map.has(kode)) {
       map.set(kode, {
@@ -85,7 +106,10 @@ export async function getNilaiAnak(opts: { siswaId?: number; tahunAjar?: string;
     tahunAjarList: tahunAjarList.length > 0 ? tahunAjarList : [fallbackTahunAjar],
     semesterOptions,
     urutanJenis: URUTAN.map((j) => ({ key: j, label: LABEL[j] })),
+    guruMapelList,
+    guruMapelId: guruMapelId ?? null,
     perMapel,
+    nilaiList: rowsTerpilih.map((row) => ({ jenis: row.jenis, nilai: Number(row.nilai) })),
     ringkasan: {
       // Rata-rata dari Nilai Akhir tiap mapel (setiap mapel berbobot sama),
       // BUKAN rata-rata seluruh nilai mentah -> mapel dengan banyak input

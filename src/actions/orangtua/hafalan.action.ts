@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { resolveAnak } from "./dashboard.action";
+import { hitungProgresHafalan } from "@/lib/hafalan/progress";
 
 function getPeriodeAkademik(tanggal: Date): { tahunAjar: string } {
   const d = new Date(tanggal);
@@ -38,6 +39,12 @@ export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: strin
   const juzTertinggi = rowsFiltered.length > 0 ? Math.max(...rowsFiltered.map((r) => r.juz)) : 0;
   const totalHalaman = new Set(rowsFiltered.map((r) => r.halaman)).size;
   const lancar = rowsFiltered.filter((r) => r.nilai === "L").length;
+  const progres = hitungProgresHafalan(rows.map((r) => ({
+    nomorSurat: r.nomorSurat,
+    ayatMulai: r.ayatMulai,
+    ayatSelesai: r.ayatSelesai,
+    nilai: r.nilai,
+  })));
 
   // Progres 4 minggu terakhir + hari ini (jumlah setoran per minggu)
   const referensi = rowsFiltered[0]?.tanggal ? new Date(rowsFiltered[0].tanggal) : new Date();
@@ -65,6 +72,7 @@ export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: strin
       persentaseProgres: rowsFiltered.length > 0 ? Math.round((lancar / rowsFiltered.length) * 100) : 0,
       targetJuz: 30,
     },
+    progres,
     perMinggu,
     rows: rowsFiltered.map((r) => ({
       id: r.id, tanggal: r.tanggal, hari: r.hari, juz: r.juz,

@@ -34,6 +34,7 @@ export default function AbsensiChart({ hadir, sakit, izin, alpa }: Props) {
     const fraction = value / total;
     const dash = fraction * circumference;
     const offset = circumference * (1 - cursor);
+    // eslint-disable-next-line react-hooks/immutability
     cursor += fraction;
     return { ...s, value, fraction, dash, offset };
   }).filter((s) => s.value > 0);

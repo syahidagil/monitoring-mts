@@ -37,10 +37,10 @@ describe("monitoring nilai anak (US-16)", () => {
     mocks.nilaiFindMany
       .mockResolvedValueOnce([{ tahunAjar: "2026/2027", semester: "GANJIL" }])
       .mockResolvedValueOnce([
-        { jenis: "TUGAS", nilai: "80", guruMapel: { mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
-        { jenis: "HARIAN", nilai: "80", guruMapel: { mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
-        { jenis: "HARIAN", nilai: "100", guruMapel: { mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
-        { jenis: "UAS", nilai: "90", guruMapel: { mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+        { guruMapelId: 4, jenis: "TUGAS", nilai: "80", guruMapel: { idGuru: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+        { guruMapelId: 4, jenis: "HARIAN", nilai: "80", guruMapel: { idGuru: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+        { guruMapelId: 4, jenis: "HARIAN", nilai: "100", guruMapel: { idGuru: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+        { guruMapelId: 4, jenis: "UAS", nilai: "90", guruMapel: { idGuru: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
       ]);
 
     const result = await getNilaiAnak({ siswaId: 10 });
@@ -56,6 +56,29 @@ describe("monitoring nilai anak (US-16)", () => {
       rataRata: 87.8,
       lengkap: true,
     })]);
+    expect(result?.nilaiList).toEqual([
+      { jenis: "TUGAS", nilai: 80 },
+      { jenis: "HARIAN", nilai: 80 },
+      { jenis: "HARIAN", nilai: 100 },
+      { jenis: "UAS", nilai: 90 },
+    ]);
+    expect(result?.guruMapelList).toEqual([
+      { id: 4, guruId: "guru-1", guruNama: "Pak A", kodeMapel: "IPA", namaMapel: "IPA" },
+    ]);
     expect(result?.ringkasan).toEqual({ rataKeseluruhan: 87.8, jumlahMapel: 1 });
+  });
+
+  it("membatasi nilai ke pasangan guru dan mata pelajaran yang dipilih", async () => {
+    mocks.nilaiFindMany
+      .mockResolvedValueOnce([{ tahunAjar: "2026/2027", semester: "GANJIL" }])
+      .mockResolvedValueOnce([
+        { guruMapelId: 4, jenis: "HARIAN", nilai: "80", guruMapel: { idGuru: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+        { guruMapelId: 5, jenis: "HARIAN", nilai: "70", guruMapel: { idGuru: "guru-2", guru: { user: { name: "Bu B" } }, mataPelajaran: { kodeMapel: "IPA", namaMapel: "IPA" } } },
+      ]);
+
+    const result = await getNilaiAnak({ siswaId: 10, guruMapelId: 4 });
+
+    expect(result?.guruMapelId).toBe(4);
+    expect(result?.nilaiList).toEqual([{ jenis: "HARIAN", nilai: 80 }]);
   });
 });

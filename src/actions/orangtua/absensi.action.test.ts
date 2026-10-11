@@ -44,9 +44,9 @@ describe("monitoring absensi anak (US-16)", () => {
 
   it("menghitung status absensi dan persentase hadir untuk bulan terpilih", async () => {
     mocks.absensiFindMany.mockResolvedValue([
-      { id: 1, tanggal: new Date(2026, 9, 1), status: "HADIR", keterangan: null, jadwal: { mataPelajaran: { namaMapel: "IPA" } } },
-      { id: 2, tanggal: new Date(2026, 9, 2), status: "SAKIT", keterangan: "Demam", jadwal: { mataPelajaran: { namaMapel: "IPA" } } },
-      { id: 3, tanggal: new Date(2026, 8, 30), status: "ALPA", keterangan: null, jadwal: { mataPelajaran: { namaMapel: "IPS" } } },
+      { id: 1, tanggal: new Date(2026, 9, 1), status: "HADIR", keterangan: null, jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
+      { id: 2, tanggal: new Date(2026, 9, 2), status: "SAKIT", keterangan: "Demam", jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
+      { id: 3, tanggal: new Date(2026, 8, 30), status: "ALPA", keterangan: null, jadwal: { guruId: "guru-2", guru: { user: { name: "Bu B" } }, mataPelajaran: { namaMapel: "IPS" } } },
     ]);
 
     const result = await getAbsensiAnak({ siswaId: 10, bulan: 10 });
@@ -61,5 +61,22 @@ describe("monitoring absensi anak (US-16)", () => {
     expect(result?.persentase).toBe(50);
     expect(result?.rows).toHaveLength(2);
     expect(result?.rows[1].keterangan).toBe("Demam");
+    expect(result?.guruList).toEqual([
+      { id: "guru-1", nama: "Pak A" },
+      { id: "guru-2", nama: "Bu B" },
+    ]);
+  });
+
+  it("membatasi grafik absensi ke guru yang dipilih", async () => {
+    mocks.absensiFindMany.mockResolvedValue([
+      { id: 1, tanggal: new Date(2026, 9, 1), status: "HADIR", keterangan: null, jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
+      { id: 2, tanggal: new Date(2026, 9, 2), status: "SAKIT", keterangan: null, jadwal: { guruId: "guru-2", guru: { user: { name: "Bu B" } }, mataPelajaran: { namaMapel: "IPS" } } },
+    ]);
+
+    const result = await getAbsensiAnak({ siswaId: 10, bulan: 10, guruId: "guru-2" });
+
+    expect(result?.guruId).toBe("guru-2");
+    expect(result?.rekap).toEqual({ HADIR: 0, SAKIT: 1, IZIN: 0, ALPA: 0 });
+    expect(result?.rows).toHaveLength(1);
   });
 });

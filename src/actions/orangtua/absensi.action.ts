@@ -5,7 +5,7 @@ import { resolveAnak } from "./dashboard.action";
 import type { Semester } from "@prisma/client";
 
 /** Monitoring absensi anak. Filter bulan+tahun pelajaran (Absensi terikat Jadwal). */
-export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; tahunAjar?: string; semester?: Semester }) {
+export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; tahunAjar?: string; semester?: Semester; guruId?: string }) {
   const anak = await resolveAnak(opts.siswaId);
   if (!anak) return null;
 
@@ -46,11 +46,24 @@ export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; t
     },
     orderBy: { tanggal: "desc" },
     include: {
-      jadwal: { include: { mataPelajaran: { select: { namaMapel: true } } } },
+      jadwal: {
+        include: {
+          mataPelajaran: { select: { namaMapel: true } },
+          guru: { include: { user: { select: { name: true } } } },
+        },
+      },
     },
   });
 
-  const rowsFilteredBulan = rows.filter((r) => {
+  const guruList = Array.from(new Map(rows.map((row) => [row.jadwal.guruId, {
+    id: row.jadwal.guruId,
+    nama: row.jadwal.guru.user.name,
+  }])).values());
+  const guruId = guruList.some((item) => item.id === opts.guruId) ? opts.guruId : undefined;
+  const rowsFilteredGuru = guruId
+    ? rows.filter((row) => row.jadwal.guruId === guruId)
+    : rows;
+  const rowsFilteredBulan = rowsFilteredGuru.filter((r) => {
     const tanggal = new Date(r.tanggal);
     return tanggal.getMonth() + 1 === bulan;
   });
@@ -66,6 +79,8 @@ export async function getAbsensiAnak(opts: { siswaId?: number; bulan?: number; t
     semester,
     tahunAjarList: tahunAjarList.length > 0 ? tahunAjarList : [fallbackTahunAjar],
     semesterOptions,
+    guruList,
+    guruId: guruId ?? null,
     rekap,
     persentase: total > 0 ? Math.round((rekap.HADIR / total) * 100) : 0,
     rows: rowsFilteredBulan.map((r) => ({
