@@ -125,8 +125,14 @@ export default function TahsinKelancaran({ rows }: { rows: TahsinKelancaranRow[]
           ))}
         </div>
         <p className="text-[11px] text-gray-400 mt-3">
-          Dari terlama (kiri, {tgl(timeline[0].tanggal)}) sampai terbaru (kanan,{" "}
-          {tgl(timeline[timeline.length - 1].tanggal)}).
+          {timeline.length === 1 ? (
+            "Baru ada 1 setoran, jadi pola kelancaran belum terlihat."
+          ) : (
+            <>
+              Dari terlama (kiri, {tgl(timeline[0].tanggal)}) sampai terbaru (kanan,{" "}
+              {tgl(timeline[timeline.length - 1].tanggal)}).
+            </>
+          )}
         </p>
       </div>
 

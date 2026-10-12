@@ -51,32 +51,13 @@ export default async function TahsinPage({ searchParams }: Props) {
         </button>
       </form>
 
-      {/* Kartu ringkas + persentase per aspek */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Total Setoran</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{data.ringkasan.totalSetoran}</p>
-          <p className="text-xs text-gray-400 mt-2">{data.ringkasan.juzTersentuh} juz tersentuh</p>
-        </div>
-        {data.aspek.map((a) => (
-          <div key={a.nama} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-            <div className="flex items-baseline justify-between">
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{a.nama}</p>
-              <p className={"text-xl font-bold " + (a.persen >= 70 ? "text-emerald-700" : "text-amber-600")}>{a.persen}%</p>
-            </div>
-            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mt-3">
-              <div className={"h-full rounded-full " + (a.persen >= 70 ? "bg-emerald-500" : "bg-amber-400")}
-                style={{ width: `${a.persen}%` }} />
-            </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">% setoran yang lancar (L)</p>
-          </div>
-        ))}
-      </div>
-
       {/* Riwayat */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-4 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-800">Riwayat Setoran Tahsin</h2>
+          <p className="text-xs text-gray-400">
+            {data.ringkasan.totalSetoran} setoran - {data.ringkasan.juzTersentuh} juz tersentuh
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
