@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getDashboardOrangTua } from "@/actions/orangtua/dashboard.action";
+import { getNilaiAnak } from "@/actions/orangtua/nilai.action";
 import Link from "next/link";
-import LineChartMini from "@/components/orangtua/LineChartMini";
+import NilaiPerMapelBar from "@/components/orangtua/dashboard/NilaiPerMapelBar";
 import ChildSwitcher from "@/components/orangtua/ChildSwitcher";
 import { BookOpen, BookMarked, Heart, Calendar, Activity, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -14,7 +15,12 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
   const data = await getDashboardOrangTua(selectedSiswaId);
   if (!data) redirect("/login");
 
-  const { ortu, anakAktifId, anakAktifNama, ringkasanJumlah, monitoringTerbaru, nilaiPerkembangan } = data;
+  const { ortu, anakAktifId, anakAktifNama, ringkasanJumlah, monitoringTerbaru } = data;
+
+  // Nilai akhir per mapel: fungsi yang SAMA dengan halaman Nilai orang tua
+  // (periode bawaan dan rumus PH 67% + PAT 33% otomatis identik).
+  const nilaiData = anakAktifId ? await getNilaiAnak({ siswaId: anakAktifId }) : null;
+
   const namaOrtu = ortu.user?.name || "Wali Murid";
   const namaAnak = ortu.anak.map((a) => a.nama).join(", ");
   const jumlahAnak = ortu.anak.length;
@@ -87,7 +93,7 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
             ) : (
               ortu.anak.map((a) => (
                 <span key={a.id} className="text-xs px-3 py-1 rounded-full bg-gray-50 border border-gray-200 text-gray-700 font-medium">
-                  {a.nama} • {a.kelas.nama}
+                  {a.nama} &bull; {a.kelas.nama}
                 </span>
               ))
             )}
@@ -117,15 +123,15 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-800">
-                {anakAktifNama ? `Grafik Perkembangan Nilai ${anakAktifNama}` : "Grafik Perkembangan Nilai Anak"}
+                {anakAktifNama ? `Nilai Akhir per Mata Pelajaran - ${anakAktifNama}` : "Nilai Akhir per Mata Pelajaran"}
               </h3>
               <p className="text-xs text-gray-500 mt-1">
-                Pilih anak
+                Nilai akhir = PH 67% + PAT 33%, sama dengan halaman Nilai dan Rekap Nilai guru.
               </p>
             </div>
             <ChildSwitcher anakList={anakList} aktifId={anakAktifId ?? anakList[0]?.id ?? 0} />
           </div>
-          <LineChartMini data={nilaiPerkembangan} />
+          <NilaiPerMapelBar items={nilaiData?.perMapel ?? []} siswaId={anakAktifId} />
         </div>
 
         <div className="xl:col-span-5 space-y-5">
