@@ -3,10 +3,15 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import {
   Eye, EyeOff, User, Lock, ArrowRight, ArrowLeft, AlertTriangle,
 } from "lucide-react";
+
+// Foto latar halaman login (file ada di folder public/images).
+// Mau ganti foto? Cukup ubah satu baris ini, mis. "/images/gedung-sekolah.jpg".
+const FOTO_LATAR = "/images/depan.jpeg";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,25 +57,21 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background ilustrasi gedung */}
-      <div className="absolute inset-0 flex items-end justify-center opacity-[0.04] pointer-events-none select-none">
-        <svg viewBox="0 0 800 300" className="w-full max-w-3xl">
-          <rect x="330" y="80" width="140" height="220" fill="#1B5E20" />
-          <polygon points="400,10 290,80 510,80" fill="#1B5E20" />
-          <rect x="370" y="160" width="60" height="140" fill="#0D3B12" />
-          <circle cx="400" cy="45" r="14" fill="#1B5E20" />
-          <rect x="80" y="130" width="100" height="170" fill="#1B5E20" />
-          <polygon points="130,75 60,130 200,130" fill="#1B5E20" />
-          <rect x="100" y="190" width="60" height="110" fill="#0D3B12" />
-          <rect x="580" y="130" width="100" height="170" fill="#1B5E20" />
-          <polygon points="630,75 560,130 700,130" fill="#1B5E20" />
-          <rect x="600" y="190" width="60" height="110" fill="#0D3B12" />
-        </svg>
-      </div>
+    <main className="min-h-screen bg-green-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Foto sekolah sebagai latar */}
+      <Image
+        src={FOTO_LATAR}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover pointer-events-none select-none"
+      />
+      {/* Lapisan hijau gelap supaya kartu dan teks tetap jelas terbaca */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-950/80 via-green-900/60 to-green-950/85 pointer-events-none" />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-[440px] bg-white rounded-2xl shadow-md border border-gray-100 p-8">
+      <div className="relative z-10 w-full max-w-[440px] bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/30 p-8">
 
         {/* Kembali ke website sekolah */}
         <Link
@@ -188,7 +189,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          © 2026 MTS Al-Amin Bintaro. Hak Cipta Dilindungi.
+          &copy; 2026 MTS Al-Amin Bintaro. Hak Cipta Dilindungi.
         </p>
       </div>
     </main>
