@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { drawKopSurat } from "@/lib/pdf/kopSurat";
+import { NAMA_KEPALA_MADRASAH } from "@/lib/pdf/kepalaMadrasah";
 
 type RekapRow = {
   siswa: { id: number; nis: string; nama: string };
@@ -176,11 +177,11 @@ export default function DownloadRekapAbsensiPDF({
       doc.setFont("helvetica", "normal");
 
       // Kanan — Kepala Sekolah
-      const ttRightX = pageW - margin - 50;
+      const ttRightX = pageW - margin - 68;
       doc.text("Mataram, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
       doc.text("Kepala Madrasah,", ttRightX, ttY + 5);
       doc.setFont("helvetica", "bold");
-      doc.text("(................................)", ttRightX, ttY + 30);
+      doc.text(NAMA_KEPALA_MADRASAH, ttRightX, ttY + 30);
       doc.setFont("helvetica", "normal");
 
       // ── FOOTER ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { drawKopSurat } from "@/lib/pdf/kopSurat";
+import { NAMA_KEPALA_MADRASAH } from "@/lib/pdf/kepalaMadrasah";
 
 type Props = {
   data: any[];
@@ -9,7 +10,11 @@ type Props = {
   kelasFilter?: string;
 };
 
-const P_LABEL: Record<string, string> = { SB: "Sangat Baik", B: "Baik", C: "Cukup", K: "Kurang" };
+// Disamakan dengan halaman Input Sikap: jenis = POSITIF / PELANGGARAN.
+const JENIS_LABEL: Record<string, string> = {
+  POSITIF: "Positif",
+  PELANGGARAN: "Pelanggaran",
+};
 
 export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: Props) {
   const [loading, setLoading] = useState(false);
@@ -25,10 +30,10 @@ export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: P
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 15;
 
-      // ── KOP SURAT ──────────────────────────────────────────────────────────
+      // === KOP SURAT ===
       await drawKopSurat(doc, pageW, margin);
 
-      // ── JUDUL ──────────────────────────────────────────────────────────────
+      // === JUDUL ===
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.setTextColor(27, 94, 32);
@@ -38,7 +43,7 @@ export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: P
       doc.setDrawColor(27, 94, 32);
       doc.line(pageW / 2 - 42, 52, pageW / 2 + 42, 52);
 
-      // ── INFO ───────────────────────────────────────────────────────────────
+      // === INFO ===
       const infoY = 59;
       const colL = margin;
       const colR = pageW / 2 + 5;
@@ -60,22 +65,22 @@ export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: P
       doc.setFont("helvetica", "normal");
       doc.text(`: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, colR + 30, infoY + 6);
 
-      // ── TABEL ──────────────────────────────────────────────────────────────
+      // === TABEL ===
       const tableStartY = infoY + 14;
 
       const rows = data.map((r, i) => [
         i + 1,
         r.siswa.nama,
         `Kelas ${r.siswa.kelas.nama}`,
-        r.aspek,
-        P_LABEL[r.predikat] ?? r.predikat,
-        r.deskripsi ?? "-",
+        r.kategori || "-",
+        JENIS_LABEL[r.jenisSikap] ?? r.jenisSikap,
+        r.keterangan || "-",
         new Date(r.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
       ]);
 
       autoTable(doc, {
         startY: tableStartY,
-        head: [["No", "Nama Siswa", "Kelas", "Aspek", "Predikat", "Deskripsi", "Tanggal"]],
+        head: [["No", "Nama Siswa", "Kelas", "Kategori", "Jenis", "Keterangan", "Tanggal"]],
         body: rows,
         margin: { left: margin, right: margin },
         styles: { fontSize: 8, cellPadding: 2.5, textColor: [40, 40, 40] },
@@ -98,24 +103,27 @@ export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: P
         alternateRowStyles: { fillColor: [245, 250, 245] },
         didParseCell: (hookData) => {
           if (hookData.section === "body" && hookData.column.index === 4) {
-            const pred = String(hookData.cell.raw ?? "");
-            if (pred === "Sangat Baik" || pred === "SB") hookData.cell.styles.textColor = [21, 128, 61];
-            else if (pred === "Baik" || pred === "B") hookData.cell.styles.textColor = [29, 78, 216];
-            else if (pred === "Cukup" || pred === "C") hookData.cell.styles.textColor = [161, 98, 7];
-            else hookData.cell.styles.textColor = [185, 28, 28];
+            const jenis = String(hookData.cell.raw ?? "");
+            hookData.cell.styles.textColor = jenis === "Positif" ? [21, 128, 61] : [185, 28, 28];
             hookData.cell.styles.fontStyle = "bold";
           }
         },
       });
 
-      // ── RINGKASAN ──────────────────────────────────────────────────────────
+      // === RINGKASAN ===
+      const jumlahPositif = data.filter((r) => r.jenisSikap === "POSITIF").length;
+      const jumlahPelanggaran = data.filter((r) => r.jenisSikap === "PELANGGARAN").length;
       const finalY = (doc as any).lastAutoTable.finalY + 6;
       doc.setFontSize(8);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(100);
-      doc.text(`Total: ${data.length} catatan sikap`, margin, finalY);
+      doc.text(
+        `Total: ${data.length} catatan sikap (${jumlahPositif} positif, ${jumlahPelanggaran} pelanggaran)`,
+        margin,
+        finalY
+      );
 
-      // ── TANDA TANGAN ───────────────────────────────────────────────────────
+      // === TANDA TANGAN ===
       const ttY = finalY + 14;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -127,14 +135,14 @@ export default function DownloadRekapSikapPDF({ data, guruNama, kelasFilter }: P
       doc.text(guruNama, margin, ttY + 30);
       doc.setFont("helvetica", "normal");
 
-      const ttRightX = pageW - margin - 50;
+      const ttRightX = pageW - margin - 68;
       doc.text("Mataram, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
       doc.text("Kepala Madrasah,", ttRightX, ttY + 5);
       doc.setFont("helvetica", "bold");
-      doc.text("(................................)", ttRightX, ttY + 30);
+      doc.text(NAMA_KEPALA_MADRASAH, ttRightX, ttY + 30);
       doc.setFont("helvetica", "normal");
 
-      // ── FOOTER ─────────────────────────────────────────────────────────────
+      // === FOOTER ===
       const pageH = doc.internal.pageSize.getHeight();
       doc.setDrawColor(200);
       doc.setLineWidth(0.3);

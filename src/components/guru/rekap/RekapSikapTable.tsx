@@ -1,12 +1,17 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { Search } from "lucide-react";
 
-const P_COLOR: Record<string, string> = {
-  SB:"bg-green-100 text-green-700", B:"bg-blue-100 text-blue-700",
-  C:"bg-yellow-100 text-yellow-700", K:"bg-red-100 text-red-700",
+// Disamakan dengan halaman Input Sikap: jenis = POSITIF / PELANGGARAN,
+// lengkap dengan kategori (mis. Atribut, Keterlambatan) dan keterangan.
+const JENIS_STYLE: Record<string, string> = {
+  POSITIF: "bg-green-100 text-green-700",
+  PELANGGARAN: "bg-red-100 text-red-700",
 };
-const P_LABEL: Record<string, string> = { SB:"Sangat Baik", B:"Baik", C:"Cukup", K:"Kurang" };
+const JENIS_LABEL: Record<string, string> = {
+  POSITIF: "Positif",
+  PELANGGARAN: "Pelanggaran",
+};
 
 export default function RekapSikapTable({ data }: { data: any[] }) {
   const [search, setSearch] = useState("");
@@ -27,9 +32,9 @@ export default function RekapSikapTable({ data }: { data: any[] }) {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Siswa</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Aspek</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Predikat</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Deskripsi</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Kategori</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Keterangan</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
             </tr>
           </thead>
@@ -43,11 +48,13 @@ export default function RekapSikapTable({ data }: { data: any[] }) {
                   <p className="text-sm font-medium text-gray-800">{r.siswa.nama}</p>
                   <p className="text-xs text-gray-400">Kelas {r.siswa.kelas.nama}</p>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-700">{r.aspek}</td>
+                <td className="px-4 py-3 text-sm text-gray-700">{r.kategori || "-"}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${P_COLOR[r.predikat]}`}>{P_LABEL[r.predikat]}</span>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${JENIS_STYLE[r.jenisSikap] ?? "bg-gray-100 text-gray-600"}`}>
+                    {JENIS_LABEL[r.jenisSikap] ?? r.jenisSikap}
+                  </span>
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate">{r.deskripsi ?? "-"}</td>
+                <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">{r.keterangan || "-"}</td>
                 <td className="px-4 py-3 text-xs text-gray-500">
                   {new Date(r.tanggal).toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" })}
                 </td>

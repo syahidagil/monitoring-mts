@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { drawKopSurat } from "@/lib/pdf/kopSurat";
+import { NAMA_KEPALA_MADRASAH } from "@/lib/pdf/kepalaMadrasah";
 
 type Props = {
   data: any[];
@@ -154,11 +155,11 @@ export default function DownloadRekapHafalanPDF({ data, guruNama, kelasFilter, s
       doc.setFont("helvetica", "bold");
       doc.text(guruNama, margin, ttY + 28);
 
-      const ttRightX = pageW - margin - 50;
+      const ttRightX = pageW - margin - 68;
       doc.text("Mataram, " + new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }), ttRightX, ttY);
       doc.text("Kepala Madrasah,", ttRightX, ttY + 5);
       doc.setFont("helvetica", "bold");
-      doc.text("(................................)", ttRightX, ttY + 28);
+      doc.text(NAMA_KEPALA_MADRASAH, ttRightX, ttY + 28);
 
       // ── FOOTER ─────────────────────────────────────────────────────────────
       const pageH = doc.internal.pageSize.getHeight();
