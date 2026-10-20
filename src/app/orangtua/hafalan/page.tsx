@@ -28,7 +28,7 @@ export default async function HafalanPage({ searchParams }: Props) {
   if (!data.anak.statusTahfidz) {
     return (
       <div className="p-6 max-w-5xl mx-auto">
-        <MonitorHeader judul="Monitoring Hafalan Al-Qur'an" subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        <MonitorHeader judul="Monitoring Hafalan Al-Qur'an" subjudul={`${data.anak.nama} \u2014 Kelas ${data.anak.kelas.nama}`}
           anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))} aktifId={siswaId} />
         <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-500">
           {data.anak.nama} tidak terdaftar dalam program tahfidz.
@@ -43,7 +43,7 @@ export default async function HafalanPage({ searchParams }: Props) {
     <div className="p-6 max-w-5xl mx-auto">
       <MonitorHeader
         judul="Monitoring Hafalan Al-Qur'an"
-        subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        subjudul={`${data.anak.nama} \u2014 Kelas ${data.anak.kelas.nama}`}
         anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
         aktifId={siswaId}
       />
@@ -64,8 +64,8 @@ export default async function HafalanPage({ searchParams }: Props) {
         </button>
       </form>
 
-      {/* 3 kartu */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+      {/* 2 kartu ringkasan */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Total Juz Terhafal</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">Juz {r.juzTertinggi}</p>
@@ -92,9 +92,11 @@ export default async function HafalanPage({ searchParams }: Props) {
         </div> */}
       </div>
 
-      {/* <div className="mb-5">
+      {/* Progres ayat Al-Qur'an: komponen dan rumus yang SAMA dengan halaman guru.
+          Dihitung dari seluruh riwayat (tidak ikut filter tahun pelajaran). */}
+      <div className="mb-5">
         <HafalanProgressChart progres={data.progres} />
-      </div> */}
+      </div>
 
       {/* Chart per minggu */}
       {/* <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-5">
@@ -140,7 +142,7 @@ export default async function HafalanPage({ searchParams }: Props) {
                     <td className="px-3 py-3 text-center">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${n.kelas}`}>{n.teks}</span>
                     </td>
-                    <td className="px-3 py-3 text-gray-500">{h.keterangan || "–"}</td>
+                    <td className="px-3 py-3 text-gray-500">{h.keterangan || "\u2013"}</td>
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{h.guruNama}</td>
                   </tr>
                 );
