@@ -67,10 +67,10 @@ export default async function HafalanPage({ searchParams }: Props) {
       {/* 2 kartu ringkasan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Total Juz Terhafal</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">Juz {r.juzTertinggi}</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Juz Tersentuh</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{r.jumlahJuz} <span className="text-base font-medium text-gray-400">Juz</span></p>
           <p className="flex items-center gap-1 text-xs text-emerald-600 mt-2">
-            <TrendingUp size={13} /> {r.jumlahJuz} juz tersentuh
+            <TrendingUp size={13} /> dari {r.targetJuz} juz Al-Qur&apos;an
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">

@@ -9,7 +9,6 @@ export default async function GuruNilaiPage() {
 
   const jadwal = await getJadwalByGuru(session.user.id);
 
-  // Dedup per (kelas + mapel) — satu kartu per mapel yang diajar di tiap kelas
   const unik = jadwal.filter(
     (j, i, arr) =>
       i ===

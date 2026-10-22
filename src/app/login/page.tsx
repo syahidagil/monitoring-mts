@@ -9,8 +9,7 @@ import {
   Eye, EyeOff, User, Lock, ArrowRight, ArrowLeft, AlertTriangle,
 } from "lucide-react";
 
-// Foto latar halaman login (file ada di folder public/images).
-// Mau ganti foto? Cukup ubah satu baris ini, mis. "/images/gedung-sekolah.jpg".
+
 const FOTO_LATAR = "/images/depan.jpeg";
 
 export default function LoginPage() {

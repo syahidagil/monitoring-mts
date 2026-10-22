@@ -27,8 +27,7 @@ export default async function InputTahsinPage({
       include: { user: { select: { name: true } } },
     }),
     prisma.tahunAjaran.findFirst({ where: { aktif: true } }),
-    // Seluruh riwayat (semua guru) - dipakai komponen TahsinKelancaran yang
-    // SAMA dengan halaman orang tua.
+
     prisma.tahsin.findMany({
       where: { siswaId: Number(siswaId) },
       orderBy: { tanggal: "desc" },

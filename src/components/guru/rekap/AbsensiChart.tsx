@@ -27,7 +27,6 @@ export default function AbsensiChart({ hadir, sakit, izin, alpa }: Props) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
 
-  // Susun tiap segmen berurutan di sekeliling lingkaran (stroke-dasharray per segmen).
   let cursor = 0;
   const segments = SEGMEN.map((s) => {
     const value = nilai[s.key];

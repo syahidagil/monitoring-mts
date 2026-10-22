@@ -17,8 +17,6 @@ export default async function OrangtuaDashboard({ searchParams }: Props) {
 
   const { ortu, anakAktifId, anakAktifNama, ringkasanJumlah, monitoringTerbaru } = data;
 
-  // Nilai akhir per mapel: fungsi yang SAMA dengan halaman Nilai orang tua
-  // (periode bawaan dan rumus PH 67% + PAT 33% otomatis identik).
   const nilaiData = anakAktifId ? await getNilaiAnak({ siswaId: anakAktifId }) : null;
 
   const namaOrtu = ortu.user?.name || "Wali Murid";
