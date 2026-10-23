@@ -1,24 +1,45 @@
 "use client";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { setTahunPelajaranAktif } from "@/actions/tahunAjaran.action";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 
 export default function AktifToggle({ id, isAktif }: { id: number; isAktif: boolean }) {
   const [isPending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   function handleToggle() {
     if (isAktif) return;
-    if (!confirm("Set tahun ajaran ini sebagai aktif? Tahun ajaran lain akan dinonaktifkan.")) return;
-    startTransition(async () => { await setTahunPelajaranAktif(id); });
+    setConfirmOpen(true);
+  }
+
+  function handleConfirm() {
+    startTransition(async () => {
+      await setTahunPelajaranAktif(id);
+      setConfirmOpen(false);
+    });
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      disabled={isAktif || isPending}
-      title={isAktif ? "Sudah aktif" : "Klik untuk aktifkan"}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAktif ? "bg-green-600 cursor-default" : "bg-gray-300 hover:bg-gray-400 cursor-pointer"} ${isPending ? "opacity-50" : ""}`}>
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isAktif ? "translate-x-6" : "translate-x-1"}`} />
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={isAktif || isPending}
+        title={isAktif ? "Sudah aktif" : "Klik untuk aktifkan"}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAktif ? "bg-green-600 cursor-default" : "bg-gray-300 hover:bg-gray-400 cursor-pointer"} ${isPending ? "opacity-50" : ""}`}>
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isAktif ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onClose={() => { if (!isPending) setConfirmOpen(false); }}
+        onConfirm={handleConfirm}
+        title="Aktifkan Tahun Pelajaran"
+        description="Set tahun ajaran ini sebagai aktif? Tahun ajaran lain akan dinonaktifkan."
+        confirmLabel="Ya, Aktifkan"
+        loadingLabel="Mengaktifkan..."
+        isLoading={isPending}
+      />
+    </>
   );
 }

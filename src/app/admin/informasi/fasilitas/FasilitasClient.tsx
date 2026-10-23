@@ -4,6 +4,7 @@ import { upsertSchoolInfo, deleteSchoolInfo } from "@/actions/schoolInfo";
 import { Plus, Trash2, Edit, X, Save } from "lucide-react";
 import ImageUploader from "@/components/admin/shared/ImageUploader";
 import Image from "next/image";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 
 export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
   const [isPending, startTransition] = useTransition();
@@ -11,6 +12,7 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
   const [showModal, setShowModal] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [form, setForm] = useState({ judul: "", isi: "", gambar: "" });
+  const [hapusId, setHapusId] = useState<number | null>(null);
 
   function openAdd() {
     setEditData(null);
@@ -41,11 +43,17 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
     });
   }
 
-  async function handleDelete(idInfo: number) {
-    if (!confirm("Hapus fasilitas ini?")) return;
+  function handleDelete(idInfo: number) {
+    setHapusId(idInfo);
+  }
+
+  function konfirmasiHapus() {
+    if (hapusId === null) return;
+    const idInfo = hapusId;
     startTransition(async () => {
       const result = await deleteSchoolInfo(idInfo);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
+      setHapusId(null);
       setTimeout(() => setMessage(null), 3000);
     });
   }
@@ -154,6 +162,18 @@ export default function FasilitasClient({ fasilitas }: { fasilitas: any[] }) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={hapusId !== null}
+        onClose={() => { if (!isPending) setHapusId(null); }}
+        onConfirm={konfirmasiHapus}
+        title="Hapus Fasilitas"
+        description="Hapus fasilitas ini? Tindakan ini tidak dapat dibatalkan."
+        variant="danger"
+        confirmLabel="Ya, Hapus"
+        loadingLabel="Menghapus..."
+        isLoading={isPending}
+      />
     </div>
   );
 }

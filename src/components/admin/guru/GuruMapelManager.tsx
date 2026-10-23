@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Plus, Trash2, X, AlertCircle, CheckCircle, Search, GraduationCap } from "lucide-react";
 import { assignGuruMapel, removeGuruMapel } from "@/actions/guru.action";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 
 type MapelItem = { kodeMapel: string; namaMapel: string };
 type GuruMapelItem = { idGuruMapel: number; kodeMapel: string; mataPelajaran: { namaMapel: string } };
@@ -21,6 +22,7 @@ export default function GuruMapelManager({ guruId, guruNama, guruMapel, allMapel
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [search, setSearch] = useState("");
   const [selectedKode, setSelectedKode] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<{ id: number; nama: string } | null>(null);
 
   const assignedCodes = new Set(guruMapel.map((gm) => gm.kodeMapel));
   const availableMapel = allMapel.filter(
@@ -46,11 +48,17 @@ export default function GuruMapelManager({ guruId, guruNama, guruMapel, allMapel
   }
 
   function handleRemove(idGuruMapel: number, namaMapel: string) {
-    if (!confirm(`Hapus "${namaMapel}" dari daftar ampu ${guruNama}?`)) return;
+    setRemoveTarget({ id: idGuruMapel, nama: namaMapel });
+  }
+
+  function handleConfirmRemove() {
+    if (!removeTarget) return;
+    const target = removeTarget;
     startTransition(async () => {
-      const res = await removeGuruMapel(idGuruMapel);
+      const res = await removeGuruMapel(target.id);
       showMsg(res.success ? "success" : "error", res.message);
       if (res.success) router.refresh();
+      setRemoveTarget(null);
     });
   }
 
@@ -224,6 +232,18 @@ export default function GuruMapelManager({ guruId, guruNama, guruMapel, allMapel
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!removeTarget}
+        onClose={() => { if (!isPending) setRemoveTarget(null); }}
+        onConfirm={handleConfirmRemove}
+        title="Hapus Mata Pelajaran Ampu"
+        description={`Hapus "${removeTarget?.nama ?? ""}" dari daftar ampu ${guruNama}?`}
+        variant="danger"
+        confirmLabel="Ya, Hapus"
+        loadingLabel="Menghapus..."
+        isLoading={isPending}
+      />
     </>
   );
 }

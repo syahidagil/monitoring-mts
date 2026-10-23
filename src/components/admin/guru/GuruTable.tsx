@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 import { useState, useTransition } from "react";
 import { Edit, Trash2, KeyRound } from "lucide-react";
 import { deleteGuru, resetPasswordGuru } from "@/actions/guru.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 import GuruMapelManager from "./GuruMapelManager";
 
 type Mapel = { kodeMapel: string; namaMapel: string };
@@ -10,13 +11,20 @@ type Mapel = { kodeMapel: string; namaMapel: string };
 export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]; allMapel?: Mapel[]; onEdit: (guru: any) => void }) {
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; nama: string } | null>(null);
+  const [resetTarget, setResetTarget] = useState<{ id: string; nama: string } | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   function handleReset(id: string, nama: string) {
-    if (!confirm(`Reset password ${nama} ke "password123"?`)) return;
+    setResetTarget({ id, nama });
+  }
+
+  function handleConfirmReset() {
+    if (!resetTarget) return;
+    const target = resetTarget;
     startTransition(async () => {
-      const result = await resetPasswordGuru(id);
+      const result = await resetPasswordGuru(target.id);
       setMessage({ type: result.success ? "success" : "error", text: result.message });
+      setResetTarget(null);
       setTimeout(() => setMessage(null), 4000);
     });
   }
@@ -131,6 +139,17 @@ export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]
         onConfirm={handleDelete}
         title="Hapus Data Guru"
         description={`Apakah Anda yakin ingin menghapus data guru "${deleteTarget?.nama}"? Semua data terkait akan ikut terhapus.`}
+        isLoading={isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={!!resetTarget}
+        onClose={() => { if (!isPending) setResetTarget(null); }}
+        onConfirm={handleConfirmReset}
+        title="Reset Password Guru"
+        description={`Reset password ${resetTarget?.nama ?? ""} ke "password123"?`}
+        confirmLabel="Ya, Reset"
+        loadingLabel="Mereset..."
         isLoading={isPending}
       />
     </>

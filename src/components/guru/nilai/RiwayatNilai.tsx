@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateNilai, deleteNilai } from "@/actions/guru/nilai.action";
 import { JENIS_LABEL } from "@/lib/validations/guru/nilai.validation";
 import { Pencil, Trash2, Check, X } from "lucide-react";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 
 type Row = {
   id: number;
@@ -32,6 +33,7 @@ export default function RiwayatNilai({ rows }: { rows: Row[] }) {
   const [editKet, setEditKet] = useState("");
   const [filter, setFilter] = useState<string>("SEMUA");
   const [pesan, setPesan] = useState("");
+  const [hapusId, setHapusId] = useState<number | null>(null);
 
   const jenisAda = Array.from(new Set(rows.map((r) => r.jenis)));
   const tampil = filter === "SEMUA" ? rows : rows.filter((r) => r.jenis === filter);
@@ -58,11 +60,17 @@ export default function RiwayatNilai({ rows }: { rows: Row[] }) {
   }
 
   function hapus(id: number) {
-    if (!confirm("Hapus nilai ini? Tindakan tidak dapat dibatalkan.")) return;
+    setHapusId(id);
+  }
+
+  function konfirmasiHapus() {
+    if (hapusId === null) return;
+    const id = hapusId;
     startTransition(async () => {
       const res = await deleteNilai(id);
       setPesan(res.message);
       if (res.success) router.refresh();
+      setHapusId(null);
     });
   }
 
@@ -208,6 +216,18 @@ export default function RiwayatNilai({ rows }: { rows: Row[] }) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={hapusId !== null}
+        onClose={() => { if (!isPending) setHapusId(null); }}
+        onConfirm={konfirmasiHapus}
+        title="Hapus Nilai"
+        description="Hapus nilai ini? Tindakan tidak dapat dibatalkan."
+        variant="danger"
+        confirmLabel="Ya, Hapus"
+        loadingLabel="Menghapus..."
+        isLoading={isPending}
+      />
     </div>
   );
 }

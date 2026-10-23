@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Filter, Pencil, Trash2 } from "lucide-react";
 import { deleteSikap, type SikapRow } from "@/actions/guru/sikap.action";
+import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 
 type Kelas = { id: number; nama: string };
 
@@ -18,6 +19,7 @@ export default function SikapRiwayat({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [pesan, setPesan] = useState("");
+  const [hapusId, setHapusId] = useState<number | null>(null);
 
   const [kelasId, setKelasId] = useState<number | "semua">("semua");
   const [jenis, setJenis] = useState<"SEMUA" | "POSITIF" | "PELANGGARAN">("SEMUA");
@@ -36,11 +38,17 @@ export default function SikapRiwayat({
   }, [rows, kelasId, jenis, dari, sampai]);
 
   function hapus(id: number) {
-    if (!confirm("Hapus catatan sikap ini?")) return;
+    setHapusId(id);
+  }
+
+  function konfirmasiHapus() {
+    if (hapusId === null) return;
+    const id = hapusId;
     startTransition(async () => {
       const res = await deleteSikap(id);
       setPesan(res.message);
       if (res.success) router.refresh();
+      setHapusId(null);
       setTimeout(() => setPesan(""), 3000);
     });
   }
@@ -192,6 +200,18 @@ export default function SikapRiwayat({
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={hapusId !== null}
+        onClose={() => { if (!isPending) setHapusId(null); }}
+        onConfirm={konfirmasiHapus}
+        title="Hapus Catatan Sikap"
+        description="Hapus catatan sikap ini? Tindakan ini tidak dapat dibatalkan."
+        variant="danger"
+        confirmLabel="Ya, Hapus"
+        loadingLabel="Menghapus..."
+        isLoading={isPending}
+      />
     </div>
   );
 }
