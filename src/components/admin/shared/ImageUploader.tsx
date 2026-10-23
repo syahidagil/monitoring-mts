@@ -32,8 +32,8 @@ export default function ImageUploader({
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Ukuran file maksimal 10MB.");
+    if (file.size > 4 * 1024 * 1024) {
+      setError("Ukuran file maksimal 4MB.");
       return;
     }
 
@@ -152,7 +152,7 @@ export default function ImageUploader({
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-700">Klik untuk memilih foto dari laptop</p>
-                <p className="text-xs text-gray-400 mt-0.5">Format: JPG, PNG, WEBP, GIF (Maks. 10MB)</p>
+                <p className="text-xs text-gray-400 mt-0.5">Format: JPG, PNG, WEBP, GIF (Maks. 4MB)</p>
               </div>
             </div>
           )}

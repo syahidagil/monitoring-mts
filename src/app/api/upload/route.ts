@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { put } from "@vercel/blob";
 import path from "path";
 import { auth } from "@/lib/auth";
+
+// Ekstensi ditentukan dari MIME type (whitelist), bukan dari nama file pengguna.
+const ALLOWED: Record<string, string> = {
+  "application/pdf": "pdf",
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
+// Batas body request di Vercel (serverless function) adalah 4,5MB.
+const MAX_SIZE = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -9,52 +22,57 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 401 });
   }
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
-  const folder = (formData.get("folder") as string) || "content";
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file");
+    const folder = (formData.get("folder") as string) || "content";
 
-  if (!file) {
-    return NextResponse.json({ error: "Tidak ada file yang dipilih" }, { status: 400 });
-  }
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { error: "Tidak ada file yang dipilih" },
+        { status: 400 }
+      );
+    }
 
-  const allowedTypes = [
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/jpg",
-    "image/webp",
-    "image/gif",
-  ];
+    const ext = ALLOWED[file.type];
+    if (!ext) {
+      return NextResponse.json(
+        { error: "Format file tidak didukung. Gunakan JPG, PNG, WEBP, GIF, atau PDF" },
+        { status: 400 }
+      );
+    }
 
-  if (!allowedTypes.includes(file.type)) {
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file maksimal 4MB" },
+        { status: 400 }
+      );
+    }
+
+    const originalExt = path.extname(file.name);
+    const baseName =
+      path
+        .basename(file.name, originalExt)
+        .replace(/[^a-zA-Z0-9]/g, "-")
+        .slice(0, 50) || "file";
+    const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "") || "content";
+
+    const blob = await put(`${safeFolder}/${baseName}.${ext}`, file, {
+      access: "public",
+      addRandomSuffix: true,
+      contentType: file.type,
+    });
+
+    return NextResponse.json({
+      success: true,
+      fileName: file.name,
+      filePath: blob.url, // URL lengkap https://....public.blob.vercel-storage.com/...
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
     return NextResponse.json(
-      { error: "Format file tidak didukung. Gunakan JPG, PNG, WEBP, GIF, atau PDF" },
-      { status: 400 }
+      { error: "Gagal menyimpan file ke penyimpanan. Coba lagi." },
+      { status: 500 }
     );
   }
-
-  const maxSize = 10 * 1024 * 1024;
-  if (file.size > maxSize) {
-    return NextResponse.json({ error: "Ukuran file maksimal 10MB" }, { status: 400 });
-  }
-
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-
-  const ext = path.extname(file.name);
-  const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9]/g, "-");
-  const fileName = `${baseName}-${Date.now()}${ext}`;
-
-  const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "");
-  const uploadDir = path.join(process.cwd(), "public", "uploads", safeFolder);
-
-  await mkdir(uploadDir, { recursive: true });
-  const filePath = path.join(uploadDir, fileName);
-  await writeFile(filePath, buffer);
-
-  return NextResponse.json({
-    success: true,
-    fileName: file.name,
-    filePath: `/uploads/${safeFolder}/${fileName}`,
-  });
 }

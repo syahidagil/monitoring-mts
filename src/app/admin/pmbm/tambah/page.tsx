@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPengumuman } from "@/actions/pmbm";
@@ -23,8 +23,8 @@ export default function TambahPengumumanPage() {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setMessage({ type: "error", text: "Ukuran file maksimal 10MB" });
+    if (file.size > 4 * 1024 * 1024) {
+      setMessage({ type: "error", text: "Ukuran file maksimal 4MB" });
       return;
     }
 
@@ -121,7 +121,7 @@ export default function TambahPengumumanPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               File Pengumuman <span className="text-red-500">*</span>
-              <span className="text-gray-400 font-normal ml-1">(PDF, JPG, PNG — maks 10MB)</span>
+              <span className="text-gray-400 font-normal ml-1">(PDF, JPG, PNG — maks 4MB)</span>
             </label>
 
             {!uploadedFile ? (
@@ -163,7 +163,7 @@ export default function TambahPengumumanPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-700">Klik atau drag file ke sini</p>
-                      <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG hingga 10MB</p>
+                      <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG hingga 4MB</p>
                     </div>
                   </div>
                 )}
