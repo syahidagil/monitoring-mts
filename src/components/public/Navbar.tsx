@@ -1,28 +1,23 @@
-﻿"use client";
-import { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+"use client";
+import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+// Diawali "/" supaya tetap berfungsi saat dibuka dari halaman lain (mis. /pmbm/pengumuman)
 const NAV_LINKS = [
-  { label: "Sejarah", href: "#sejarah" },
-  { label: "Visi Misi", href: "#visi-misi" },
-  { label: "Kurikulum", href: "#kurikulum" },
-  { label: "Prestasi", href: "#prestasi" },
-  { label: "Ekstrakurikuler", href: "#ekstrakurikuler" },
+  { label: "Sejarah", href: "/#sejarah" },
+  { label: "Visi Misi", href: "/#visi-misi" },
+  { label: "Kurikulum", href: "/#kurikulum" },
+  { label: "Prestasi", href: "/#prestasi" },
+  { label: "Ekstrakurikuler", href: "/#ekstrakurikuler" },
 ];
 
-const PMBM_LINKS = [
-  { label: "Informasi PMBM 2026/2027", href: "/pmbm/informasi" },
-  { label: "Pengumuman PMBM 2026/2027", href: "/pmbm/pengumuman" },
-];
+const PMBM_HREF = "/pmbm/pengumuman";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [pmbmOpen, setPmbmOpen] = useState(false);
-  const [mobilePmbmOpen, setMobilePmbmOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -30,22 +25,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setPmbmOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#1B5E20] shadow-md" : "bg-[#1B5E20]"}`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-                  <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
             <div className="relative w-[45px] h-[45px] flex-shrink-0">
               <Image
                 src="/images/logo-mts.jpg"
@@ -68,33 +53,10 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
-
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setPmbmOpen(!pmbmOpen)}
-                className="flex items-center gap-1 text-white/90 hover:text-white px-4 py-2 text-sm transition-colors"
-              >
-                PMBM
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${pmbmOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {pmbmOpen && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                  <div className="py-1">
-                    {PMBM_LINKS.map((item) => (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        onClick={() => setPmbmOpen(false)}
-                        className="block px-5 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-[#1B5E20] font-medium transition-colors border-b border-gray-50 last:border-0"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <Link href={PMBM_HREF}
+              className="text-white/90 hover:text-white px-4 py-2 text-sm transition-colors">
+              PMBM
+            </Link>
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -117,30 +79,10 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
-
-            <div>
-              <button
-                onClick={() => setMobilePmbmOpen(!mobilePmbmOpen)}
-                className="flex items-center justify-between w-full text-white/90 hover:text-white py-2.5 px-2 text-sm"
-              >
-                PMBM
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mobilePmbmOpen ? "rotate-180" : ""}`} />
-              </button>
-              {mobilePmbmOpen && (
-                <div className="ml-4 border-l border-white/20 pl-3 mb-1">
-                  {PMBM_LINKS.map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => { setOpen(false); setMobilePmbmOpen(false); }}
-                      className="block text-white/70 hover:text-white py-2 text-xs"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Link href={PMBM_HREF} onClick={() => setOpen(false)}
+              className="block text-white/90 hover:text-white py-2.5 px-2 text-sm">
+              PMBM
+            </Link>
 
             <div className="flex gap-3 mt-3">
               <Link href="/login"

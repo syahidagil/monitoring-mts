@@ -1,9 +1,11 @@
-﻿
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/public/Navbar";
 import Footer from "@/components/public/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, FileText, Download, Calendar } from "lucide-react";
+
+const IMAGE_EXT = /\.(jpe?g|png|webp|gif)(\?.*)?$/i;
 
 export default async function PengumumanPMBMPage() {
   const pengumuman = await prisma.pengumumanPmbm.findMany({
@@ -20,8 +22,8 @@ export default async function PengumumanPMBMPage() {
             <Link href="/" className="inline-flex items-center gap-2 text-green-300 hover:text-white text-sm mb-4">
               <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
             </Link>
-            <h1 className="text-3xl font-bold text-white">Pengumuman PMBM 2026/2027</h1>
-            <p className="text-green-200 mt-2">Daftar pengumuman resmi penerimaan murid baru MTS Al-Amin Bintaro</p>
+            <h1 className="text-3xl font-bold text-white">Informasi &amp; Pengumuman PMBM</h1>
+            <p className="text-green-200 mt-2">Penerimaan Murid Baru Madrasah MTS Al-Amin Bintaro</p>
           </div>
         </div>
 
@@ -30,68 +32,89 @@ export default async function PengumumanPMBMPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="font-semibold text-gray-600 mb-2">Belum ada pengumuman</h3>
-              <p className="text-sm text-gray-400">Pengumuman PMBM akan ditampilkan di sini saat tersedia</p>
+              <p className="text-sm text-gray-400">Informasi dan pengumuman PMBM akan ditampilkan di sini saat tersedia</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {pengumuman.map((item, i) => (
-                <div key={item.id}
-                  className={`bg-white rounded-2xl border shadow-sm p-6 transition-all hover:shadow-md ${i === 0 ? "border-green-200 ring-1 ring-green-100" : "border-gray-100"}`}>
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${i === 0 ? "bg-green-100" : "bg-gray-100"}`}>
-                      <FileText className={`w-6 h-6 ${i === 0 ? "text-green-700" : "text-gray-500"}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-base">{item.judul}</h3>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs font-semibold bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
-                              {item.tahun}
-                            </span>
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(item.createdAt).toLocaleDateString("id-ID", {
-                                day: "numeric", month: "long", year: "numeric"
-                              })}
+              {pengumuman.map((item, i) => {
+                const isImage = IMAGE_EXT.test(item.filePath);
+                return (
+                  <div key={item.id}
+                    className={`bg-white rounded-2xl border shadow-sm p-6 transition-all hover:shadow-md ${i === 0 ? "border-green-200 ring-1 ring-green-100" : "border-gray-100"}`}>
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${i === 0 ? "bg-green-100" : "bg-gray-100"}`}>
+                        <FileText className={`w-6 h-6 ${i === 0 ? "text-green-700" : "text-gray-500"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-base">{item.judul}</h3>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs font-semibold bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                {item.tahun}
+                              </span>
+                              <div className="flex items-center gap-1 text-xs text-gray-400">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(item.createdAt).toLocaleDateString("id-ID", {
+                                  day: "numeric", month: "long", year: "numeric"
+                                })}
+                              </div>
                             </div>
                           </div>
+                          {i === 0 && (
+                            <span className="text-xs font-semibold bg-green-500 text-white px-3 py-1 rounded-full flex-shrink-0">
+                              Terbaru
+                            </span>
+                          )}
                         </div>
-                        {i === 0 && (
-                          <span className="text-xs font-semibold bg-green-500 text-white px-3 py-1 rounded-full flex-shrink-0">
-                            Terbaru
-                          </span>
+
+                        {item.deskripsi && (
+                          <p className="text-sm text-gray-500 mt-2 leading-relaxed whitespace-pre-line">{item.deskripsi}</p>
                         )}
-                      </div>
 
-                      {item.deskripsi && (
-                        <p className="text-sm text-gray-500 mt-2 leading-relaxed">{item.deskripsi}</p>
-                      )}
+                        {isImage && (
+                          <a
+                            href={item.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
+                          >
+                            <Image
+                              src={item.filePath}
+                              alt={item.judul}
+                              width={1200}
+                              height={1600}
+                              unoptimized
+                              className="w-full h-auto"
+                            />
+                          </a>
+                        )}
 
-                      <div className="mt-4 flex items-center gap-3">
-                        <a
-                          href={item.filePath}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-                        >
-                          <Download className="w-4 h-4" />
-                          Unduh Pengumuman
-                        </a>
-                        <a
-                          href={item.filePath}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-300 text-sm px-4 py-2 rounded-lg transition-colors"
-                        >
-                          <FileText className="w-4 h-4" />
-                          Lihat File
-                        </a>
+                        <div className="mt-4 flex items-center gap-3 flex-wrap">
+                          <a
+                            href={item.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                          >
+                            <Download className="w-4 h-4" />
+                            Unduh
+                          </a>
+                          <a
+                            href={item.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-300 text-sm px-4 py-2 rounded-lg transition-colors"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Lihat File
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

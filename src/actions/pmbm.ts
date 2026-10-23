@@ -1,7 +1,8 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { del } from "@vercel/blob";
 import { unlink } from "fs/promises";
 import path from "path";
 
@@ -46,8 +47,13 @@ export async function deletePengumuman(id: number) {
   const data = await prisma.pengumumanPmbm.findUnique({ where: { id } });
   if (data) {
     try {
-      const fullPath = path.join(process.cwd(), "public", data.filePath);
-      await unlink(fullPath);
+      if (data.filePath.startsWith("http")) {
+        // File baru: tersimpan di Vercel Blob
+        await del(data.filePath);
+      } else {
+        // File lama: tersimpan di folder public/ (hanya ada di komputer lokal)
+        await unlink(path.join(process.cwd(), "public", data.filePath));
+      }
     } catch {}
   }
 

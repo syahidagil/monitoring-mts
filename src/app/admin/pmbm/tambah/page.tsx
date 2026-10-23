@@ -76,7 +76,7 @@ export default function TambahPengumumanPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold text-gray-900">Upload Pengumuman PMBM</h1>
-        <p className="text-sm text-gray-500 mt-1">Upload file pengumuman nama-nama siswa yang lolos PMBM</p>
+        <p className="text-sm text-gray-500 mt-1">Upload informasi, brosur, poster, atau pengumuman PMBM (PDF, JPG, atau PNG)</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -98,7 +98,7 @@ export default function TambahPengumumanPage() {
             </label>
             <input name="judul" required
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Contoh: Pengumuman Tahap 1 PMBM 2026/2027" />
+              placeholder="Contoh: Informasi dan Jadwal PMBM 2026/2027" />
           </div>
 
           <div>
