@@ -1,7 +1,6 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { logoutAction } from "@/actions/auth.action";
 import StatistikCard from "@/components/guru/dashboard/StatistikCard";
 import JadwalHariIni from "@/components/guru/dashboard/JadwalHariIni";
 import NotifikasiGuru from "@/components/guru/dashboard/NotifikasiGuru";
@@ -68,11 +67,6 @@ export default async function GuruDashboard() {
             <h1 className="text-xl font-bold text-gray-900">Dashboard Guru</h1>
             <p className="text-sm text-gray-500 mt-1">Selamat datang, {session.user.name}</p>
           </div>
-          <form action={logoutAction}>
-            <button className="text-sm text-red-500 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">
-              Keluar
-            </button>
-          </form>
         </div>
 
         <StatistikCard
