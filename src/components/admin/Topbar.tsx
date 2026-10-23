@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/actions/auth.action";
-import { LogOut, Bell, User, ChevronRight } from "lucide-react";
+import { LogOut, User, ChevronRight } from "lucide-react";
 
 type Crumb = { label: string; href?: string };
 
@@ -63,11 +63,6 @@ export default function Topbar({ user }: { user: any }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-        <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
-
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-green-700" />
