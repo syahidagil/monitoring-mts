@@ -1,8 +1,10 @@
-﻿"use client";
+"use client";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createUser, deleteUser, updateUserStatus, resetPassword } from "@/actions/users";
 import { Plus, Trash2, ToggleLeft, ToggleRight, Key, User, Search } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
+import ResetPasswordDialog from "@/components/admin/shared/ResetPasswordDialog";
 
 const ROLES = ["ADMIN", "GURU", "ORANGTUA"] as const;
 const ROLE_LABELS: Record<string, string> = { ADMIN: "Admin", GURU: "Guru", ORANGTUA: "Orang Tua" };
@@ -19,6 +21,10 @@ export default function PenggunaClient({ users }: { users: any[] }) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"semua" | "aktif" | "nonaktif">("semua");
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [resetTarget, setResetTarget] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -33,6 +39,42 @@ export default function PenggunaClient({ users }: { users: any[] }) {
       );
     });
   }, [activeTab, search, statusFilter, users]);
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteUser(deleteTarget.id);
+      if (result.success) {
+        toast.success(result.message);
+        setDeleteTarget(null);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("Gagal menghapus pengguna. Silakan coba lagi.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  async function handleResetPassword(password: string) {
+    if (!resetTarget) return;
+    setIsResetting(true);
+    try {
+      const result = await resetPassword(resetTarget.id, password);
+      if (result.success) {
+        toast.success(result.message);
+        setResetTarget(null);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("Gagal mereset password. Silakan coba lagi.");
+    } finally {
+      setIsResetting(false);
+    }
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -149,15 +191,12 @@ export default function PenggunaClient({ users }: { users: any[] }) {
                       className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-2.5 py-1.5 rounded-lg transition-colors">
                       {user.status ? "Nonaktifkan" : "Aktifkan"}
                     </button>
-                    <button onClick={() => {
-                      const pw = prompt("Password baru (min 6 karakter):");
-                      if (pw) startTransition(() => resetPassword(user.id, pw).then((r) => setMessage({ type: r.success ? "success" : "error", text: r.message })));
-                    }} className="text-xs text-blue-500 hover:text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <button onClick={() => setResetTarget(user)}
+                      className="text-xs text-blue-500 hover:text-blue-600 border border-blue-200 px-2.5 py-1.5 rounded-lg transition-colors">
                       Reset PW
                     </button>
-                    <button onClick={() => {
-                      if (confirm("Hapus pengguna ini?")) startTransition(() => { void deleteUser(user.id); });
-                    }} className="text-xs text-red-500 hover:text-red-600 border border-red-200 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <button onClick={() => setDeleteTarget(user)}
+                      className="text-xs text-red-500 hover:text-red-600 border border-red-200 px-2.5 py-1.5 rounded-lg transition-colors">
                       Hapus
                     </button>
                   </div>
@@ -204,6 +243,23 @@ export default function PenggunaClient({ users }: { users: any[] }) {
           </div>
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => { if (!isDeleting) setDeleteTarget(null); }}
+        onConfirm={handleDelete}
+        title="Hapus Pengguna"
+        description={`Yakin ingin menghapus pengguna "${deleteTarget?.name ?? ""}" (${deleteTarget?.username ?? ""})? Tindakan ini tidak dapat dibatalkan.`}
+        isLoading={isDeleting}
+      />
+
+      <ResetPasswordDialog
+        isOpen={resetTarget !== null}
+        onClose={() => { if (!isResetting) setResetTarget(null); }}
+        onSubmit={handleResetPassword}
+        namaUser={resetTarget?.name ?? ""}
+        isLoading={isResetting}
+      />
     </div>
   );
 }

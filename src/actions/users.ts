@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -54,7 +54,20 @@ export async function deleteUser(id: string) {
   if (!session || session.user.role !== "ADMIN") {
     return { success: false, message: "Tidak diizinkan" };
   }
-  await prisma.user.delete({ where: { id } });
+  if (session.user.id === id) {
+    return { success: false, message: "Anda tidak dapat menghapus akun yang sedang digunakan" };
+  }
+  try {
+    await prisma.user.delete({ where: { id } });
+  } catch (e: any) {
+    if (e?.code === "P2003") {
+      return {
+        success: false,
+        message: "Pengguna tidak dapat dihapus karena masih memiliki data terkait. Gunakan 'Nonaktifkan' sebagai gantinya.",
+      };
+    }
+    return { success: false, message: "Gagal menghapus pengguna" };
+  }
   revalidatePath("/admin/pengguna");
   return { success: true, message: "Pengguna berhasil dihapus" };
 }
