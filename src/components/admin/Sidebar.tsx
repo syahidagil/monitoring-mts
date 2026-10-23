@@ -36,7 +36,6 @@ const MENUS: MenuItem[] = [
     children: [
       { label: "Sejarah",            href: "/admin/informasi/sejarah" },
       { label: "Visi Misi & Tujuan", href: "/admin/informasi/visi-misi" },
-      { label: "Fasilitas",          href: "/admin/informasi/fasilitas" },
       { label: "Kurikulum",          href: "/admin/informasi/kurikulum" },
     ],
   },

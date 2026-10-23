@@ -476,8 +476,6 @@ async function main() {
     { kategori: "berita" as KategoriInfo, judul: "Tim Futsal Raih Juara Regional", isi: "Tim futsal MTS Al-Amin Bintaro berhasil meraih juara pertama dalam kompetisi futsal antar SMP/MTs tingkat regional." },
     { kategori: "prestasi" as KategoriInfo, judul: "Juara 1 Olimpiade Matematika", isi: "Akademik|Tingkat Kota Tangerang Selatan|2025" },
     { kategori: "prestasi" as KategoriInfo, judul: "Juara 2 MTQ Tingkat Provinsi", isi: "Islami|Tingkat Provinsi Banten|2025" },
-    { kategori: "fasilitas" as KategoriInfo, judul: "Masjid Al-Amin", isi: "Masjid representatif berkapasitas 500 jamaah sebagai pusat kegiatan keagamaan sekolah" },
-    { kategori: "fasilitas" as KategoriInfo, judul: "Laboratorium Komputer", isi: "40 unit komputer modern dengan koneksi internet berkecepatan tinggi" },
     { kategori: "kurikulum" as KategoriInfo, judul: "Kurikulum Nasional", isi: "Matematika|IPA|Bahasa Indonesia|Bahasa Inggris|IPS|PKN|Seni Budaya" },
     { kategori: "kurikulum" as KategoriInfo, judul: "Kurikulum Keislaman", isi: "Tahfidz Al-Quran|Tahsin dan Tilawah|Fiqih|Akidah Akhlak|Bahasa Arab" },
     { kategori: "ekstrakurikuler" as KategoriInfo, judul: "Tahfidz Al-Quran", isi: "Senin & Rabu 14:00-16:00|Ustadz Ahmad Syafii|Membantu siswa menghafal Al-Quran" },

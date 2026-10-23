@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { usePathname } from "next/navigation";
 import { logoutAction } from "@/actions/auth.action";
 import { LogOut, Bell, User, ChevronRight } from "lucide-react";
@@ -16,7 +16,6 @@ const BREADCRUMBS: Record<string, Crumb[]> = {
   "/admin/tahun-pelajaran":             [{ label: "Tahun Pelajaran" }, { label: "Kelola Tahun Pelajaran" }],
   "/admin/informasi/sejarah":           [{ label: "Informasi Sekolah" }, { label: "Sejarah" }],
   "/admin/informasi/visi-misi":         [{ label: "Informasi Sekolah" }, { label: "Visi Misi & Tujuan" }],
-  "/admin/informasi/fasilitas":         [{ label: "Informasi Sekolah" }, { label: "Fasilitas" }],
   "/admin/informasi/kurikulum":         [{ label: "Informasi Sekolah" }, { label: "Kurikulum" }],
   "/admin/berita":                       [{ label: "Konten Website" }, { label: "Berita" }],
   "/admin/berita/tambah":               [{ label: "Konten Website" }, { label: "Berita", href: "/admin/berita" }, { label: "Tambah Berita" }],
