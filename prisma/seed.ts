@@ -36,7 +36,7 @@ async function main() {
   const tahunAjaranList = [];
   for (const ta of tahunAjaranData) {
     const result = await prisma.tahunAjaran.upsert({
-      where: { nama: ta.nama },
+      where: { nama_semester: { nama: ta.nama, semester: ta.semester } },
       update: { aktif: ta.aktif },
       create: ta,
     });

@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -33,13 +33,22 @@ export async function createTahunPelajaran(formData: FormData) {
   const count = await prisma.tahunAjaran.count();
   const aktif = count === 0;
 
-  await prisma.tahunAjaran.create({
-    data: {
-      nama: parsed.data.nama,
-      semester: parsed.data.semester as any,
-      aktif,
-    },
-  });
+  try {
+    await prisma.tahunAjaran.create({
+      data: {
+        nama: parsed.data.nama,
+        semester: parsed.data.semester as any,
+        aktif,
+      },
+    });
+  } catch (e: any) {
+    if (e?.code === "P2002")
+      return {
+        success: false,
+        message: `Tahun pelajaran ${parsed.data.nama} Semester ${parsed.data.semester} sudah ada`,
+      };
+    return { success: false, message: "Gagal menambahkan tahun pelajaran" };
+  }
 
   revalidatePath("/admin/tahun-pelajaran");
   return {
@@ -112,13 +121,22 @@ export async function updateTahunPelajaran(id: number, formData: FormData) {
       message: `Tahun pelajaran ${parsed.data.nama} Semester ${parsed.data.semester} sudah ada`,
     };
 
-  await prisma.tahunAjaran.update({
-    where: { id },
-    data: {
-      nama: parsed.data.nama,
-      semester: parsed.data.semester as any,
-    },
-  });
+  try {
+    await prisma.tahunAjaran.update({
+      where: { id },
+      data: {
+        nama: parsed.data.nama,
+        semester: parsed.data.semester as any,
+      },
+    });
+  } catch (e: any) {
+    if (e?.code === "P2002")
+      return {
+        success: false,
+        message: `Tahun pelajaran ${parsed.data.nama} Semester ${parsed.data.semester} sudah ada`,
+      };
+    return { success: false, message: "Gagal memperbarui tahun pelajaran" };
+  }
 
   revalidatePath("/admin/tahun-pelajaran");
   return { success: true, message: "Tahun pelajaran berhasil diperbarui" };

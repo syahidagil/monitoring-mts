@@ -40,13 +40,14 @@ model InformasiSekolah {
 
 model TahunAjaran {
   id        Int      @id @default(autoincrement())
-  nama      String   @unique @db.VarChar(20)
+  nama      String   @db.VarChar(20)
   semester  Semester
   aktif     Boolean  @default(false)
   createdAt DateTime @default(now())
   jadwal    Jadwal[]
   kelas     Kelas[]
 
+  @@unique([nama, semester])
   @@map("tahun_ajaran")
 }
 
