@@ -83,13 +83,14 @@ export default async function HafalanSiswaPage({
         <div className="grid lg:grid-cols-2 gap-6">
           <HafalanForm siswaId={siswa.id} siswaName={siswa.nama} />
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
+          <div className="relative">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col lg:absolute lg:inset-0">
+            <div className="px-5 py-4 border-b border-gray-100 shrink-0">
               <h3 className="text-sm font-bold text-gray-800">
                 Riwayat Hafalan ({hafalan.length})
               </h3>
             </div>
-            <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+            <div className="divide-y divide-gray-100 overflow-y-auto max-h-96 lg:max-h-none lg:flex-1 lg:min-h-0">
               {hafalan.length === 0 && (
                 <p className="text-center py-8 text-gray-400 text-sm">
                   Belum ada riwayat hafalan
@@ -127,7 +128,7 @@ export default async function HafalanSiswaPage({
               })}
             </div>
           </div>
-        </div>
+        </div></div>
       </div>
     </main>
   );
