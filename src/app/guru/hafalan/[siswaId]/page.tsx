@@ -41,6 +41,8 @@ export default async function HafalanSiswaPage({
     hafalan.map((h) => ({
       nomorSurat:  h.nomorSurat,
       ayatMulai:   h.ayatMulai,
+      id: h.id,
+      tanggal: h.tanggal,
       ayatSelesai: h.ayatSelesai,
       nilai:       h.nilai,
     }))

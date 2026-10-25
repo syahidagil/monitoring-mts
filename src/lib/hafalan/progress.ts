@@ -26,7 +26,16 @@ function ayatGlobal(nomorSurat: number, ayat: number): number {
   return OFFSET_AWAL_SURAT[nomorSurat] + ayat;
 }
 
+function waktu(t: Date | string): number {
+  const ms = new Date(t).getTime();
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
 export interface HafalanRecordMinimal {
+  /** Dipakai sebagai pembeda urutan untuk evaluasi yang tanggalnya sama. */
+  id: number;
+  /** Dipakai untuk mengurutkan evaluasi dari yang paling lama ke yang terbaru. */
+  tanggal: Date | string;
   nomorSurat: number | null;
   ayatMulai: number | null;
   ayatSelesai: number | null;
@@ -34,14 +43,14 @@ export interface HafalanRecordMinimal {
 }
 
 export interface ProgresHafalanResult {
-  /** Jumlah ayat unik yang sudah "berhasil" dihafal (lulus semua evaluasi, tanpa L-, tanpa dobel hitung rentang tumpang tindih). */
+  /** Jumlah ayat unik yang evaluasi terbarunya bernilai L (tanpa dobel hitung rentang tumpang tindih). */
   totalAyatBerhasil: number;
   totalAyatQuran: number;
   /** 0-100, dibulatkan 1 desimal. */
   persentase: number;
-  /** Jumlah rentang setoran (bukan ayat) yang dinyatakan sukses - buat konteks tambahan di UI. */
+  /** Jumlah rentang setoran (bukan ayat) yang seluruh ayatnya sudah dinyatakan berhasil. */
   jumlahRentangBerhasil: number;
-  /** Rentang yang sudah diinput tapi belum lolos kriteria sukses (masih ada L- di dalamnya, atau evaluasi belum lengkap). */
+  /** Rentang yang sudah diinput tapi masih ada ayat yang evaluasi terbarunya L-. */
   jumlahRentangBelumTuntas: number;
 }
 
@@ -49,14 +58,14 @@ export interface ProgresHafalanResult {
  * Hitung persentase ayat Al-Qur'an yang berhasil dihafal siswa.
  *
  * Aturan:
- * - Kelompokkan setoran per rentang (nomorSurat + ayatMulai + ayatSelesai) yang identik -
- *   ini mewakili beberapa kali evaluasi untuk rentang ayat yang sama (mis. setoran + murajaah).
- * - Rentang dihitung BERHASIL hanya jika SEMUA evaluasi pada rentang itu bernilai "L".
- *   Kalau ada satu saja "L_MIN" di rentang tsb, seluruh rentang itu tidak dihitung.
- * - Record lama yang belum punya nomorSurat/ayatMulai/ayatSelesai (sebelum migrasi field ini
- *   ditambahkan) otomatis diabaikan dari kalkulasi persentase - bukan dianggap gagal.
- * - Ayat dari rentang-rentang yang overlap di-dedup di level ayat individual (pakai Set),
- *   jadi tidak dihitung dobel.
+ * - Setiap setoran memberi nilai pada ayat-ayat dalam rentangnya.
+ * - Status sebuah ayat ditentukan oleh evaluasi TERBARU yang mencakup ayat itu
+ *   (urut menurut tanggal, lalu id untuk tanggal yang sama).
+ *   Jadi ayat yang sempat L- lalu diulang dan mendapat L ikut dihitung,
+ *   sedangkan ayat yang evaluasi terbarunya L- tidak dihitung sampai diulang dan lulus.
+ * - Ayat dari rentang yang overlap dihitung sekali saja (kunci ayat unik lintas surat).
+ * - Record lama yang belum punya nomorSurat/ayatMulai/ayatSelesai otomatis
+ *   diabaikan dari kalkulasi - bukan dianggap gagal.
  */
 export function hitungProgresHafalan(
   records: HafalanRecordMinimal[]
@@ -65,34 +74,48 @@ export function hitungProgresHafalan(
     (r) => r.nomorSurat != null && r.ayatMulai != null && r.ayatSelesai != null
   );
 
-  const groups = new Map<string, HafalanRecordMinimal[]>();
+  // Urutkan dari paling lama ke paling baru; tanggal sama -> id lebih kecil dulu.
+  const urut = [...valid].sort(
+    (a, b) => waktu(a.tanggal) - waktu(b.tanggal) || a.id - b.id
+  );
+
+  // Status akhir tiap ayat = nilai dari evaluasi terbaru yang mencakup ayat itu.
+  const statusAyat = new Map<number, "L" | "L_MIN">();
+  for (const r of urut) {
+    // Batasi ke jumlah ayat surat tsb, supaya data tak wajar tidak menggeser ke surat lain.
+    const akhir = Math.min(r.ayatSelesai!, JUMLAH_AYAT[r.nomorSurat!] ?? 0);
+    for (let a = r.ayatMulai!; a <= akhir; a++) {
+      statusAyat.set(ayatGlobal(r.nomorSurat!, a), r.nilai);
+    }
+  }
+
+  let totalAyatBerhasil = 0;
+  for (const status of statusAyat.values()) {
+    if (status === "L") totalAyatBerhasil += 1;
+  }
+
+  // Hitung jumlah rentang (nomorSurat + ayatMulai + ayatSelesai yang identik) untuk konteks UI.
+  const rentang = new Map<string, HafalanRecordMinimal>();
   for (const r of valid) {
     const key = `${r.nomorSurat}:${r.ayatMulai}:${r.ayatSelesai}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(r);
+    if (!rentang.has(key)) rentang.set(key, r);
   }
 
-  const ayatBerhasil = new Set<number>();
   let jumlahRentangBerhasil = 0;
   let jumlahRentangBelumTuntas = 0;
-
-  for (const group of groups.values()) {
-    const semuaLulus = group.every((r) => r.nilai === "L");
-    const { nomorSurat, ayatMulai, ayatSelesai } = group[0];
-
-    if (!semuaLulus) {
-      jumlahRentangBelumTuntas += 1;
-      continue;
+  for (const r of rentang.values()) {
+    const akhir = Math.min(r.ayatSelesai!, JUMLAH_AYAT[r.nomorSurat!] ?? 0);
+    let tuntas = true;
+    for (let a = r.ayatMulai!; a <= akhir; a++) {
+      if (statusAyat.get(ayatGlobal(r.nomorSurat!, a)) !== "L") {
+        tuntas = false;
+        break;
+      }
     }
-    jumlahRentangBerhasil += 1;
-    // Batasi ke jumlah ayat surat tsb, supaya data tak wajar tidak menggeser ke surat lain.
-    const akhir = Math.min(ayatSelesai!, JUMLAH_AYAT[nomorSurat!] ?? 0);
-    for (let a = ayatMulai!; a <= akhir; a++) {
-      ayatBerhasil.add(ayatGlobal(nomorSurat!, a));
-    }
+    if (tuntas) jumlahRentangBerhasil += 1;
+    else jumlahRentangBelumTuntas += 1;
   }
 
-  const totalAyatBerhasil = ayatBerhasil.size;
   const persentase = Math.round((totalAyatBerhasil / TOTAL_AYAT_QURAN) * 1000) / 10;
 
   return {

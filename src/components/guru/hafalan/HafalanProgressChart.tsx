@@ -48,12 +48,12 @@ export default function HafalanProgressChart({
             <span className="text-xs text-gray-500">/ {totalAyatQuran} ayat berhasil dihafal</span>
           </div>
           <p className="text-xs text-gray-400 leading-relaxed">
-            Dihitung dari rentang ayat yang <span className="font-medium text-gray-500">lulus (L) di semua evaluasi</span>.
-            Rentang yang pernah mendapat nilai L- tidak ikut dihitung.
+            Dihitung dari rentang ayat yang <span className="font-medium text-gray-500">lulus (L) pada evaluasi terbaru</span>.
+            Ayat yang evaluasi terbarunya L- tidak dihitung sampai diulang dan mendapat nilai L.
           </p>
           {jumlahRentangBelumTuntas > 0 && (
             <p className="text-xs text-amber-600">
-              {jumlahRentangBelumTuntas} rentang setoran belum dihitung karena pernah mendapat nilai L-.
+              {jumlahRentangBelumTuntas} rentang setoran belum dihitung karena evaluasi terbarunya masih L-.
             </p>
           )}
         </div>

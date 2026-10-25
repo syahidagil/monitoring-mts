@@ -42,6 +42,8 @@ export async function getHafalanAnak(opts: { siswaId?: number; tahunAjar?: strin
   const progres = hitungProgresHafalan(rows.map((r) => ({
     nomorSurat: r.nomorSurat,
     ayatMulai: r.ayatMulai,
+    id: r.id,
+    tanggal: r.tanggal,
     ayatSelesai: r.ayatSelesai,
     nilai: r.nilai,
   })));
