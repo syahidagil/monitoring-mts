@@ -1,9 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Edit, Trash2, KeyRound } from "lucide-react";
-import { deleteGuru, resetPasswordGuru } from "@/actions/guru.action";
+import { Edit, Trash2 } from "lucide-react";
+import { deleteGuru } from "@/actions/guru.action";
 import ConfirmDeleteDialog from "@/components/admin/shared/ConfirmDeleteDialog";
-import ConfirmDialog from "@/components/admin/shared/ConfirmDialog";
 import GuruMapelManager from "./GuruMapelManager";
 
 type Mapel = { kodeMapel: string; namaMapel: string };
@@ -11,23 +10,7 @@ type Mapel = { kodeMapel: string; namaMapel: string };
 export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]; allMapel?: Mapel[]; onEdit: (guru: any) => void }) {
   const [isPending, startTransition] = useTransition();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; nama: string } | null>(null);
-  const [resetTarget, setResetTarget] = useState<{ id: string; nama: string } | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  function handleReset(id: string, nama: string) {
-    setResetTarget({ id, nama });
-  }
-
-  function handleConfirmReset() {
-    if (!resetTarget) return;
-    const target = resetTarget;
-    startTransition(async () => {
-      const result = await resetPasswordGuru(target.id);
-      setMessage({ type: result.success ? "success" : "error", text: result.message });
-      setResetTarget(null);
-      setTimeout(() => setMessage(null), 4000);
-    });
-  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -114,10 +97,6 @@ export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]
                       <Edit className="w-3.5 h-3.5" /> Edit
                     </button>
                     <GuruMapelManager guruId={guru.id} guruNama={guru.user.name} guruMapel={guru.guruMapel ?? []} allMapel={allMapel} />
-                    <button onClick={() => handleReset(guru.id, guru.user.name)}
-                      className="flex items-center gap-1 text-xs text-yellow-600 border border-yellow-200 px-2 py-1.5 rounded-lg hover:bg-yellow-50 transition-colors">
-                      <KeyRound className="w-3.5 h-3.5" /> Reset PW
-                    </button>
                     <button onClick={() => setDeleteTarget({ id: guru.id, nama: guru.user.name })}
                       className="flex items-center gap-1 text-xs text-red-500 border border-red-200 px-2 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" /> Hapus
@@ -139,17 +118,6 @@ export default function GuruTable({ data, allMapel = [], onEdit }: { data: any[]
         onConfirm={handleDelete}
         title="Hapus Data Guru"
         description={`Apakah Anda yakin ingin menghapus data guru "${deleteTarget?.nama}"? Semua data terkait akan ikut terhapus.`}
-        isLoading={isPending}
-      />
-
-      <ConfirmDialog
-        isOpen={!!resetTarget}
-        onClose={() => { if (!isPending) setResetTarget(null); }}
-        onConfirm={handleConfirmReset}
-        title="Reset Password Guru"
-        description={`Reset password ${resetTarget?.nama ?? ""} ke "password123"?`}
-        confirmLabel="Ya, Reset"
-        loadingLabel="Mereset..."
         isLoading={isPending}
       />
     </>

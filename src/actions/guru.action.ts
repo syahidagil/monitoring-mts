@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -169,15 +169,6 @@ export async function deleteGuru(id: string) {
   return { success: true, message: "Guru berhasil dihapus" };
 }
 
-export async function resetPasswordGuru(id: string) {
-  const session = await auth();
-  if (!session || session.user.role !== "ADMIN")
-    return { success: false, message: "Tidak diizinkan" };
-
-  const hashed = await bcrypt.hash("password123", 12);
-  await prisma.user.update({ where: { id }, data: { password: hashed } });
-  return { success: true, message: "Password direset ke: password123" };
-}
 
 export async function assignGuruMapel(guruId: string, kodeMapel: string) {
   const session = await auth();
