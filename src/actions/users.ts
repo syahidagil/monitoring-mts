@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { deleteGuru } from "@/actions/guru.action";
+import { deleteOrangTua } from "@/actions/orangtua.action";
 
 const UserSchema = z.object({
   username: z.string().min(3, "Username minimal 3 karakter"),
@@ -57,17 +59,32 @@ export async function deleteUser(id: string) {
   if (session.user.id === id) {
     return { success: false, message: "Anda tidak dapat menghapus akun yang sedang digunakan" };
   }
-  try {
-    await prisma.user.delete({ where: { id } });
-  } catch (e: any) {
-    if (e?.code === "P2003") {
-      return {
-        success: false,
-        message: "Pengguna tidak dapat dihapus karena masih memiliki data terkait. Gunakan 'Nonaktifkan' sebagai gantinya.",
-      };
+
+  const user = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  if (!user) return { success: false, message: "Pengguna tidak ditemukan" };
+
+  // Guru dan wali punya profil di tabel lain; hapus lewat fungsi khususnya
+  // supaya profil dibersihkan lebih dulu dan pesan penolakannya jelas.
+  if (user.role === "GURU") {
+    const result = await deleteGuru(id);
+    if (!result.success) return { success: false, message: result.message };
+  } else if (user.role === "ORANGTUA") {
+    const result = await deleteOrangTua(id);
+    if (!result.success) return { success: false, message: result.message };
+  } else {
+    try {
+      await prisma.user.delete({ where: { id } });
+    } catch (e: any) {
+      if (e?.code === "P2003") {
+        return {
+          success: false,
+          message: "Pengguna tidak dapat dihapus karena masih memiliki data terkait. Gunakan 'Nonaktifkan' sebagai gantinya.",
+        };
+      }
+      return { success: false, message: "Gagal menghapus pengguna" };
     }
-    return { success: false, message: "Gagal menghapus pengguna" };
   }
+
   revalidatePath("/admin/pengguna");
   return { success: true, message: "Pengguna berhasil dihapus" };
 }

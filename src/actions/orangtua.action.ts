@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -155,5 +155,6 @@ export async function deleteOrangTua(id: string) {
   });
 
   revalidatePath("/admin/data-orangtua");
+  revalidatePath("/admin/pengguna");
   return { success: true, message: "Orang tua berhasil dihapus" };
 }

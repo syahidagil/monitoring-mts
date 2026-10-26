@@ -146,26 +146,54 @@ export async function deleteGuru(id: string) {
   const guru = await prisma.guru.findUnique({
     where: { id },
     include: {
-      _count: { select: { jadwal: true, nilaiDibuat: true, absensiDibuat: true, kelasWali: true } },
+      _count: {
+        select: {
+          jadwal: true,
+          nilaiDibuat: true,
+          absensiDibuat: true,
+          catatanUmumAbsensiDibuat: true,
+          sikapDibuat: true,
+          hafalanDibuat: true,
+          tahsinDibuat: true,
+          kelasWali: true,
+        },
+      },
     },
   });
   if (!guru) return { success: false, message: "Guru tidak ditemukan" };
-  if (guru._count.jadwal > 0)
-    return { success: false, message: "Guru masih memiliki jadwal mengajar. Hapus jadwal terlebih dahulu." };
-  if (guru._count.nilaiDibuat > 0)
-    return { success: false, message: "Guru masih memiliki data nilai siswa." };
-  if (guru._count.absensiDibuat > 0)
-    return { success: false, message: "Guru masih memiliki data absensi siswa." };
-  if (guru._count.kelasWali > 0)
-    return { success: false, message: "Guru masih menjadi wali kelas. Ganti wali kelas terlebih dahulu." };
 
-  await prisma.$transaction(async (tx) => {
-    await tx.guruMapel.deleteMany({ where: { idGuru: id } });
-    await tx.guru.delete({ where: { id } });
-    await tx.user.delete({ where: { id } });
-  });
+  const c = guru._count;
+  const saran = "Gunakan 'Nonaktifkan' sebagai gantinya.";
+  if (c.jadwal > 0)
+    return { success: false, message: `Guru masih memiliki ${c.jadwal} jadwal mengajar. Hapus jadwalnya terlebih dahulu. ${saran}` };
+  if (c.kelasWali > 0)
+    return { success: false, message: `Guru masih menjadi wali kelas. Ganti wali kelasnya terlebih dahulu. ${saran}` };
+  if (c.nilaiDibuat > 0)
+    return { success: false, message: `Guru masih memiliki ${c.nilaiDibuat} data nilai siswa. ${saran}` };
+  if (c.absensiDibuat > 0 || c.catatanUmumAbsensiDibuat > 0)
+    return { success: false, message: `Guru masih memiliki data absensi siswa. ${saran}` };
+  if (c.sikapDibuat > 0)
+    return { success: false, message: `Guru masih memiliki ${c.sikapDibuat} data penilaian sikap. ${saran}` };
+  if (c.hafalanDibuat > 0)
+    return { success: false, message: `Guru masih memiliki ${c.hafalanDibuat} data hafalan. ${saran}` };
+  if (c.tahsinDibuat > 0)
+    return { success: false, message: `Guru masih memiliki ${c.tahsinDibuat} data tahsin. ${saran}` };
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.guruMapel.deleteMany({ where: { idGuru: id } });
+      await tx.guru.delete({ where: { id } });
+      await tx.user.delete({ where: { id } });
+    });
+  } catch (e: any) {
+    if (e?.code === "P2003") {
+      return { success: false, message: `Guru masih memiliki data terkait. ${saran}` };
+    }
+    return { success: false, message: "Gagal menghapus guru" };
+  }
 
   revalidatePath("/admin/data-guru");
+  revalidatePath("/admin/pengguna");
   return { success: true, message: "Guru berhasil dihapus" };
 }
 
