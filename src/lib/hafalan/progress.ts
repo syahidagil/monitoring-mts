@@ -1,4 +1,4 @@
-import { DAFTAR_SURAT } from "@/lib/quran/surat";
+import { DAFTAR_SURAT, hitungJuz } from "@/lib/quran/surat";
 
 /** Total ayat Al-Qur'an (hitungan Kufah/Hafs, standar Kemenag RI) = 6.236 ayat. */
 export const TOTAL_AYAT_QURAN = DAFTAR_SURAT.reduce((sum, s) => sum + s.jumlahAyat, 0);
@@ -26,6 +26,23 @@ function ayatGlobal(nomorSurat: number, ayat: number): number {
   return OFFSET_AWAL_SURAT[nomorSurat] + ayat;
 }
 
+/** Jumlah ayat pada tiap juz (indeks 0 = juz 1), dihitung dari batas juz di surat.ts. */
+const AYAT_PER_JUZ: number[] = (() => {
+  const hasil: number[] = new Array(30).fill(0);
+  for (const s of DAFTAR_SURAT) {
+    for (let a = 1; a <= s.jumlahAyat; a++) {
+      const juz = hitungJuz(s.nomor, a);
+      if (juz) hasil[juz - 1] += 1;
+    }
+  }
+  return hasil;
+})();
+
+/** Jumlah ayat pada suatu juz (1-30); 0 jika nomor juz tidak valid. */
+export function totalAyatJuz(juz: number): number {
+  return AYAT_PER_JUZ[juz - 1] ?? 0;
+}
+
 function waktu(t: Date | string): number {
   const ms = new Date(t).getTime();
   return Number.isNaN(ms) ? 0 : ms;
@@ -42,28 +59,48 @@ export interface HafalanRecordMinimal {
   nilai: "L" | "L_MIN";
 }
 
+export interface ProgresJuz {
+  juz: number;
+  /** Ayat pada juz ini yang evaluasi terbarunya bernilai L. */
+  ayatBerhasil: number;
+  /** Jumlah seluruh ayat pada juz ini (pembagi persentase). */
+  totalAyat: number;
+  /** 0-100, dibulatkan 1 desimal: ayatBerhasil / totalAyat. */
+  persentase: number;
+  /** True jika pernah ada setoran yang menyentuh juz ini (apa pun nilainya). */
+  adaSetoran: boolean;
+}
+
 export interface ProgresHafalanResult {
   /** Jumlah ayat unik yang evaluasi terbarunya bernilai L (tanpa dobel hitung rentang tumpang tindih). */
   totalAyatBerhasil: number;
   totalAyatQuran: number;
-  /** 0-100, dibulatkan 1 desimal. */
+  /** Persentase terhadap SELURUH Al-Qur'an, 0-100, dibulatkan 1 desimal (ringkasan). */
   persentase: number;
   /** Jumlah rentang setoran (bukan ayat) yang seluruh ayatnya sudah dinyatakan berhasil. */
   jumlahRentangBerhasil: number;
   /** Rentang yang sudah diinput tapi masih ada ayat yang evaluasi terbarunya L-. */
   jumlahRentangBelumTuntas: number;
+  /** Progres tiap juz (30 entri, juz 1 sampai 30). */
+  perJuz: ProgresJuz[];
+  /** Juz dari setoran terbaru, untuk tampilan awal grafik; null jika belum ada setoran. */
+  juzAktif: number | null;
+  /** Jumlah juz yang seluruh ayatnya sudah berhasil (100%). */
+  jumlahJuzTuntas: number;
 }
 
 /**
- * Hitung persentase ayat Al-Qur'an yang berhasil dihafal siswa.
+ * Hitung progres hafalan siswa, total dan PER JUZ.
  *
  * Aturan:
- * - Setiap setoran memberi nilai pada ayat-ayat dalam rentangnya.
+ * - Setiap setoran memberi nilai pada ayat-ayat di rentangnya.
  * - Status sebuah ayat ditentukan oleh evaluasi TERBARU yang mencakup ayat itu
  *   (urut menurut tanggal, lalu id untuk tanggal yang sama).
  *   Jadi ayat yang sempat L- lalu diulang dan mendapat L ikut dihitung,
  *   sedangkan ayat yang evaluasi terbarunya L- tidak dihitung sampai diulang dan lulus.
  * - Ayat dari rentang yang overlap dihitung sekali saja (kunci ayat unik lintas surat).
+ * - Persentase per juz = ayat berhasil pada juz itu / jumlah ayat juz itu.
+ *   Rentang yang melewati batas juz otomatis terbagi ke juz masing-masing.
  * - Record lama yang belum punya nomorSurat/ayatMulai/ayatSelesai otomatis
  *   diabaikan dari kalkulasi - bukan dianggap gagal.
  */
@@ -80,19 +117,44 @@ export function hitungProgresHafalan(
   );
 
   // Status akhir tiap ayat = nilai dari evaluasi terbaru yang mencakup ayat itu.
-  const statusAyat = new Map<number, "L" | "L_MIN">();
+  const statusAyat = new Map<number, { nilai: "L" | "L_MIN"; juz: number }>();
+  const juzTersentuh = new Set<number>();
   for (const r of urut) {
     // Batasi ke jumlah ayat surat tsb, supaya data tak wajar tidak menggeser ke surat lain.
     const akhir = Math.min(r.ayatSelesai!, JUMLAH_AYAT[r.nomorSurat!] ?? 0);
     for (let a = r.ayatMulai!; a <= akhir; a++) {
-      statusAyat.set(ayatGlobal(r.nomorSurat!, a), r.nilai);
+      const juz = hitungJuz(r.nomorSurat!, a);
+      if (!juz) continue;
+      statusAyat.set(ayatGlobal(r.nomorSurat!, a), { nilai: r.nilai, juz });
+      juzTersentuh.add(juz);
     }
   }
 
+  const berhasilPerJuz: number[] = new Array(30).fill(0);
   let totalAyatBerhasil = 0;
-  for (const status of statusAyat.values()) {
-    if (status === "L") totalAyatBerhasil += 1;
+  for (const s of statusAyat.values()) {
+    if (s.nilai === "L") {
+      berhasilPerJuz[s.juz - 1] += 1;
+      totalAyatBerhasil += 1;
+    }
   }
+
+  const perJuz: ProgresJuz[] = AYAT_PER_JUZ.map((total, i) => ({
+    juz: i + 1,
+    ayatBerhasil: berhasilPerJuz[i],
+    totalAyat: total,
+    persentase: total > 0 ? Math.round((berhasilPerJuz[i] / total) * 1000) / 10 : 0,
+    adaSetoran: juzTersentuh.has(i + 1),
+  }));
+
+  const jumlahJuzTuntas = perJuz.filter(
+    (j) => j.totalAyat > 0 && j.ayatBerhasil === j.totalAyat
+  ).length;
+
+  const terakhir = urut.length > 0 ? urut[urut.length - 1] : null;
+  const juzAktif = terakhir
+    ? hitungJuz(terakhir.nomorSurat!, terakhir.ayatMulai!)
+    : null;
 
   // Hitung jumlah rentang (nomorSurat + ayatMulai + ayatSelesai yang identik) untuk konteks UI.
   const rentang = new Map<string, HafalanRecordMinimal>();
@@ -107,7 +169,7 @@ export function hitungProgresHafalan(
     const akhir = Math.min(r.ayatSelesai!, JUMLAH_AYAT[r.nomorSurat!] ?? 0);
     let tuntas = true;
     for (let a = r.ayatMulai!; a <= akhir; a++) {
-      if (statusAyat.get(ayatGlobal(r.nomorSurat!, a)) !== "L") {
+      if (statusAyat.get(ayatGlobal(r.nomorSurat!, a))?.nilai !== "L") {
         tuntas = false;
         break;
       }
@@ -124,5 +186,8 @@ export function hitungProgresHafalan(
     persentase,
     jumlahRentangBerhasil,
     jumlahRentangBelumTuntas,
+    perJuz,
+    juzAktif,
+    jumlahJuzTuntas,
   };
 }
