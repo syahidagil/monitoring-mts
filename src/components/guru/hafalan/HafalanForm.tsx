@@ -2,13 +2,16 @@
 
 import { useState, useTransition, useRef } from "react";
 import { createHafalan } from "@/actions/guru/hafalan.action";
-import { DAFTAR_SURAT, SURAT_BY_NOMOR, hitungJuz } from "@/lib/quran/surat";
+import { SURAT_BY_NOMOR } from "@/lib/quran/surat";
+import { daftarSuratDiJuz, rentangAyatDiJuz } from "@/lib/quran/juz";
 import { Save, CheckCircle, AlertCircle } from "lucide-react";
 
 const NILAI_OPTIONS = [
   { value: "L",     label: "L \u2014 Lancar",            color: "bg-green-100 text-green-700" },
   { value: "L_MIN", label: "L- \u2014 Lancar (catatan)", color: "bg-amber-100 text-amber-700" },
 ];
+
+const DAFTAR_JUZ = Array.from({ length: 30 }, (_, i) => i + 1);
 
 export default function HafalanForm({
   siswaId,
@@ -22,7 +25,8 @@ export default function HafalanForm({
   const [error, setError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  // State untuk menghitung juz otomatis dari surat + ayat mulai/selesai
+  // Guru memilih juz dulu, lalu surat yang ada di juz itu
+  const [juz, setJuz] = useState<number>(0);
   const [nomorSurat, setNomorSurat] = useState<number>(0);
   const [ayatMulai, setAyatMulai] = useState<number>(0);
   const [ayatSelesai, setAyatSelesai] = useState<number>(0);
@@ -30,24 +34,50 @@ export default function HafalanForm({
   const [nilai, setNilai] = useState<string>("");
   const [keterangan, setKeterangan] = useState<string>("");
 
+  const daftarSurat = juz ? daftarSuratDiJuz(juz) : [];
   const suratTerpilih = nomorSurat ? SURAT_BY_NOMOR[nomorSurat] : undefined;
-  const juzOtomatis = nomorSurat && ayatMulai ? hitungJuz(nomorSurat, ayatMulai) : null;
+  const rentang = juz && nomorSurat ? rentangAyatDiJuz(juz, nomorSurat) : null;
+  const suratSebagian = daftarSurat.find((s) => s.nomor === nomorSurat)?.sebagian ?? false;
+
+  function handleJuzChange(value: string) {
+    setJuz(Number(value));
+    // Surat dan ayat harus dipilih ulang karena daftar surat berbeda per juz
+    setNomorSurat(0);
+    setAyatMulai(0);
+    setAyatSelesai(0);
+  }
+
+  function handleSuratChange(value: string) {
+    const no = Number(value);
+    setNomorSurat(no);
+    const batas = no ? rentangAyatDiJuz(juz, no) : null;
+    setAyatMulai(batas ? batas.mulai : 0);
+    setAyatSelesai(batas ? batas.mulai : 0);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!suratTerpilih) {
+    if (!juz) {
+      setError("Silakan pilih juz terlebih dahulu");
+      return;
+    }
+    if (!suratTerpilih || !rentang) {
       setError("Silakan pilih surat terlebih dahulu");
       return;
     }
-    if (!juzOtomatis || !ayatMulai || !ayatSelesai) {
+    if (!ayatMulai || !ayatSelesai) {
       setError("Isi rentang ayat (ayat mulai dan ayat selesai)");
       return;
     }
     if (ayatSelesai < ayatMulai) {
       setError("Ayat selesai tidak boleh lebih kecil dari ayat mulai");
+      return;
+    }
+    if (ayatMulai < rentang.mulai || ayatSelesai > rentang.selesai) {
+      setError(`Pada Juz ${juz}, ${suratTerpilih.namaLatin} memuat ayat ${rentang.mulai}-${rentang.selesai}`);
       return;
     }
 
@@ -57,7 +87,7 @@ export default function HafalanForm({
     const fd = new FormData(e.currentTarget);
     fd.set("siswaId", String(siswaId));
     fd.set("surat", namaSuratLengkap);
-    fd.set("juz", String(juzOtomatis));
+    fd.set("juz", String(juz));
     fd.set("ayatMulai", String(ayatMulai));
     fd.set("ayatSelesai", String(ayatSelesai));
 
@@ -65,6 +95,7 @@ export default function HafalanForm({
       const result = await createHafalan(fd);
       if (result.success) {
         setSuccess(result.message);
+        // Juz sengaja dibiarkan terpilih: guru biasanya lanjut menyetor di juz yang sama
         setNomorSurat(0);
         setAyatMulai(0);
         setAyatSelesai(0);
@@ -105,7 +136,28 @@ export default function HafalanForm({
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Surat: dropdown 114 surat dari surat.ts */}
+        {/* Juz: dipilih guru */}
+        <div className="col-span-2">
+          <label className={labelClass}>
+            Juz <span className="text-red-500">*</span>
+          </label>
+          <input type="hidden" name="juz" value={juz || ""} />
+          <select
+            required
+            value={juz || ""}
+            onChange={(e) => handleJuzChange(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Pilih Juz</option>
+            {DAFTAR_JUZ.map((j) => (
+              <option key={j} value={j}>
+                Juz {j}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Surat: hanya surat yang ada di juz terpilih */}
         <div className="col-span-2">
           <label className={labelClass}>
             Surat <span className="text-red-500">*</span>
@@ -113,34 +165,35 @@ export default function HafalanForm({
           <input type="hidden" name="nomorSurat" value={nomorSurat || ""} />
           <select
             required
+            disabled={!juz}
             value={nomorSurat || ""}
-            onChange={(e) => {
-              const no = Number(e.target.value);
-              setNomorSurat(no);
-              setAyatMulai(1);
-              setAyatSelesai(1);
-            }}
+            onChange={(e) => handleSuratChange(e.target.value)}
             className={inputClass}
           >
-            <option value="">Pilih Surat</option>
-            {DAFTAR_SURAT.map((s) => (
+            <option value="">{juz ? "Pilih Surat" : "Pilih juz terlebih dahulu"}</option>
+            {daftarSurat.map((s) => (
               <option key={s.nomor} value={s.nomor}>
-                {s.nomor}. {s.namaLatin} ({s.jumlahAyat} ayat)
+                {s.nomor}. {s.namaLatin} (
+                {s.sebagian
+                  ? `ayat ${s.ayatMulai}-${s.ayatSelesai} dari ${s.jumlahAyat}`
+                  : `${s.jumlahAyat} ayat`}
+                )
               </option>
             ))}
           </select>
         </div>
 
-        {/* Rentang Ayat: Ayat Mulai & Ayat Selesai */}
+        {/* Rentang Ayat: Ayat Mulai & Ayat Selesai (dibatasi pada juz terpilih) */}
         <div>
           <label className={labelClass}>
             Ayat Mulai <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
-            min={1}
-            max={suratTerpilih?.jumlahAyat ?? 286}
+            min={rentang?.mulai ?? 1}
+            max={rentang?.selesai ?? 286}
             required
+            disabled={!rentang}
             value={ayatMulai || ""}
             onChange={(e) => {
               const val = Number(e.target.value);
@@ -150,7 +203,7 @@ export default function HafalanForm({
               }
             }}
             className={inputClass}
-            placeholder="mis. 1"
+            placeholder={rentang ? `mis. ${rentang.mulai}` : "mis. 1"}
           />
         </div>
 
@@ -160,33 +213,29 @@ export default function HafalanForm({
           </label>
           <input
             type="number"
-            min={ayatMulai || 1}
-            max={suratTerpilih?.jumlahAyat ?? 286}
+            min={ayatMulai || rentang?.mulai || 1}
+            max={rentang?.selesai ?? 286}
             required
+            disabled={!rentang}
             value={ayatSelesai || ""}
             onChange={(e) => setAyatSelesai(Number(e.target.value))}
             className={inputClass}
-            placeholder="mis. 10"
+            placeholder={rentang ? `maks ${rentang.selesai}` : "mis. 10"}
           />
-          {suratTerpilih && (
-            <p className="text-xs text-gray-400 mt-1">
-              Maks {suratTerpilih.jumlahAyat} ayat
-            </p>
-          )}
         </div>
 
-        {/* Juz otomatis (read-only) */}
-        <div className="col-span-2">
-          <label className={labelClass}>Juz (otomatis)</label>
-          <input type="hidden" name="juz" value={juzOtomatis ?? ""} />
-          <div
-            className={`${inputClass} flex items-center ${
-              juzOtomatis ? "text-gray-900" : "text-gray-400"
-            }`}
-          >
-            {juzOtomatis ? `Juz ${juzOtomatis}` : "otomatis dari surat + ayat mulai"}
+        {rentang && (
+          <div className="col-span-2 -mt-2">
+            <p className="text-xs text-gray-500">
+              Pada Juz {juz}, {suratTerpilih?.namaLatin} memuat ayat {rentang.mulai}-{rentang.selesai}.
+            </p>
+            {suratSebagian && (
+              <p className="text-xs text-amber-600 mt-0.5">
+                Surat ini berlanjut ke juz lain. Setoran yang melewati batas juz dicatat sebagai dua setoran.
+              </p>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Halaman mushaf */}
         <div>

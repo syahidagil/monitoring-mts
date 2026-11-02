@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { hafalanSchema } from "@/lib/validations/guru/hafalan.validation";
+import { rentangAyatDiJuz } from "@/lib/quran/juz";
 import { Hari } from "@prisma/client";
 
 async function getGuruId() {
@@ -41,6 +42,17 @@ export async function createHafalan(formData: FormData) {
     return { success: false, message: parsed.error.issues[0].message };
   }
 
+  // Rentang ayat harus berada di dalam juz yang dipilih guru
+  const rentangJuz = rentangAyatDiJuz(parsed.data.juz, parsed.data.nomorSurat);
+  if (!rentangJuz) {
+    return { success: false, message: `Surat ini tidak berada pada Juz ${parsed.data.juz}` };
+  }
+  if (parsed.data.ayatMulai < rentangJuz.mulai || parsed.data.ayatSelesai > rentangJuz.selesai) {
+    return {
+      success: false,
+      message: `Pada Juz ${parsed.data.juz}, surat ini memuat ayat ${rentangJuz.mulai}-${rentangJuz.selesai}. Setoran yang melewati batas juz dicatat sebagai dua setoran.`,
+    };
+  }
   const tanggal = new Date();
   await prisma.hafalan.create({
     data: {
