@@ -1,10 +1,20 @@
-﻿"use client";
-import { useState, useTransition, useCallback } from "react";
+"use client";
+import { Fragment, useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createJadwal, updateJadwal, getGuruByMapel } from "@/actions/jadwal.action";
 import { Save, Clock, AlertCircle, CheckCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import {
+  cariJpMulai,
+  hitungJumlahJp,
+  jamPelajaranHari,
+  jamSelesaiDari,
+  labelDurasi,
+  labelJp,
+  maksJumlahJp,
+  ringkasanHari,
+} from "@/lib/jadwal/jamPelajaran";
 
 const HARI_OPTIONS = [
   { value: "SENIN",   label: "Senin" },
@@ -42,6 +52,57 @@ export default function JadwalForm({
   const [selectedGuruId, setSelectedGuruId] = useState(defaultValues?.guruId ?? "");
   const [isFilteringGuru, setIsFilteringGuru] = useState(false);
 
+  // Hari menentukan tabel jam pelajaran yang tampil
+  const [hari, setHari] = useState<string>(defaultValues?.hari ?? "");
+  const tabelJp = jamPelajaranHari(hari);
+
+  // Jam pelajaran: dipilih dari dropdown (JP mulai + lama pelajaran)
+  const awalJp =
+    defaultValues?.hari && defaultValues?.jamMulai
+      ? cariJpMulai(defaultValues.hari, defaultValues.jamMulai)
+      : undefined;
+  const awalJumlah =
+    defaultValues?.hari && defaultValues?.jamMulai && defaultValues?.jamSelesai
+      ? hitungJumlahJp(defaultValues.hari, defaultValues.jamMulai, defaultValues.jamSelesai)
+      : null;
+  // Data lama yang jamnya tidak sesuai tabel jam pelajaran: admin harus memilih ulang
+  const jamLama =
+    !!defaultValues?.jamMulai &&
+    (!awalJp || !awalJumlah || awalJumlah > maksJumlahJp(defaultValues.hari, awalJp.ke));
+
+  const [jpMulai, setJpMulai] = useState<number | "">(!jamLama && awalJp ? awalJp.ke : "");
+  const [jumlahJp, setJumlahJp] = useState<number>(!jamLama && awalJumlah ? awalJumlah : 1);
+
+  const jpTerpilih = jpMulai === "" ? undefined : tabelJp[jpMulai - 1];
+  const jamMulaiValue = jpTerpilih ? jpTerpilih.mulai : "";
+  const jamSelesaiValue =
+    jpMulai === "" || !jpTerpilih ? "" : (jamSelesaiDari(hari, jpMulai, jumlahJp) ?? "");
+  const maksJp = jpMulai === "" || !jpTerpilih ? 1 : maksJumlahJp(hari, jpMulai);
+
+  function handleHariChange(value: string) {
+    setHari(value);
+    if (jpMulai === "") return;
+    const tabelBaru = jamPelajaranHari(value);
+    if (jpMulai > tabelBaru.length) {
+      // JP ini tidak ada pada hari yang baru (mis. JP ke-8 di hari Jumat)
+      setJpMulai("");
+      setJumlahJp(1);
+    } else {
+      setJumlahJp((j) => Math.min(j, maksJumlahJp(value, jpMulai)));
+    }
+  }
+
+  function handleJpMulaiChange(value: string) {
+    if (value === "") {
+      setJpMulai("");
+      setJumlahJp(1);
+      return;
+    }
+    const ke = Number(value);
+    setJpMulai(ke);
+    setJumlahJp((j) => Math.min(j, maksJumlahJp(hari, ke)));
+  }
+
   // Default tahun ajaran aktif
   const defaultTaId = tahunAjaran.find((ta) => ta.aktif)?.id ?? tahunAjaran[0]?.id ?? "";
 
@@ -67,7 +128,8 @@ export default function JadwalForm({
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(""); setSuccess(""); setWarning("");
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     startTransition(async () => {
       const result = isEdit && jadwalId
         ? await updateJadwal(jadwalId, fd)
@@ -79,8 +141,14 @@ export default function JadwalForm({
           onSuccess();
         } else {
           setSuccess("Jadwal berhasil disimpan!");
-          if (isEdit) setTimeout(() => router.push("/admin/jadwal"), 1200);
-          else (e.target as HTMLFormElement).reset();
+          if (isEdit) {
+            setTimeout(() => router.push("/admin/jadwal"), 1200);
+          } else {
+            form.reset();
+            setHari("");
+            setJpMulai("");
+            setJumlahJp(1);
+          }
         }
       } else {
         setError(result.message);
@@ -119,11 +187,17 @@ export default function JadwalForm({
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          {/* ── Baris 1 ── */}
+          {/* -- Baris 1 -- */}
           {/* Hari */}
           <div>
             <label className={labelClass}>Hari <span className="text-red-500">*</span></label>
-            <select name="hari" defaultValue={defaultValues?.hari ?? ""} required className={inputClass}>
+            <select
+              name="hari"
+              value={hari}
+              onChange={(e) => handleHariChange(e.target.value)}
+              required
+              className={inputClass}
+            >
               <option value="">Pilih Hari</option>
               {HARI_OPTIONS.map((h) => (
                 <option key={h.value} value={h.value}>{h.label}</option>
@@ -148,39 +222,73 @@ export default function JadwalForm({
             </select>
           </div>
 
-          {/* ── Baris 2 ── */}
-          {/* Jam (Mulai + Selesai dalam 1 kolom) */}
+          {/* -- Baris 2 -- */}
+          {/* Jam pelajaran (dropdown, mengikuti hari) */}
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>Jam Mulai <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <input
-                  name="jamMulai"
-                  type="time"
-                  defaultValue={defaultValues?.jamMulai ?? "07:30"}
-                  required
-                  min="07:00"
-                  max="16:00"
-                  className={`${inputClass} pr-10`}
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+              <label className={labelClass}>Jam Pelajaran Mulai <span className="text-red-500">*</span></label>
+              <select
+                value={jpMulai === "" ? "" : String(jpMulai)}
+                onChange={(e) => handleJpMulaiChange(e.target.value)}
+                disabled={hari === ""}
+                required
+                className={inputClass}
+              >
+                <option value="">
+                  {hari === "" ? "Pilih hari terlebih dahulu" : "Pilih jam pelajaran"}
+                </option>
+                {tabelJp.map((jp, i) => {
+                  const sebelumnya = tabelJp[i - 1];
+                  const adaIstirahat = !!sebelumnya && sebelumnya.selesai !== jp.mulai;
+                  return (
+                    <Fragment key={jp.ke}>
+                      {adaIstirahat && (
+                        <option disabled>
+                          {`-- Istirahat ${sebelumnya.selesai} - ${jp.mulai} --`}
+                        </option>
+                      )}
+                      <option value={jp.ke}>{labelJp(jp)}</option>
+                    </Fragment>
+                  );
+                })}
+              </select>
             </div>
+
             <div>
-              <label className={labelClass}>Jam Selesai <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <input
-                  name="jamSelesai"
-                  type="time"
-                  defaultValue={defaultValues?.jamSelesai ?? "09:00"}
-                  required
-                  min="07:00"
-                  max="16:00"
-                  className={`${inputClass} pr-10`}
-                />
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+              <label className={labelClass}>Lama Pelajaran <span className="text-red-500">*</span></label>
+              <select
+                value={String(jumlahJp)}
+                onChange={(e) => setJumlahJp(Number(e.target.value))}
+                disabled={jpMulai === ""}
+                className={inputClass}
+              >
+                {Array.from({ length: maksJp }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{labelDurasi(n)}</option>
+                ))}
+              </select>
             </div>
+
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              {jpMulai === "" || !jpTerpilih
+                ? "Pilih hari dan jam pelajaran mulai"
+                : `Berlangsung ${jamMulaiValue} - ${jamSelesaiValue}`}
+            </div>
+
+            {hari !== "" && (
+              <p className="text-xs text-gray-400 leading-relaxed">{ringkasanHari(hari)}</p>
+            )}
+
+            {jamLama && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Jam pada jadwal ini ({defaultValues?.jamMulai} - {defaultValues?.jamSelesai}) tidak sesuai
+                dengan jam pelajaran hari tersebut. Pilih ulang jam pelajaran sebelum menyimpan.
+              </p>
+            )}
+
+            {/* Nilai yang dikirim ke server */}
+            <input type="hidden" name="jamMulai" value={jamMulaiValue} />
+            <input type="hidden" name="jamSelesai" value={jamSelesaiValue} />
           </div>
 
           {/* Guru Pengampu */}
@@ -211,7 +319,7 @@ export default function JadwalForm({
             )}
           </div>
 
-          {/* ── Baris 3 ── */}
+          {/* -- Baris 3 -- */}
           {/* Kelas */}
           <div>
             <label className={labelClass}>Kelas <span className="text-red-500">*</span></label>

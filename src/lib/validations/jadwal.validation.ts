@@ -1,4 +1,5 @@
-﻿import { z } from "zod";
+import { z } from "zod";
+import { validasiRentangJam } from "@/lib/jadwal/jamPelajaran";
 
 export const jadwalSchema = z
   .object({
@@ -16,17 +17,13 @@ export const jadwalSchema = z
     kelasId: z.coerce.number().positive("Pilih kelas"),
     tahunAjaranId: z.coerce.number().positive("Pilih semester/tahun ajaran"),
   })
-  .refine((d) => d.jamMulai < d.jamSelesai, {
-    message: "Jam mulai harus lebih awal dari jam selesai",
-    path: ["jamSelesai"],
-  })
-  .refine((d) => d.jamMulai >= "07:00" && d.jamMulai <= "16:00", {
-    message: "Jam mulai harus dalam range 07:00 - 16:00",
-    path: ["jamMulai"],
-  })
-  .refine((d) => d.jamSelesai >= "07:00" && d.jamSelesai <= "16:00", {
-    message: "Jam selesai harus dalam range 07:00 - 16:00",
-    path: ["jamSelesai"],
+  .superRefine((d, ctx) => {
+    // Jam harus sesuai tabel jam pelajaran pada hari tersebut
+    // (lihat src/lib/jadwal/jamPelajaran.ts)
+    const kesalahan = validasiRentangJam(d.hari, d.jamMulai, d.jamSelesai);
+    if (kesalahan) {
+      ctx.addIssue({ code: "custom", message: kesalahan.message, path: [kesalahan.field] });
+    }
   });
 
 export type JadwalFormValues = z.infer<typeof jadwalSchema>;

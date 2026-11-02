@@ -80,14 +80,14 @@ describe("validasi form data", () => {
     const data = {
       hari: "SENIN",
       kodeMapel: "IPA",
-      jamMulai: "08:00",
-      jamSelesai: "09:00",
+      jamMulai: "07:30",
+      jamSelesai: "08:10",
       guruId: "guru-1",
       kelasId: "1",
       tahunAjaranId: "1",
     };
 
     expect(jadwalSchema.safeParse(data).success).toBe(true);
-    expect(jadwalSchema.safeParse({ ...data, jamMulai: "09:00", jamSelesai: "08:00" }).success).toBe(false);
+    expect(jadwalSchema.safeParse({ ...data, jamMulai: "09:30", jamSelesai: "08:10" }).success).toBe(false);
   });
 });

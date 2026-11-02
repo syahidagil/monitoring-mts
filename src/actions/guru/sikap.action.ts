@@ -21,7 +21,7 @@ async function kelasIdsGuru(guruId: string) {
   return jadwal.map((j) => j.kelasId);
 }
 
-/** Data lengkap HALAMAN DAFTAR sikap: profil guru, statistik bulan ini, kelas, riwayat. */
+//Data lengkap HALAMAN DAFTAR sikap: profil guru, statistik bulan ini, kelas, riwayat
 export async function getDataHalamanSikap() {
   const session = await auth();
   if (!session || session.user.role !== "GURU") return null;

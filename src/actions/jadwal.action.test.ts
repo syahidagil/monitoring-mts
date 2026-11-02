@@ -35,8 +35,8 @@ function jadwalForm(overrides: Record<string, string> = {}) {
   Object.entries({
     hari: "SENIN",
     kodeMapel: "IPA",
-    jamMulai: "08:00",
-    jamSelesai: "09:00",
+    jamMulai: "07:30",
+    jamSelesai: "08:10",
     guruId: "guru-1",
     kelasId: "2",
     tahunAjaranId: "3",
@@ -55,7 +55,7 @@ describe("kelola jadwal pelajaran (US-08)", () => {
   });
 
   it("menolak jadwal dengan jam mulai yang tidak lebih awal dari jam selesai", async () => {
-    const result = await createJadwal(jadwalForm({ jamMulai: "09:00", jamSelesai: "08:00" }));
+    const result = await createJadwal(jadwalForm({ jamMulai: "09:30", jamSelesai: "08:10" }));
 
     expect(result.success).toBe(false);
     expect(mocks.jadwalFindFirst).not.toHaveBeenCalled();
@@ -104,8 +104,8 @@ describe("kelola jadwal pelajaran (US-08)", () => {
       data: {
         hari: "SENIN",
         kodeMapel: "IPA",
-        jamMulai: "08:00",
-        jamSelesai: "09:00",
+        jamMulai: "07:30",
+        jamSelesai: "08:10",
         guruId: "guru-1",
         kelasId: 2,
         tahunAjaranId: 3,
@@ -118,8 +118,8 @@ describe("kelola jadwal pelajaran (US-08)", () => {
   it("mencegah perubahan hari atau waktu jika jadwal sudah memiliki absensi", async () => {
     mocks.jadwalFindUnique.mockResolvedValue({
       hari: "SENIN",
-      jamMulai: "08:00",
-      jamSelesai: "09:00",
+      jamMulai: "07:30",
+      jamSelesai: "08:10",
       kelasId: 2,
     });
     mocks.absensiCount.mockResolvedValue(2);
