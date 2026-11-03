@@ -24,12 +24,34 @@ const anakFixture = {
   kelas: { id: 2, nama: "VIII A", tahunAjaran: { id: 3, nama: "2026/2027", semester: "GANJIL" } },
 };
 
+function baris(
+  id: number,
+  tanggal: Date,
+  status: "HADIR" | "SAKIT" | "IZIN" | "ALPA",
+  kodeMapel: string,
+  namaMapel: string,
+  keterangan: string | null = null
+) {
+  return {
+    id,
+    tanggal,
+    status,
+    keterangan,
+    jadwal: { kodeMapel, mataPelajaran: { namaMapel } },
+  };
+}
+
 describe("monitoring absensi anak (US-16)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.resolveAnak.mockResolvedValue(anakFixture);
     mocks.tahunAjaranFindMany.mockResolvedValue([
       { id: 3, nama: "2026/2027", semester: "GANJIL", aktif: true },
+    ]);
+    mocks.absensiFindMany.mockResolvedValue([
+      baris(1, new Date(2026, 9, 1), "HADIR", "MTK", "Matematika"),
+      baris(2, new Date(2026, 9, 2), "SAKIT", "MTK", "Matematika", "Demam"),
+      baris(3, new Date(2026, 8, 30), "ALPA", "IPA", "IPA"),
     ]);
   });
 
@@ -43,12 +65,6 @@ describe("monitoring absensi anak (US-16)", () => {
   });
 
   it("menghitung status absensi dan persentase hadir untuk bulan terpilih", async () => {
-    mocks.absensiFindMany.mockResolvedValue([
-      { id: 1, tanggal: new Date(2026, 9, 1), status: "HADIR", keterangan: null, jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
-      { id: 2, tanggal: new Date(2026, 9, 2), status: "SAKIT", keterangan: "Demam", jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
-      { id: 3, tanggal: new Date(2026, 8, 30), status: "ALPA", keterangan: null, jadwal: { guruId: "guru-2", guru: { user: { name: "Bu B" } }, mataPelajaran: { namaMapel: "IPS" } } },
-    ]);
-
     const result = await getAbsensiAnak({ siswaId: 10, bulan: 10 });
 
     expect(mocks.absensiFindMany).toHaveBeenCalledWith(expect.objectContaining({
@@ -61,22 +77,38 @@ describe("monitoring absensi anak (US-16)", () => {
     expect(result?.persentase).toBe(50);
     expect(result?.rows).toHaveLength(2);
     expect(result?.rows[1].keterangan).toBe("Demam");
-    expect(result?.guruList).toEqual([
-      { id: "guru-1", nama: "Pak A" },
-      { id: "guru-2", nama: "Bu B" },
+  });
+
+  it("daftar mata pelajaran berisi semua mapel pada semester itu, terurut menurut nama", async () => {
+    const result = await getAbsensiAnak({ siswaId: 10, bulan: 10 });
+
+    expect(result?.mapelList).toEqual([
+      { kodeMapel: "IPA", nama: "IPA" },
+      { kodeMapel: "MTK", nama: "Matematika" },
     ]);
   });
 
-  it("membatasi grafik absensi ke guru yang dipilih", async () => {
-    mocks.absensiFindMany.mockResolvedValue([
-      { id: 1, tanggal: new Date(2026, 9, 1), status: "HADIR", keterangan: null, jadwal: { guruId: "guru-1", guru: { user: { name: "Pak A" } }, mataPelajaran: { namaMapel: "IPA" } } },
-      { id: 2, tanggal: new Date(2026, 9, 2), status: "SAKIT", keterangan: null, jadwal: { guruId: "guru-2", guru: { user: { name: "Bu B" } }, mataPelajaran: { namaMapel: "IPS" } } },
-    ]);
+  it("membatasi data ke mata pelajaran yang dipilih", async () => {
+    const result = await getAbsensiAnak({ siswaId: 10, bulan: 0, kodeMapel: "IPA" });
 
-    const result = await getAbsensiAnak({ siswaId: 10, bulan: 10, guruId: "guru-2" });
-
-    expect(result?.guruId).toBe("guru-2");
-    expect(result?.rekap).toEqual({ HADIR: 0, SAKIT: 1, IZIN: 0, ALPA: 0 });
+    expect(result?.kodeMapel).toBe("IPA");
+    expect(result?.rekap).toEqual({ HADIR: 0, SAKIT: 0, IZIN: 0, ALPA: 1 });
     expect(result?.rows).toHaveLength(1);
+  });
+
+  it("bulan 0 menampilkan semua bulan pada semester itu", async () => {
+    const result = await getAbsensiAnak({ siswaId: 10, bulan: 0 });
+
+    expect(result?.bulan).toBe(0);
+    expect(result?.rows).toHaveLength(3);
+    expect(result?.rekap).toEqual({ HADIR: 1, SAKIT: 1, IZIN: 0, ALPA: 1 });
+    expect(result?.persentase).toBe(33);
+  });
+
+  it("mengabaikan kode mapel yang tidak ada pada data anak", async () => {
+    const result = await getAbsensiAnak({ siswaId: 10, bulan: 0, kodeMapel: "XYZ" });
+
+    expect(result?.kodeMapel).toBeNull();
+    expect(result?.rows).toHaveLength(3);
   });
 });

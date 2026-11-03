@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahunAjar?: string; semester?: string; guruId?: string }> };
+type Props = { searchParams: Promise<{ siswaId?: string; bulan?: string; tahunAjar?: string; semester?: string; kodeMapel?: string }> };
 
 export default async function AbsensiPage({ searchParams }: Props) {
   const sp = await searchParams;
@@ -19,10 +19,16 @@ export default async function AbsensiPage({ searchParams }: Props) {
   if (anakList.length === 0) redirect("/login");
 
   const siswaId = sp.siswaId ? Number(sp.siswaId) : anakList[0].id;
-  const bulan = sp.bulan ? Number(sp.bulan) : new Date().getMonth() + 1;
+
+  // bulan: 0 = Semua Bulan, 1-12 = Januari-Desember; tanpa pilihan = bulan berjalan
+  const bulanParam = sp.bulan !== undefined && sp.bulan !== "" ? Number(sp.bulan) : NaN;
+  const bulan =
+    Number.isInteger(bulanParam) && bulanParam >= 0 && bulanParam <= 12
+      ? bulanParam
+      : new Date().getMonth() + 1;
   const semester = sp.semester as Semester | undefined;
 
-  const data = await getAbsensiAnak({ siswaId, bulan, tahunAjar: sp.tahunAjar, semester, guruId: sp.guruId });
+  const data = await getAbsensiAnak({ siswaId, bulan, tahunAjar: sp.tahunAjar, semester, kodeMapel: sp.kodeMapel });
   if (!data) redirect("/orangtua/dashboard");
 
   const kartu = [
@@ -36,22 +42,23 @@ export default async function AbsensiPage({ searchParams }: Props) {
     <div className="p-6 max-w-5xl mx-auto">
       <MonitorHeader
         judul="Monitoring Kehadiran"
-        subjudul={`${data.anak.nama} — Kelas ${data.anak.kelas.nama}`}
+        subjudul={`${data.anak.nama} \u2014 Kelas ${data.anak.kelas.nama}`}
         anakList={anakList.map((a) => ({ id: a.id, nama: a.nama, kelasNama: a.kelas.nama }))}
         aktifId={siswaId}
       />
 
       <form method="get" className="flex flex-wrap gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-5">
         <input type="hidden" name="siswaId" value={siswaId} />
-        <select name="guruId" defaultValue={data.guruId ?? ""}
+        <select name="kodeMapel" defaultValue={data.kodeMapel ?? ""}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-          <option value="">Semua Guru</option>
-          {data.guruList.map((guru) => (
-            <option key={guru.id} value={guru.id}>{guru.nama}</option>
+          <option value="">Semua Mata Pelajaran</option>
+          {data.mapelList.map((mapel) => (
+            <option key={mapel.kodeMapel} value={mapel.kodeMapel}>{mapel.nama}</option>
           ))}
         </select>
-        <select name="bulan" defaultValue={String(bulan)}
+        <select name="bulan" defaultValue={String(data.bulan)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <option value="0">Semua Bulan</option>
           {BULAN.map((b, i) => <option key={i} value={i + 1}>{b}</option>)}
         </select>
         <select name="tahunAjar" defaultValue={data.tahunAjar}
@@ -96,33 +103,42 @@ export default async function AbsensiPage({ searchParams }: Props) {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50/70 text-[11px] text-gray-500 uppercase tracking-wide">
-              <th className="text-left font-semibold px-5 py-3">Tanggal</th>
-              <th className="text-left font-semibold px-4 py-3">Mata Pelajaran</th>
-              <th className="text-left font-semibold px-4 py-3">Status</th>
-              <th className="text-left font-semibold px-4 py-3">Keterangan</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.rows.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-12 text-gray-400">Tidak ada data absensi bulan ini</td></tr>
-            )}
-            {data.rows.map((a) => (
-              <tr key={a.id} className="hover:bg-gray-50/60">
-                <td className="px-5 py-3 text-gray-600">
-                  {new Date(a.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                </td>
-                <td className="px-4 py-3 text-gray-700">{a.mapel}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[a.status]}`}>{a.status}</span>
-                </td>
-                <td className="px-4 py-3 text-gray-500">{a.keterangan || "–"}</td>
+        {/* Tinggi dibatasi agar tabel tetap rapi saat memilih "Semua Bulan" */}
+        <div className="max-h-[36rem] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0">
+              <tr className="bg-gray-50 text-[11px] text-gray-500 uppercase tracking-wide">
+                <th className="text-left font-semibold px-5 py-3">Tanggal</th>
+                <th className="text-left font-semibold px-4 py-3">Mata Pelajaran</th>
+                <th className="text-left font-semibold px-4 py-3">Status</th>
+                <th className="text-left font-semibold px-4 py-3">Keterangan</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.rows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="text-center py-12 text-gray-400">
+                    {data.bulan === 0
+                      ? "Tidak ada data absensi pada semester ini"
+                      : "Tidak ada data absensi bulan ini"}
+                  </td>
+                </tr>
+              )}
+              {data.rows.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-50/60">
+                  <td className="px-5 py-3 text-gray-600">
+                    {new Date(a.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">{a.mapel}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOR[a.status]}`}>{a.status}</span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">{a.keterangan || "\u2013"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
